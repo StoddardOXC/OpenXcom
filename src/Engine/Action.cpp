@@ -103,7 +103,7 @@ bool  Action::isMouseRightClick() const
 /**
  * Gets given mouse button state.
  */
-bool Action::mouseButtonState(const int button) const
+bool Action::getMouseButtonState(const int button) const
 {
 	return _mouseButtonState & (1 << (button-1));
 }

@@ -57,7 +57,7 @@ public:
 	/// Gets if action is mouse right click.
 	bool isMouseRightClick() const;
 	/// Gets mouse button's state
-	bool mouseButtonState(const int button) const;
+	bool getMouseButtonState(const int button) const;
 	/// Gets the top black band height.
 	int getTopBlackBand() const;
 	/// Gets the left black band width.
