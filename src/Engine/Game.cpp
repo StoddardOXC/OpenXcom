@@ -49,7 +49,7 @@ const double Game::VOLUME_GRADIENT = 10.0;
  * creates the display screen and sets up the cursor.
  * @param title Title of the game window.
  */
-Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0), _mod(0), _quit(false), _init(false),  _timeUntilNextFrame(0)
+Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0), _mod(0), _quit(false), _init(false), _timeUntilNextFrame(0), _mouseButtonState(0)
 {
 	Options::reload = false;
 	Options::mute = false;
@@ -218,9 +218,21 @@ void Game::run()
 						}
 					}
 					break;
-				case SDL_MOUSEMOTION:
+
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
+					if (_event.button.button < 32)
+					{
+						if (_event.button.state == SDL_RELEASED)
+						{
+							_mouseButtonState &= ! (1<<(_event.button.button-1));
+						}
+						else if (_event.button.state == SDL_PRESSED)
+						{
+							_mouseButtonState |= (1<<(_event.button.button-1));
+						}
+					}
+				case SDL_MOUSEMOTION:
 					// re-gain focus on mouse-over or keypress.
 					runningState = RUNNING;
 					// Go on, feed the event to others

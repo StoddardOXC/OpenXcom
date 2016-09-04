@@ -55,6 +55,7 @@ private:
 	unsigned int _timeOfLastFrame;
 	int _timeUntilNextFrame;
 	static const double VOLUME_GRADIENT;
+	Uint32 _mouseButtonState;
 
 public:
 	/// Creates a new game and initializes SDL.
