@@ -213,7 +213,7 @@ en-US:
   STR_TRIGGER_SCROLL: "Trigger"
   STR_AUTO_SCROLL: "Auto"
   STR_DRAG_SCROLL: "Drag Scroll"
-  STR_DRAG_SCROLL_DESC: "Scrolls the map when the specified mouse button is held down and dragged."
+  STR_DRAG_SCROLL_DESC: "Scrolls the map when the specified mouse button is held down and dragged. Ctrl-click to disable."
   STR_LEFT_MOUSE_BUTTON: "Left Button"
   STR_MIDDLE_MOUSE_BUTTON: "Middle Button"
   STR_RIGHT_MOUSE_BUTTON: "Right Button"

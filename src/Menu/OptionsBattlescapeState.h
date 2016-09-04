@@ -30,6 +30,7 @@ class TextButton;
 class ToggleTextButton;
 class Slider;
 class ComboBox;
+class MouseButton;
 
 /**
  * Screen that lets the user configure various
@@ -39,7 +40,8 @@ class OptionsBattlescapeState : public OptionsBaseState
 {
 private:
 	Text *_txtEdgeScroll, *_txtDragScroll;
-	ComboBox *_cbxEdgeScroll, *_cbxDragScroll;
+	ComboBox *_cbxEdgeScroll;
+	MouseButton *_btnDragScroll;
 	Text *_txtScrollSpeed, *_txtFireSpeed, *_txtXcomSpeed, *_txtAlienSpeed;
 	Slider *_slrScrollSpeed, *_slrFireSpeed, *_slrXcomSpeed, *_slrAlienSpeed;
 	Text *_txtPathPreview;
@@ -54,7 +56,7 @@ public:
 	/// Handler for changing the Edge Scroll combobox.
 	void cbxEdgeScrollChange(Action *action);
 	/// Handler for changing the Drag Scroll combobox.
-	void cbxDragScrollChange(Action *action);
+	void btnDragScrollChange(Action *action);
 	/// Handler for changing the scroll speed slider.
 	void slrScrollSpeedChange(Action *action);
 	/// Handler for changing the fire speed slider.

@@ -23,6 +23,7 @@
 #include "../Interface/Text.h"
 #include "../Interface/Slider.h"
 #include "../Interface/ComboBox.h"
+#include "../Interface/MouseButton.h"
 #include "../Engine/Action.h"
 #include "../Engine/Options.h"
 
@@ -43,7 +44,7 @@ OptionsBattlescapeState::OptionsBattlescapeState(OptionsOrigin origin) : Options
 	_cbxEdgeScroll = new ComboBox(this, 104, 16, 94, 18);
 
 	_txtDragScroll = new Text(114, 9, 206, 8);
-	_cbxDragScroll = new ComboBox(this, 104, 16, 206, 18);
+	_btnDragScroll = new MouseButton(this, 104, 16, 206, 18);
 
 	_txtScrollSpeed = new Text(114, 9, 94, 40);
 	_slrScrollSpeed = new Slider(104, 16, 94, 50);
@@ -89,7 +90,7 @@ OptionsBattlescapeState::OptionsBattlescapeState(OptionsOrigin origin) : Options
 	add(_btnDeaths, "button", "battlescapeMenu");
 
 	add(_cbxEdgeScroll, "button", "battlescapeMenu");
-	add(_cbxDragScroll, "button", "battlescapeMenu");
+	add(_btnDragScroll, "button", "battlescapeMenu");
 
 	centerAllSurfaces();
 
@@ -116,12 +117,11 @@ OptionsBattlescapeState::OptionsBattlescapeState(OptionsOrigin origin) : Options
 	dragScrolls.push_back("STR_MIDDLE_MOUSE_BUTTON");
 	dragScrolls.push_back("STR_RIGHT_MOUSE_BUTTON");
 
-	_cbxDragScroll->setOptions(dragScrolls);
-	_cbxDragScroll->setSelected(Options::battleDragScrollButton);
-	_cbxDragScroll->onChange((ActionHandler)&OptionsBattlescapeState::cbxDragScrollChange);
-	_cbxDragScroll->setTooltip("STR_DRAG_SCROLL_DESC");
-	_cbxDragScroll->onMouseIn((ActionHandler)&OptionsBattlescapeState::txtTooltipIn);
-	_cbxDragScroll->onMouseOut((ActionHandler)&OptionsBattlescapeState::txtTooltipOut);
+	_btnDragScroll->setSelected(Options::battleDragScrollButton);
+	_btnDragScroll->onChange((ActionHandler)&OptionsBattlescapeState::btnDragScrollChange);
+	_btnDragScroll->setTooltip("STR_DRAG_SCROLL_DESC");
+	_btnDragScroll->onMouseIn((ActionHandler)&OptionsBattlescapeState::txtTooltipIn);
+	_btnDragScroll->onMouseOut((ActionHandler)&OptionsBattlescapeState::txtTooltipOut);
 
 	_txtScrollSpeed->setText(tr("STR_SCROLL_SPEED"));
 
@@ -213,9 +213,9 @@ void OptionsBattlescapeState::cbxEdgeScrollChange(Action *)
  * Changes the Drag Scroll option.
  * @param action Pointer to an action.
  */
-void OptionsBattlescapeState::cbxDragScrollChange(Action *)
+void OptionsBattlescapeState::btnDragScrollChange(Action *)
 {
-	Options::battleDragScrollButton = _cbxDragScroll->getSelected();
+	Options::battleDragScrollButton = _btnDragScroll->getSelected();
 }
 
 /**
