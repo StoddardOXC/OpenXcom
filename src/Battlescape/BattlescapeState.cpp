@@ -650,9 +650,7 @@ void BattlescapeState::mapOver(Action *action)
 		_isMouseScrolled = true;
 
 		// Set the mouse cursor back
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-		SDL_WarpMouse(_game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
-		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+		_game->warpMouse(_game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
 
 		// Check the threshold
 		_totalMouseMoveX += action->getDetails()->motion.xrel;

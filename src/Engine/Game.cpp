@@ -49,7 +49,8 @@ const double Game::VOLUME_GRADIENT = 10.0;
  * creates the display screen and sets up the cursor.
  * @param title Title of the game window.
  */
-Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0), _mod(0), _quit(false), _init(false), _timeUntilNextFrame(0), _mouseButtonState(0)
+Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0), _mod(0), _quit(false),
+		_init(false), _timeUntilNextFrame(0), _mouseButtonState(0), _warp(false), _warpX(0), _warpY(0)
 {
 	Options::reload = false;
 	Options::mute = false;
@@ -130,6 +131,18 @@ Game::~Game()
 
 	SDL_Quit();
 }
+/**
+ * Warps mouse and records the event parameters for later ignoring it.
+ */
+
+void Game::warpMouse(Uint16 x, Uint16 y)
+{
+	_warpX = x;
+	_warpY = y;
+	_warp = true;
+	SDL_WarpMouse(x, y);
+}
+
 
 /**
  * The state machine takes care of passing all the events from SDL to the
@@ -234,6 +247,11 @@ void Game::run()
 						}
 					}
 				case SDL_MOUSEMOTION:
+					if (_warp && _event.motion.x == _warpX && _event.motion.y == _warpY)
+					{
+						_warp = false;
+						continue;
+					}
 					// re-gain focus on mouse-over or keypress.
 					runningState = RUNNING;
 					// Go on, feed the event to others

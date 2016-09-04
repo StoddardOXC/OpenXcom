@@ -302,9 +302,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		_isMouseScrolled = true;
 
 		// Set the mouse cursor back
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-		SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
-		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+		_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 
 		// Check the threshold
 		_totalMouseMoveX += action->getDetails()->motion.xrel;

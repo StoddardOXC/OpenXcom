@@ -57,6 +57,8 @@ private:
 	int _timeUntilNextFrame;
 	static const double VOLUME_GRADIENT;
 	Uint32 _mouseButtonState;
+	bool _warp;
+	Uint16 _warpX, _warpY;
 
 public:
 	/// Creates a new game and initializes SDL.
@@ -107,6 +109,8 @@ public:
 	Action *getSynthMouseDown(const int button) const;
 	/// Gets synthetic mouse button up action
 	Action *getSynthMouseUp(const int button) const;
+	/// Warp mouse and deal with the fallout
+	void warpMouse(Uint16 x, Uint16 y);
 };
 
 }
