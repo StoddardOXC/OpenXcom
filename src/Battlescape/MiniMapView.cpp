@@ -212,21 +212,6 @@ void MiniMapView::mouseClick(Action *action, State *state)
 {
 	InteractiveSurface::mouseClick(action, state);
 
-	// The following is the workaround for a rare problem where sometimes
-	// the mouse-release event is missed for any reason.
-	// However if the SDL is also missed the release event, then it is to no avail :(
-	// (this part handles the release if it is missed and now an other button is used)
-	if (_isMouseScrolling) {
-		if (action->getDetails()->button.button != Options::battleDragScrollButton
-		&& !action->getMouseButtonState(Options::battleDragScrollButton)) { // so we missed again the mouse-release :(
-			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
-				{ _camera->centerOnPosition(_posBeforeMouseScrolling); _redraw = true; }
-			_isMouseScrolled = _isMouseScrolling = false;
-			stopScrolling(action);
-		}
-	}
-
 	// Drag-Scroll release: release mouse-scroll-mode
 	if (_isMouseScrolling)
 	{
@@ -283,22 +268,6 @@ void MiniMapView::mouseOver(Action *action, State *state)
 
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
-		// The following is the workaround for a rare problem where sometimes
-		// the mouse-release event is missed for any reason.
-		// However if the SDL is also missed the release event, then it is to no avail :(
-		// (checking: is the dragScroll-mouse-button still pressed?)
-		if (!action->getMouseButtonState(Options::battleDragScrollButton)) { // so we missed again the mouse-release :(
-			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
-			{
-					_camera->centerOnPosition(_posBeforeMouseScrolling);
-					_redraw = true;
-			}
-			_isMouseScrolled = _isMouseScrolling = false;
-			stopScrolling(action);
-			return;
-		}
-
 		_isMouseScrolled = true;
 
 		// Set the mouse cursor back

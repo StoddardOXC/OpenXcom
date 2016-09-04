@@ -1582,22 +1582,6 @@ void Globe::mouseOver(Action *action, State *state)
 
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
-		// The following is the workaround for a rare problem where sometimes
-		// the mouse-release event is missed for any reason.
-		// (checking: is the dragScroll-mouse-button still pressed?)
-		// However if the SDL is also missed the release event, then it is to no avail :(
-		if (!action->getMouseButtonState(Options::geoDragScrollButton))
-		{ // so we missed again the mouse-release :(
-			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
-			{
-				center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
-			}
-			_isMouseScrolled = _isMouseScrolling = false;
-			stopScrolling(action);
-			return;
-		}
-
 		_isMouseScrolled = true;
 
 		// Set the mouse cursor back
@@ -1711,25 +1695,6 @@ void Globe::mouseClick(Action *action, State *state)
 
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
-
-	// The following is the workaround for a rare problem where sometimes
-	// the mouse-release event is missed for any reason.
-	// However if the SDL is also missed the release event, then it is to no avail :(
-	// (this part handles the release if it is missed and now an other button is used)
-	if (_isMouseScrolling)
-	{
-		if (action->getDetails()->button.button != Options::geoDragScrollButton
-			&& !action->getMouseButtonState(Options::geoDragScrollButton))
-		{ // so we missed again the mouse-release :(
-			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
-			{
-				center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
-			}
-			_isMouseScrolled = _isMouseScrolling = false;
-			stopScrolling(action);
-		}
-	}
 
 	// DragScroll-Button release: release mouse-scroll-mode
 	if (_isMouseScrolling)

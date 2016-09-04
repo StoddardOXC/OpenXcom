@@ -631,22 +631,6 @@ void BattlescapeState::mapOver(Action *action)
 {
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
-		// The following is the workaround for a rare problem where sometimes
-		// the mouse-release event is missed for any reason.
-		// (checking: is the dragScroll-mouse-button still pressed?)
-		// However if the SDL is also missed the release event, then it is to no avail :(
-		if (!action->getMouseButtonState(Options::battleDragScrollButton))
-		{ // so we missed again the mouse-release :(
-			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
-			{
-				_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
-			}
-			_isMouseScrolled = _isMouseScrolling = false;
-			stopScrolling(action);
-			return;
-		}
-
 		_isMouseScrolled = true;
 
 		// Set the mouse cursor back
@@ -749,25 +733,6 @@ void BattlescapeState::mapPress(Action *action)
  */
 void BattlescapeState::mapClick(Action *action)
 {
-	// The following is the workaround for a rare problem where sometimes
-	// the mouse-release event is missed for any reason.
-	// However if the SDL is also missed the release event, then it is to no avail :(
-	// (this part handles the release if it is missed and now an other button is used)
-	if (_isMouseScrolling)
-	{
-		if (action->getDetails()->button.button != Options::battleDragScrollButton
-		&& !action->getMouseButtonState(Options::battleDragScrollButton))
-		{   // so we missed again the mouse-release :(
-			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
-			{
-				_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
-			}
-			_isMouseScrolled = _isMouseScrolling = false;
-			stopScrolling(action);
-		}
-	}
-
 	// DragScroll-Button release: release mouse-scroll-mode
 	if (_isMouseScrolling)
 	{
