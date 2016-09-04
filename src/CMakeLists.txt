@@ -411,6 +411,8 @@ set ( interface_src
   Interface/Frame.h
   Interface/ImageButton.cpp
   Interface/ImageButton.h
+  Interface/MouseButton.cpp
+  Interface/MouseButton.h
   Interface/NumberText.cpp
   Interface/NumberText.h
   Interface/ScrollBar.cpp
