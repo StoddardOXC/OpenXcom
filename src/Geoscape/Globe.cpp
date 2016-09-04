@@ -1771,6 +1771,7 @@ void Globe::mouseClick(Action *action, State *state)
 		InteractiveSurface::mouseClick(action, state);
 		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 		{
+			stopFollowing();
 			center(lon, lat);
 		}
 	}
