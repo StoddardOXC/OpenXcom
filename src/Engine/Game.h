@@ -52,7 +52,6 @@ private:
 	Mod *_mod;
 	bool _quit, _init;
 	FpsCounter *_fpsCounter;
-	bool _mouseActive;
 	unsigned int _timeOfLastFrame;
 	int _timeUntilNextFrame;
 	static const double VOLUME_GRADIENT;
@@ -94,8 +93,6 @@ public:
 	Mod *getMod() const;
 	/// Loads the mods specified in the game options.
 	void loadMods();
-	/// Sets whether the mouse cursor is activated.
-	void setMouseActive(bool active);
 	/// Returns whether current state is the param state
 	bool isState(State *state) const;
 	/// Returns whether the game is shutting down.

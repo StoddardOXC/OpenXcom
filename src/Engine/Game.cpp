@@ -49,7 +49,7 @@ const double Game::VOLUME_GRADIENT = 10.0;
  * creates the display screen and sets up the cursor.
  * @param title Title of the game window.
  */
-Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0), _mod(0), _quit(false), _init(false), _mouseActive(true), _timeUntilNextFrame(0)
+Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0), _mod(0), _quit(false), _init(false),  _timeUntilNextFrame(0)
 {
 	Options::reload = false;
 	Options::mute = false;
@@ -221,8 +221,6 @@ void Game::run()
 				case SDL_MOUSEMOTION:
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
-					// Skip mouse events if they're disabled
-					if (!_mouseActive) continue;
 					// re-gain focus on mouse-over or keypress.
 					runningState = RUNNING;
 					// Go on, feed the event to others
@@ -528,18 +526,6 @@ void Game::loadMods()
 	delete _mod;
 	_mod = new Mod();
 	_mod->loadAll(FileMap::getRulesets());
-}
-
-/**
- * Sets whether the mouse is activated.
- * If it is, mouse events are processed, otherwise
- * they are ignored and the cursor is hidden.
- * @param active Is mouse activated?
- */
-void Game::setMouseActive(bool active)
-{
-	_mouseActive = active;
-	_cursor->setVisible(active);
 }
 
 /**
