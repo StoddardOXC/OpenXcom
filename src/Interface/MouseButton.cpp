@@ -36,9 +36,8 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-MouseButton::MouseButton(State *state, int width, int height, int x, int y) : TextButton(width, height, x, y), _mouseButtonNames(), _change(0), _state(state)
+MouseButton::MouseButton(State *state, int width, int height, int x, int y) : TextButton(width, height, x, y), _selected(0), _mouseButtonNames(), _change(0), _state(state)
 {
-	_selected = 0;
 	_mouseButtonNames.push_back("STR_DISABLED");
 	_mouseButtonNames.push_back("STR_LEFT_MOUSE_BUTTON");
 	_mouseButtonNames.push_back("STR_MIDDLE_MOUSE_BUTTON");
