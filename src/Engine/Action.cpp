@@ -107,7 +107,14 @@ bool Action::getMouseButtonState(const int button) const
 {
 	return _mouseButtonState & (1 << (button-1));
 }
-
+/**
+ * Gets mouse position and buttons state
+ */
+Uint32 Action::getMouseState(int *x, int *y) const
+{
+	SDL_GetMouseState(x, y);
+	return _mouseButtonState;
+}
 /**
  * Returns the height in pixel of the
  * top black band if any.

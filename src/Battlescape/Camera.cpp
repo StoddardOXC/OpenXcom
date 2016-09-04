@@ -87,7 +87,7 @@ void Camera::minMaxInt(int *value, const int minValue, const int maxValue) const
  */
 void Camera::mousePress(Action *action, State *)
 {
-	if (Options::battleDragScrollButton != SDL_BUTTON_MIDDLE || (SDL_GetMouseState(0,0)&SDL_BUTTON(Options::battleDragScrollButton)) == 0)
+	if (Options::battleDragScrollButton != SDL_BUTTON_MIDDLE || action->getMouseButtonState(Options::battleDragScrollButton) == 0)
 	{
 		if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
 		{
@@ -228,7 +228,8 @@ void Camera::mouseOver(Action *action, State *)
 			_scrollMouseY = 0;
 		}
 
-		if ((_scrollMouseX || _scrollMouseY) && !_scrollMouseTimer->isRunning() && !_scrollKeyTimer->isRunning() && 0==(SDL_GetMouseState(0,0)&SDL_BUTTON(Options::battleDragScrollButton)))
+		if ((_scrollMouseX || _scrollMouseY) && !_scrollMouseTimer->isRunning()
+				&& !_scrollKeyTimer->isRunning() && !action->getMouseButtonState(Options::battleDragScrollButton))
 		{
 			_scrollMouseTimer->start();
 		}
@@ -270,7 +271,8 @@ void Camera::keyboardPress(Action *action, State *)
 		_scrollKeyY = -scrollSpeed;
 	}
 
-	if ((_scrollKeyX || _scrollKeyY) && !_scrollKeyTimer->isRunning() && !_scrollMouseTimer->isRunning() && 0==(SDL_GetMouseState(0,0)&SDL_BUTTON(Options::battleDragScrollButton)))
+	if ((_scrollKeyX || _scrollKeyY) && !_scrollKeyTimer->isRunning() && !_scrollMouseTimer->isRunning()
+			&& !action->getMouseButtonState(Options::battleDragScrollButton))
 	{
 		_scrollKeyTimer->start();
 	}

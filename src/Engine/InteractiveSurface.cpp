@@ -133,7 +133,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 			}
 			if (_listButton && action->getDetails()->type == SDL_MOUSEMOTION)
 			{
-				_buttonsPressed = SDL_GetMouseState(0, 0);
+				_buttonsPressed = action->getMouseState(0, 0);
 				for (Uint8 i = 1; i <= NUM_BUTTONS; ++i)
 				{
 					if (isButtonPressed(i))
