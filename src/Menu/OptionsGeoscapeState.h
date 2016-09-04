@@ -28,7 +28,7 @@ class Text;
 class TextButton;
 class ToggleTextButton;
 class Slider;
-class ComboBox;
+class MouseButton;
 
 /**
  * Screen that lets the user configure various
@@ -38,7 +38,7 @@ class OptionsGeoscapeState : public OptionsBaseState
 {
 private:
 	Text *_txtDragScroll;
-	ComboBox *_cbxDragScroll;
+	MouseButton *_btnDragScroll;
 	Text *_txtScrollSpeed, *_txtDogfightSpeed, *_txtClockSpeed;
 	Slider *_slrScrollSpeed, *_slrDogfightSpeed, *_slrClockSpeed;
 	Text *_txtGlobeDetails;
@@ -51,7 +51,7 @@ public:
 	/// Cleans up the Geoscape Options state.
 	~OptionsGeoscapeState();
 	/// Handler for changing the Drag Scroll combobox.
-	void cbxDragScrollChange(Action *action);
+	void btnDragScrollChange(Action *action);
 	/// Handler for changing the scroll speed slider.
 	void slrScrollSpeedChange(Action *action);
 	/// Handler for changing the dogfight speed slider.
