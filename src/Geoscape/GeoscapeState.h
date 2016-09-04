@@ -57,6 +57,7 @@ private:
 	std::list<State*> _popups;
 	std::list<DogfightState*> _dogfights, _dogfightsToBeStarted;
 	size_t _minimizedDogfights;
+
 public:
 	/// Creates the Geoscape state.
 	GeoscapeState();
@@ -152,6 +153,8 @@ public:
 	void handleBaseDefense(Base *base, Ufo *ufo);
 	/// Update the resolution settings, we just resized the window.
 	void resize(int &dX, int &dY);
+	/// Set up the globe to follow an Ufo.
+	void followUfo(Ufo *);
 private:
 	/// Handle alien mission generation.
 	void determineAlienMissions();

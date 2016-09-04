@@ -256,8 +256,11 @@ struct CreateShadow
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-Globe::Globe(Game* game, int cenX, int cenY, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _rotLon(0.0), _rotLat(0.0), _hoverLon(0.0), _hoverLat(0.0), _cenX(cenX), _cenY(cenY), _game(game), _hover(false), _blink(-1),
-																					_isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _lonBeforeMouseScrolling(0.0), _latBeforeMouseScrolling(0.0), _mouseScrollingStartTime(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(false)
+Globe::Globe(Game* game, int cenX, int cenY, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y),
+		_rotLon(0.0), _rotLat(0.0), _hoverLon(0.0), _hoverLat(0.0), _cenX(cenX), _cenY(cenY), _game(game), _hover(false), _blink(-1),
+		_isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _lonBeforeMouseScrolling(0.0),
+		_latBeforeMouseScrolling(0.0), _mouseScrollingStartTime(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(false),
+		_followedTarget(0)
 {
 	_rules = game->getMod()->getGlobe();
 	_texture = new SurfaceSet(*_game->getMod()->getSurfaceSet("TEXTURE.DAT"));
@@ -445,6 +448,7 @@ Polygon* Globe::getPolygonFromLonLat(double lon, double lat) const
  */
 void Globe::rotateLeft()
 {
+	stopFollowing();
 	_rotLon = -ROTATE_LONGITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
@@ -454,6 +458,7 @@ void Globe::rotateLeft()
  */
 void Globe::rotateRight()
 {
+	stopFollowing();
 	_rotLon = ROTATE_LONGITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
@@ -463,6 +468,7 @@ void Globe::rotateRight()
  */
 void Globe::rotateUp()
 {
+	stopFollowing();
 	_rotLat = -ROTATE_LATITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
@@ -472,6 +478,7 @@ void Globe::rotateUp()
  */
 void Globe::rotateDown()
 {
+	stopFollowing();
 	_rotLat = ROTATE_LATITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
@@ -879,6 +886,7 @@ void Globe::rotate()
  */
 void Globe::draw()
 {
+	doFollowing();
 	if (_redraw)
 	{
 		cachePolygons();
@@ -1658,6 +1666,7 @@ void Globe::mousePress(Action *action, State *state)
 
 	if (action->getDetails()->button.button == Options::geoDragScrollButton)
 	{
+		stopFollowing();
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
 		SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
@@ -1888,4 +1897,37 @@ void Globe::stopScrolling(Action *action)
 	SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
 }
+
+void Globe::center(Target *target)
+{
+	center(target->getLongitude(), target->getLatitude());
+}
+
+void Globe::doFollowing()
+{
+	if (_followedTarget)
+	{
+		center(_followedTarget);
+	}
+}
+
+void Globe::stopFollowing()
+{
+	_followedTarget = NULL;
+}
+
+void Globe::stopFollowing(Target *target)
+{
+	if (_followedTarget == target)
+	{
+		_followedTarget = NULL;
+	}
+}
+
+void Globe::setFollowedTarget(Target *target)
+{
+	_followedTarget = target;
+	center(target);
+}
+
 }

@@ -80,6 +80,8 @@ private:
 	int _totalMouseMoveX, _totalMouseMoveY;
 	bool _mouseMovedOverThreshold;
 
+	Target *_followedTarget;
+
 	/// Sets the globe zoom factor.
 	void setZoom(size_t zoom);
 	/// Checks if a point is behind the globe.
@@ -104,6 +106,8 @@ private:
 	void drawPath(Surface *surface, double lon1, double lat1, double lon2, double lat2);
 	/// Draw target marker.
 	void drawTarget(Target *target, Surface *surface);
+	/// Follow target if any
+	void doFollowing();
 public:
 
 	static Uint8 COUNTRY_LABEL_COLOR;
@@ -153,6 +157,8 @@ public:
 	size_t getZoom() const;
 	/// Centers the globe on a point.
 	void center(double lon, double lat);
+	/// Centers the globe on a target.
+	void center(Target *target);
 	/// Checks if a point is inside land.
 	bool insideLand(double lon, double lat) const;
 	/// Turns on/off the globe detail.
@@ -215,6 +221,12 @@ public:
 	void setupRadii(int width, int height);
 	/// Move the mouse back to where it started after we finish drag scrolling.
 	void stopScrolling(Action *action);
+	/// Set the target for the view to follow
+	void setFollowedTarget(Target *target);
+	/// Stop following this target
+	void stopFollowing(Target *target);
+	/// Stop following any target
+	void stopFollowing();
 };
 
 }

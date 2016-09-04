@@ -199,7 +199,10 @@ void UfoDetectedState::btnInterceptClick(Action *)
 void UfoDetectedState::btnCentreClick(Action *)
 {
 	_state->timerReset();
-	_state->getGlobe()->center(_ufo->getLongitude(), _ufo->getLatitude());
+	if (SDL_GetModState() & KMOD_CTRL)
+	{
+		_state->followUfo(_ufo);
+	}
 	_game->popState();
 }
 

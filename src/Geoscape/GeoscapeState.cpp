@@ -1011,6 +1011,7 @@ void GeoscapeState::time5Seconds()
 					}
 				}
 			}
+			_globe->stopFollowing(*i);
 			delete *i;
 			i = _game->getSavedGame()->getUfos()->erase(i);
 		}
@@ -2757,6 +2758,11 @@ void GeoscapeState::resize(int &dX, int &dY)
 	_sideLine->setHeight(Options::baseYResolution);
 	_sideLine->setY(0);
 	_sideLine->drawRect(0, 0, _sideLine->getWidth(), _sideLine->getHeight(), 15);
+}
+
+void GeoscapeState::followUfo(Ufo *ufo)
+{
+	_globe->setFollowedTarget(ufo);
 }
 
 }
