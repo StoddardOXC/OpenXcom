@@ -87,7 +87,7 @@ void Camera::minMaxInt(int *value, const int minValue, const int maxValue) const
  */
 void Camera::mousePress(Action *action, State *)
 {
-	if (Options::battleDragScrollButton != SDL_BUTTON_MIDDLE || action->getMouseButtonState(Options::battleDragScrollButton) == 0)
+	if (Options::battleDragScrollButton != SDL_BUTTON_MIDDLE || !action->getMouseButtonState(Options::battleDragScrollButton))
 	{
 		if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
 		{
