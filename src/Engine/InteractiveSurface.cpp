@@ -18,6 +18,8 @@
  */
 #include "InteractiveSurface.h"
 #include "Action.h"
+#include "State.h"
+#include "Game.h"
 
 namespace OpenXcom
 {
@@ -229,11 +231,9 @@ void InteractiveSurface::unpress(State *state)
 	if (isButtonPressed())
 	{
 		_buttonsPressed = 0;
-		SDL_Event ev;
-		ev.type = SDL_MOUSEBUTTONUP;
-		ev.button.button = SDL_BUTTON_LEFT;
-		Action a = Action(&ev, 0.0, 0.0, 0, 0);
-		mouseRelease(&a, state);
+		Action *a = State::getGamePtr()->getSynthMouseUp(SDL_BUTTON_LEFT);
+		mouseRelease(a, state);
+		delete a;
 	}
 }
 

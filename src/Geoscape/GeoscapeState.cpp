@@ -1855,10 +1855,9 @@ void GeoscapeState::time1Month()
  */
 void GeoscapeState::timerReset()
 {
-	SDL_Event ev;
-	ev.button.button = SDL_BUTTON_LEFT;
-	Action act(&ev, _game->getScreen()->getXScale(), _game->getScreen()->getYScale(), _game->getScreen()->getCursorTopBlackBand(), _game->getScreen()->getCursorLeftBlackBand());
-	_btn5Secs->mousePress(&act, this);
+	Action *a = _game->getSynthMouseDown(SDL_BUTTON_LEFT);
+	_btn5Secs->mousePress(a, this);
+	delete a;
 }
 
 /**
@@ -2687,11 +2686,9 @@ bool GeoscapeState::processCommand(RuleMissionScript *command)
  */
 void GeoscapeState::btnTimerClick(Action *action)
 {
-	SDL_Event ev;
-	ev.type = SDL_MOUSEBUTTONDOWN;
-	ev.button.button = SDL_BUTTON_LEFT;
-	Action a = Action(&ev, 0.0, 0.0, 0, 0);
-	action->getSender()->mousePress(&a, this);
+	Action *a = _game->getSynthMouseDown(SDL_BUTTON_LEFT);
+	action->getSender()->mousePress(a, this);
+	delete a;
 }
 
 /**

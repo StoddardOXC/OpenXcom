@@ -168,7 +168,8 @@ void Game::run()
 			ev.type = SDL_MOUSEMOTION;
 			ev.motion.x = x;
 			ev.motion.y = y;
-			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(),
+										_screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand(), _mouseButtonState);
 			_states.back()->handle(&action);
 		}
 
@@ -237,7 +238,8 @@ void Game::run()
 					runningState = RUNNING;
 					// Go on, feed the event to others
 				default:
-					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(),
+											_screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand(), _mouseButtonState);
 					_screen->handle(&action);
 					_cursor->handle(&action);
 					_fpsCounter->handle(&action);
@@ -650,6 +652,34 @@ void Game::initAudio()
 		Log(LOG_INFO) << "SDL_mixer initialized successfully.";
 		setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	}
+}
+
+/**
+ * Gets synthetic mouse button down action
+ */
+Action *Game::getSynthMouseDown(const int button) const
+{
+	SDL_Event _event;
+	_event.type = SDL_MOUSEBUTTONDOWN;
+	_event.button.button = button;
+
+	Action *rv = new Action(&_event, _screen->getXScale(), _screen->getYScale(),
+			_screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand(), _mouseButtonState & ~(1<<(button-1)));
+	return rv;
+}
+
+/**
+ * Gets synthetic mouse button up action
+ */
+Action *Game::getSynthMouseUp(const int button) const
+{
+	SDL_Event _event;
+	_event.type = SDL_MOUSEBUTTONUP;
+	_event.button.button = button;
+
+	Action *rv = new Action(&_event, _screen->getXScale(), _screen->getYScale(),
+			_screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand(), _mouseButtonState | (1<<(button-1)));
+	return rv;
 }
 
 }

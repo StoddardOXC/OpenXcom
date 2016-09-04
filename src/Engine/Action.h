@@ -38,9 +38,10 @@ private:
 	double _scaleX, _scaleY;
 	int _topBlackBand, _leftBlackBand, _mouseX, _mouseY, _surfaceX, _surfaceY;
 	InteractiveSurface *_sender;
+	Uint32 _mouseButtonState;
 public:
 	/// Creates an action with given event data.
-	Action(SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand);
+	Action(SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand, Uint32 mouseButtonState);
 	/// Cleans up the action.
 	~Action();
 	/// Gets the screen's X scale.
@@ -55,6 +56,8 @@ public:
 	bool isMouseLeftClick() const;
 	/// Gets if action is mouse right click.
 	bool isMouseRightClick() const;
+	/// Gets mouse button's state
+	bool mouseButtonState(const int button) const;
 	/// Gets the top black band height.
 	int getTopBlackBand() const;
 	/// Gets the left black band width.

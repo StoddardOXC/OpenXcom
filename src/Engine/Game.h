@@ -26,6 +26,7 @@
 namespace OpenXcom
 {
 
+class Action;
 class State;
 class Screen;
 class Cursor;
@@ -102,6 +103,10 @@ public:
 	void defaultLanguage();
 	/// Sets up the audio.
 	void initAudio();
+	/// Gets synthetic mouse button down action
+	Action *getSynthMouseDown(const int button) const;
+	/// Gets synthetic mouse button up action
+	Action *getSynthMouseUp(const int button) const;
 };
 
 }
