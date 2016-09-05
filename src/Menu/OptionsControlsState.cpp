@@ -80,6 +80,10 @@ OptionsControlsState::OptionsControlsState(OptionsOrigin origin) : OptionsBaseSt
 			{
 				_controlsGeo.push_back(*i);
 			}
+			else if (i->category() == "STR_BASESCAPE")
+			{
+				_controlsBase.push_back(*i);
+			}
 			else if (i->category() == "STR_BATTLESCAPE")
 			{
 				_controlsBattle.push_back(*i);
@@ -111,15 +115,19 @@ void OptionsControlsState::init()
 	addControls(_controlsGeneral);
 	_lstControls->addRow(2, L"", L"");
 	_lstControls->addRow(2, tr("STR_GEOSCAPE").c_str(), L"");
-	_lstControls->setCellColor(_controlsGeneral.size() + 2, 0, _colorGroup);
+	_lstControls->setCellColor(_lstControls->getRows()-1, 0, _colorGroup);
 	addControls(_controlsGeo);
 	_lstControls->addRow(2, L"", L"");
+	_lstControls->addRow(2, tr("STR_BASESCAPE").c_str(), L"");
+	_lstControls->setCellColor(_lstControls->getRows()-1, 0, _colorGroup);
+	addControls(_controlsBase);
+	_lstControls->addRow(2, L"", L"");
 	_lstControls->addRow(2, tr("STR_BATTLESCAPE").c_str(), L"");
-	_lstControls->setCellColor(_controlsGeneral.size() + 2 + _controlsGeo.size() + 2, 0, _colorGroup);
+	_lstControls->setCellColor(_lstControls->getRows()-1, 0, _colorGroup);
 	addControls(_controlsBattle);
 	_lstControls->addRow(2, L"", L"");
 	_lstControls->addRow(2, tr("STR_OXCE").c_str(), L"");
-	_lstControls->setCellColor(_controlsGeneral.size() + 2 + _controlsGeo.size() + 2 + _controlsBattle.size() + 2, 0, _colorGroup);
+	_lstControls->setCellColor(_lstControls->getRows()-1, 0, _colorGroup);
 	addControls(_controlsOxce);
 }
 

@@ -175,7 +175,7 @@ void create()
 	_info.push_back(OptionInfo("canManufactureMoreItemsPerHour", &canManufactureMoreItemsPerHour, false, "STR_CANMANUFACTUREMOREITEMSPERHOUR", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("spendResearchedItems", &spendResearchedItems, false, "STR_SPENDRESEARCHEDITEMS", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("fieldPromotions", &fieldPromotions, false, "STR_FIELDPROMOTIONS", "STR_GEOSCAPE"));
-	
+
 	_info.push_back(OptionInfo("battleDragScrollInvert", &battleDragScrollInvert, false, "STR_DRAGSCROLLINVERT", "STR_BATTLESCAPE")); // true drags away from the cursor, false drags towards (like a grab)
 	_info.push_back(OptionInfo("sneakyAI", &sneakyAI, false, "STR_SNEAKYAI", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("battleUFOExtenderAccuracy", &battleUFOExtenderAccuracy, false, "STR_BATTLEUFOEXTENDERACCURACY", "STR_BATTLESCAPE"));
@@ -247,6 +247,16 @@ void create()
 	_info.push_back(OptionInfo("keyBaseSelect6", &keyBaseSelect6, SDLK_6, "STR_SELECT_BASE_6", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("keyBaseSelect7", &keyBaseSelect7, SDLK_7, "STR_SELECT_BASE_7", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("keyBaseSelect8", &keyBaseSelect8, SDLK_8, "STR_SELECT_BASE_8", "STR_GEOSCAPE"));
+
+	_info.push_back(OptionInfo("keyBaseInfo", &keyBaseInfo, SDLK_i, "STR_BASE_INFORMATION", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBaseSoldiers", &keyBaseSoldiers, SDLK_s, "STR_SOLDIERS_UC", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBaseCraft", &keyBaseCraft, SDLK_c, "STR_EQUIP_CRAFT", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBaseResearch", &keyBaseResearch, SDLK_r, "STR_RESEARCH", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBaseManufacture", &keyBaseManufacture, SDLK_m, "STR_MANUFACTURE", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBaseTransfer", &keyBaseTransfer, SDLK_t, "STR_TRANSFER_UC", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBasePurchase", &keyBasePurchase, SDLK_p, "STR_PURCHASE_RECRUIT", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo("keyBaseSell", &keyBaseSell, SDLK_f, "STR_SELL_SACK_UC", "STR_BASESCAPE"));
+
 	_info.push_back(OptionInfo("keyBattleLeft", &keyBattleLeft, SDLK_LEFT, "STR_SCROLL_LEFT", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("keyBattleRight", &keyBattleRight, SDLK_RIGHT, "STR_SCROLL_RIGHT", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("keyBattleUp", &keyBattleUp, SDLK_UP, "STR_SCROLL_UP", "STR_BATTLESCAPE"));

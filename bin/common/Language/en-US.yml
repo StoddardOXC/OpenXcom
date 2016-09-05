@@ -38,6 +38,7 @@ en-US:
   STR_CONTROLS: "CONTROLS"
   STR_GENERAL: "General"
   STR_GEOSCAPE: "Geoscape"
+  STR_BASESCAPE: "Basescape"
   STR_BATTLESCAPE: "Battlescape"
   STR_SCREENSHOT: "Screenshot"
   STR_FPS_COUNTER: "FPS Counter"
