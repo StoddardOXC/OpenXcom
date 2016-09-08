@@ -82,6 +82,7 @@ ResearchState::ResearchState(Base *base) : _base(base)
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&ResearchState::btnOkClick);
 	_btnOk->onKeyboardPress((ActionHandler)&ResearchState::btnOkClick, Options::keyCancel);
+	_btnOk->onKeyboardPress((ActionHandler)&ResearchState::btnOkClick, Options::keyBaseResearch);
 
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);

@@ -70,6 +70,7 @@ TransferBaseState::TransferBaseState(Base *base) : _base(base)
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&TransferBaseState::btnCancelClick);
 	_btnCancel->onKeyboardPress((ActionHandler)&TransferBaseState::btnCancelClick, Options::keyCancel);
+	_btnCancel->onKeyboardPress((ActionHandler)&TransferBaseState::btnCancelClick, Options::keyBaseTransfer);
 
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);

@@ -109,6 +109,7 @@ SellState::SellState(Base *base, DebriefingState *debriefingState, OptionsOrigin
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&SellState::btnCancelClick);
 	_btnCancel->onKeyboardPress((ActionHandler)&SellState::btnCancelClick, Options::keyCancel);
+	_btnCancel->onKeyboardPress((ActionHandler)&SellState::btnCancelClick, Options::keyBaseSell);
 
 	if (overfull)
 	{
