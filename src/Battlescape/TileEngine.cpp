@@ -2507,7 +2507,7 @@ int TileEngine::unitOpensDoor(BattleUnit *unit, bool rClick, int dir)
 		}
 	}
 
-	if (TUCost != 0)
+	if (door == 0 || door == 1)
 	{
 		if (_save->getBattleGame()->checkReservedTU(unit, TUCost, 0))
 		{
@@ -2515,6 +2515,8 @@ int TileEngine::unitOpensDoor(BattleUnit *unit, bool rClick, int dir)
 			{
 				// Update FOV through the doorway.
 				calculateFOV(doorCentre, doorsOpened, true, true);
+				calculateTerrainLighting();
+				calculateUnitLighting();
 			}
 			else return 4;
 		}
@@ -2807,29 +2809,31 @@ int TileEngine::calculateParabola(const Position& origin, const Position& target
 		x = (int)((double)origin.x + (double)i * cos(te) * sin(fi));
 		y = (int)((double)origin.y + (double)i * sin(te) * sin(fi));
 		z = (int)((double)origin.z + (double)i * cos(fi) - zK * ((double)i - ro / 2.0) * ((double)i - ro / 2.0) + zA);
-		if (storeTrajectory && trajectory)
-		{
-			trajectory->push_back(Position(x, y, z));
-		}
 		//passes through this point?
-		Position nextPosition = Position(x,y,z);
-		int result = calculateLine(lastPosition, nextPosition, false, 0, excludeUnit);
+		Position nextPosition = Position(x, y, z);
+		std::vector<Position> contactPoint;
+		int result = calculateLine(lastPosition, nextPosition, false, &contactPoint, excludeUnit);
 		if (result != V_EMPTY)
 		{
 			if (lastPosition.z < nextPosition.z)
 			{
 				result = V_OUTOFBOUNDS;
 			}
-			if (!storeTrajectory && trajectory != 0)
+			if (trajectory != nullptr)
 			{ // store the position of impact
-				trajectory->push_back(nextPosition);
+				assert(contactPoint.size() > 0);
+				trajectory->push_back(contactPoint[0]);
 			}
 			return result;
+		}
+		if (storeTrajectory && trajectory != nullptr)
+		{
+			trajectory->push_back(nextPosition);
 		}
 		lastPosition = Position(x,y,z);
 		++i;
 	}
-	if (!storeTrajectory && trajectory != 0)
+	if (!storeTrajectory && trajectory != nullptr)
 	{ // store the position of impact
 		trajectory->push_back(Position(x, y, z));
 	}
@@ -3488,7 +3492,10 @@ bool TileEngine::validateThrow(BattleAction &action, Position originVoxel, Posit
 	{
 		std::vector<Position> trajectory;
 		test = calculateParabola(originVoxel, targetVoxel, false, &trajectory, action.actor, curvature, Position(0,0,0));
-		if (test != V_OUTOFBOUNDS && (trajectory.at(0) / Position(16, 16, 24)) == (targetVoxel / Position(16, 16, 24)))
+		Position impactTile = trajectory.at(0) / Position(16, 16, 24);
+		Position targetTile = targetVoxel / Position(16, 16, 24);
+		Position belowTargetTile = targetTile - Position(0, 0, 1);
+		if (test != V_OUTOFBOUNDS && (impactTile == targetTile || impactTile == belowTargetTile))
 		{
 			if (voxelType)
 			{
