@@ -16,19 +16,39 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_VERSION_H
-#define OPENXCOM_VERSION_H
+#ifndef OPENXCOM_CUSTOMPALETTES_H
+#define OPENXCOM_CUSTOMPALETTES_H
 
-#define OPENXCOM_VERSION_SHORT "Extended 3.2+"
-#define OPENXCOM_VERSION_LONG "3.2.0.0"
-#define OPENXCOM_VERSION_NUMBER 3,2,0,0
+#include <yaml-cpp/yaml.h>
+#include "../Battlescape/Position.h"
 
-#ifdef GIT_BUILD
-#include "git_version.h"
-#endif
+namespace OpenXcom
+{
 
-#ifndef OPENXCOM_VERSION_GIT
-#define OPENXCOM_VERSION_GIT " (v2016-09-21)"
-#endif
+/**
+ * For adding custom palettes to the game.
+ */
+class CustomPalettes
+{
+private:
+	std::string _type, _target;
+	std::map<int, Position> _palette;
+public:
+	/// Creates a blank custom palette.
+	CustomPalettes(const std::string &type);
+	/// Clean up.
+	virtual ~CustomPalettes();
+	/// Loads the data from YAML.
+	void load(const YAML::Node &node);
+	/// Gets the palette.
+	std::map<int, Position> *getPalette();
+	/// Gets the type.
+	const std::string &getType() const;
+	/// Gets the target.
+	const std::string &getTarget() const;
+
+};
+
+}
 
 #endif
