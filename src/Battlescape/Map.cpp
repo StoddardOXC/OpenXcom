@@ -47,6 +47,7 @@
 #include "../Mod/MapDataSet.h"
 #include "../Mod/MapData.h"
 #include "../Mod/Armor.h"
+#include "../Mod/RuleStartingCondition.h"
 #include "BattlescapeMessage.h"
 #include "../Savegame/SavedGame.h"
 #include "../Interface/NumberText.h"
@@ -78,7 +79,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param visibleMapHeight Current visible map height.
  */
-Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _projectile(0), _projectileInFOV(false), _explosionInFOV(false), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _smoothingEngaged(false), _flashScreen(false)
+Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _projectile(0), _projectileInFOV(false), _explosionInFOV(false), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _smoothingEngaged(false), _flashScreen(false), _bgColor(15)
 {
 	_iconHeight = _game->getMod()->getInterface("battlescape")->getElement("icons")->h;
 	_iconWidth = _game->getMod()->getInterface("battlescape")->getElement("icons")->w;
@@ -131,6 +132,15 @@ Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) 
 		_fadeTimer->onTimer((SurfaceHandler)&Map::fadeShade);
 		_fadeTimer->start();
 	}
+
+	const RuleStartingCondition *startingCondition = _game->getMod()->getStartingCondition(_save->getStartingConditionType());
+	if (startingCondition != 0)
+	{
+		_bgColor = startingCondition->getMapBackgroundColor();
+	}
+
+	_stunIndicator = _game->getMod()->getSurface("FloorStunIndicator");
+	_woundIndicator = _game->getMod()->getSurface("FloorWoundIndicator");
 }
 
 /**
@@ -207,8 +217,9 @@ void Map::draw()
 	// normally we'd call for a Surface::draw();
 	// but we don't want to clear the background with colour 0, which is transparent (aka black)
 	// we use colour 15 because that actually corresponds to the colour we DO want in all variations of the xcom and tftd palettes.
+	// Note: un-hardcoded the color from 15 to ruleset value, default 15
 	_redraw = false;
-	clear(Palette::blockOffset(0)+15);
+	clear(Palette::blockOffset(0) + _bgColor);
 
 	Tile *t;
 
@@ -650,6 +661,35 @@ void Map::drawTerrain(Surface *surface)
 										tileWestShade,
 										true
 									);
+									if (_stunIndicator || _woundIndicator)
+									{
+										BattleUnit *itemUnit = item->getUnit();
+										if (itemUnit && itemUnit->getStatus() == STATUS_UNCONSCIOUS)
+										{
+											if (itemUnit->getFatalWounds() > 0)
+											{
+												if (_woundIndicator)
+												{
+													_woundIndicator->blitNShade(surface,
+														screenPosition.x - tileOffset.x,
+														screenPosition.y + tileWest->getTerrainLevel() + tileOffset.y,
+														tileWestShade,
+														true);
+												}
+											}
+											else
+											{
+												if (_stunIndicator)
+												{
+													_stunIndicator->blitNShade(surface,
+														screenPosition.x - tileOffset.x,
+														screenPosition.y + tileWest->getTerrainLevel() + tileOffset.y,
+														tileWestShade,
+														true);
+												}
+											}
+										}
+									}
 								}
 								// Draw soldier
 								if (westUnit && westUnit->getStatus() != STATUS_WALKING && (!tileWest->getMapData(O_OBJECT) || tileWest->getMapData(O_OBJECT)->getBigWall() < 6 || tileWest->getMapData(O_OBJECT)->getBigWall() == 9) && (westUnit->getVisible() || _save->getDebugMode()))
@@ -756,6 +796,33 @@ void Map::drawTerrain(Surface *surface)
 								screenPosition.y + tile->getTerrainLevel(),
 								tileShade
 							);
+							if (_stunIndicator || _woundIndicator)
+							{
+								BattleUnit *itemUnit = item->getUnit();
+								if (itemUnit && itemUnit->getStatus() == STATUS_UNCONSCIOUS)
+								{
+									if (itemUnit->getFatalWounds() > 0)
+									{
+										if (_woundIndicator)
+										{
+											_woundIndicator->blitNShade(surface,
+												screenPosition.x,
+												screenPosition.y + tile->getTerrainLevel(),
+												tileShade);
+										}
+									}
+									else
+									{
+										if (_stunIndicator)
+										{
+											_stunIndicator->blitNShade(surface,
+												screenPosition.x,
+												screenPosition.y + tile->getTerrainLevel(),
+												tileShade);
+										}
+									}
+								}
+							}
 						}
 					}
 
