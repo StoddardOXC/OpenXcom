@@ -1366,21 +1366,13 @@ bool TileEngine::awardExperience(BattleUnit *unit, BattleItem *weapon, BattleUni
 	{
 		return false;
 	}
-	else
+	else if (weapon->getRules()->getBattleType() != BT_MEDIKIT)
 	{
-		if (weapon->getRules()->getBattleType() == BT_MEDIKIT && target->getOriginalFaction() == FACTION_PLAYER && target->killedBy() != FACTION_PLAYER)
-		{
-			// only give experience for actions performed on enemies...
-			// ... unless the action is to heal a fatal wound which was inflicted by an enemy (or neutral)
-		}
-		else
-		{
-			// only enemies count, not friends or neutrals
-			if (target->getOriginalFaction() != FACTION_HOSTILE) return false;
+		// only enemies count, not friends or neutrals
+		if (target->getOriginalFaction() != FACTION_HOSTILE) return false;
 
-			// mind-controlled enemies don't count though!
-			if (target->getFaction() != FACTION_HOSTILE) return false;
-		}
+		// mind-controlled enemies don't count though!
+		if (target->getFaction() != FACTION_HOSTILE) return false;
 	}
 
 	if (weapon->getRules()->getExperienceTrainingMode() > ETM_DEFAULT)

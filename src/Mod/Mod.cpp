@@ -790,8 +790,11 @@ void Mod::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 	}
 	for (std::map<std::string, Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
 	{
-		if (i->first.substr(i->first.length() - 3, i->first.length()) != "LBM")
-			i->second->setPalette(colors, firstcolor, ncolors);
+		if (i->first.substr(i->first.length() - 3, i->first.length()) == "LBM")
+			continue;
+		if (i->first.find("_CPAL") != std::string::npos)
+			continue;
+		i->second->setPalette(colors, firstcolor, ncolors);
 	}
 	for (std::map<std::string, SurfaceSet*>::iterator i = _sets.begin(); i != _sets.end(); ++i)
 	{
@@ -878,17 +881,29 @@ void Mod::loadAll(const std::vector< std::pair< std::string, std::vector<std::st
 {
 	ModScript parser{ _scriptGlobal, this };
 
+	std::vector<size_t> modOffsets(mods.size());
 	_scriptGlobal->beginLoad();
+	size_t offset = 0;
 	for (size_t i = 0; mods.size() > i; ++i)
 	{
-		_scriptGlobal->addMod(mods[i].first, (int)i);
+		modOffsets[i] = offset;
+		_scriptGlobal->addMod(mods[i].first, (int)offset);
+		auto it = Options::getModInfos().find(mods[i].first);
+		if (it != Options::getModInfos().end())
+		{
+			offset += it->second.getReservedSpace();
+		}
+		else
+		{
+			offset += 1;
+		}
 	}
 	for (size_t i = 0; mods.size() > i; ++i)
 	{
-		_scriptGlobal->setMod((int)i);
+		_scriptGlobal->setMod((int)modOffsets[i]);
 		try
 		{
-			loadMod(mods[i].second, i, parser);
+			loadMod(mods[i].second, modOffsets[i], parser);
 		}
 		catch (Exception &e)
 		{
