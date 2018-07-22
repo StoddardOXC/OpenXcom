@@ -80,3 +80,7 @@ nbproject/
 src/OpenXcom.2010.VC.opendb
 bin/user
 /makefile
+#PyPy stuff
+bin/python/__pycache__
+src/Python/module.c
+

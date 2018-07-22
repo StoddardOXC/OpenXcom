@@ -56,6 +56,14 @@ endif()
 
 set ( DEPS_DIR "${default_deps_dir}" CACHE STRING "Dependencies directory" )
 
+# TODO: detect it the right way
+set ( PYPY3_ROOT_DIR "/opt/pypy/pypy3-v6.0.0-linux64" CACHE PATH PYPY3_ROOT_DIR )
+set ( PYPY3_LIBRARY pypy3-c )
+
+set ( PYPY3_BIN ${PYPY3_ROOT_DIR}/bin/pypy3 )
+include_directories ( ${PYPY3_ROOT_DIR}/include )
+link_directories ( ${PYPY3_ROOT_DIR}/bin )
+
 # Add check for library (SDL_gfx, yaml-cpp )
 if ( IS_DIRECTORY ${DEPS_DIR} )
    include_directories ( ${DEPS_DIR}/include/SDL ${DEPS_DIR}/include/yaml-cpp ${DEPS_DIR}/include )

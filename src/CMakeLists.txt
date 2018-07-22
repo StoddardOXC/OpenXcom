@@ -379,6 +379,20 @@ set ( ufopedia_src
   Ufopaedia/UfopaediaStartState.cpp
 )
 
+set_source_files_properties(${CMAKE_SOURCE_DIR}/src/python/module.c properties generated true)
+add_custom_command(
+            OUTPUT ${CMAKE_SOURCE_DIR}/src/Python/module.c
+            COMMAND ${PYPY3_BIN} ${CMAKE_SOURCE_DIR}/src/Python/build.py
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/Python
+            MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/src/Python/embedding_init_code.py
+            DEPENDS ${CMAKE_SOURCE_DIR}/src/Python/module.h ${CMAKE_SOURCE_DIR}/src/Python/adapter.h ${CMAKE_SOURCE_DIR}/src/Python/build.py
+)
+
+set ( python_src
+  Python/adapter.cpp
+  Python/module.c
+)
+
 set ( data_install_dir bin )
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )
   add_definitions ( -D_DEBUG )
@@ -461,7 +475,7 @@ if ( WIN32 )
   set ( openxcom_icon OpenXcomEx.rc )
 endif ()
 
-set ( openxcom_src ${root_src} ${basescape_src} ${battlescape_src} ${engine_src} ${geoscape_src} ${interface_src} ${menu_src} ${mod_src} ${savegame_src} ${ufopedia_src} )
+set ( openxcom_src ${root_src} ${basescape_src} ${battlescape_src} ${engine_src} ${geoscape_src} ${interface_src} ${menu_src} ${mod_src} ${savegame_src} ${ufopedia_src} ${python_src} )
 
 set ( install_dest RUNTIME )
 set ( set_exec_path ON )
@@ -533,7 +547,7 @@ if (WIN32)
 set(CMAKE_EXE_LINKER_FLAGS -Wl,--export-all-symbols)
 set(WIN32_LIBS  imagehlp dbghelp)
 endif(WIN32)
-target_link_libraries ( openxcom ${system_libs} ${PKG_SDLIMAGE_LIBRARIES} ${PKG_SDLMIXER_LIBRARIES} ${PKG_SDLGFX_LIBRARIES} ${PKG_SDL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${PKG_YAMLCPP_LIBRARIES} ${WIN32_LIBS})
+target_link_libraries ( openxcom ${system_libs} ${PKG_SDLIMAGE_LIBRARIES} ${PKG_SDLMIXER_LIBRARIES} ${PKG_SDLGFX_LIBRARIES} ${PKG_SDL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${PKG_YAMLCPP_LIBRARIES} ${WIN32_LIBS} ${PYPY3_LIBRARY} )
 else (CMAKE_HOST_UNIX)
 target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_gl_LIBRARY} debug ${YAMLCPP_LIBRARY_DEBUG} optimized ${YAMLCPP_LIBRARY} )
 endif (CMAKE_HOST_UNIX)

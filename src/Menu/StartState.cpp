@@ -38,6 +38,8 @@
 #include <SDL_mixer.h>
 #include <SDL_thread.h>
 
+#include "../Python/module.h"
+
 namespace OpenXcom
 {
 
@@ -280,6 +282,19 @@ int StartState::load(void *game_ptr)
 	Game *game = (Game*)game_ptr;
 	try
 	{
+		// supplied strings do not live past this scope.
+		// pypy_initialize has to copy them
+		auto cfg_dir = Options::getConfigFolder();
+		auto data_dir = Options::getDataFolder();
+		auto user_dir = Options::getUserFolder();
+		auto python_dir = CrossPlatform::searchDataFolder("python");
+		pypy_syspaths_t pypy_paths;
+		pypy_paths.cfg_dir = cfg_dir.c_str();
+		pypy_paths.data_dir = data_dir.c_str();
+		pypy_paths.user_dir = user_dir.c_str();
+		pypy_paths.python_dir = python_dir.c_str();
+		pypy_initialize(&pypy_paths);
+
 		Log(LOG_INFO) << "Loading data...";
 		Options::updateMods();
 		game->loadMods();

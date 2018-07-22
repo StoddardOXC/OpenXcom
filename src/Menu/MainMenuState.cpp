@@ -33,6 +33,8 @@
 #include "../Engine/Screen.h"
 #include "../Engine/Options.h"
 
+#include "../Python/module.h"
+
 namespace OpenXcom
 {
 
@@ -88,6 +90,8 @@ MainMenuState::MainMenuState()
 
 	_btnQuit->setText(tr("STR_QUIT"));
 	_btnQuit->onMouseClick((ActionHandler)&MainMenuState::btnQuitClick);
+
+	_btnQuit->onKeyboardPress((ActionHandler)&MainMenuState::aboutPythonClick, Options::keyToggleQuickSearch);
 
 	_txtTitle->setAlign(ALIGN_CENTER);
 	_txtTitle->setBig();
@@ -160,6 +164,13 @@ void MainMenuState::btnQuitClick(Action *)
 {
 	_game->quit();
 }
+
+void MainMenuState::aboutPythonClick(Action *)
+{
+	auto aboutpy = pypy_spawn_state("AboutPyPy", this);
+	_game->pushState((State *)aboutpy);
+}
+
 
 /**
  * Updates the scale.
