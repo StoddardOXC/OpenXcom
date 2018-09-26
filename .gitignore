@@ -83,4 +83,6 @@ bin/user
 #PyPy stuff
 bin/python/__pycache__
 src/Python/module.c
+.kdev4
+pypy3.kdev4
 
