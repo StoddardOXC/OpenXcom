@@ -28,6 +28,9 @@ extern "C" {
 typedef uint8_t bool;
 #endif
 
+/* UI */
+
+typedef struct _textlist_t textlist_t;
 typedef struct _textbutton_t textbutton_t;
 typedef struct _text_t text_t;
 typedef struct _state_t state_t;
@@ -57,6 +60,11 @@ void st_add_text(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
 				 int32_t halign, int32_t valign,
 				 bool do_wrap, bool is_big, const char *text_utf8);
 
+textlist_t *st_add_text_list(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
+								 const char *ui_element, const char *ui_category);
+void textlist_add_row(textlist_t *tl, int cols, ...);
+void textlist_set_columns(textlist_t *tl, int cols, ...);
+
 const char *st_translate(state_t *st, const char *key);
 
 /* log levels:
@@ -70,6 +78,38 @@ const char *st_translate(state_t *st, const char *key);
  */
 void logg(int level, const char *message);
 
+/* Game data */
+
+typedef struct _base_t {
+	int32_t idx;
+	const char *name;			// NULL = end of list/no game loaded.
+	int32_t facility_count;		// exact number of facilities in the base
+	int32_t inventory_count;	// ceiling on item count in the base
+} base_t;
+
+#define MAX_JAIL_TYPES 8
+
+typedef struct _facility_t {
+	const char *id;				// STR_whatever. NULL for no such facility/invalid base num etc.
+	int32_t online;
+	int32_t ware_capacity;		// vaults
+	int32_t crew_capacity;		// barracks
+	int32_t craft_capacity;		// hangars
+	int32_t jail_capacity;		// prisons
+	int32_t jail_type;
+	int32_t maintenance;		// monthly cost
+} facility_t;
+// good old C - fac_vec is expected to hold at least fac_cap structs.
+// we can return ptr-to-prt to a buffer of structs internally allocated as std::vector
+// and then interned, but memory consumption then depends on usage patterns
+// since it can only be freed when the state is freed, up until that it just grows.
+// on the other hand... for the base inventory mgmt that might be acceptable.
+// can't do finegrained flush, but if we're for example reinitializing the whole state anyway...
+// returned values' lifetime is at most the lifetime of a state (ui window).
+// and they are not to be modified.
+
+// just iterate over base_idx until you get -1 as rv. Returns the index of the base otherwise.
+int32_t get_base_facilities(state_t *st, int32_t base_idx, base_t *base, facility_t *fac_vec, size_t fac_cap);
 #ifdef __cplusplus
 } // extern "C" - this comment is required due to pypy/cffi build system
 #endif
