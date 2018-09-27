@@ -268,8 +268,15 @@ size_t TextList::getVisibleRows() const
 void TextList::addRow(int cols, ...)
 {
 	va_list args;
-	int ncols;
 	va_start(args, cols);
+	vAddRow(cols, args);
+	va_end(args);
+}
+
+void TextList::vAddRow(int cols, va_list args)
+{
+	int ncols;
+
 	if (cols > 0)
 	{
 		ncols = cols;
@@ -408,7 +415,6 @@ void TextList::addRow(int cols, ...)
 	}
 
 	_redraw = true;
-	va_end(args);
 	updateArrows();
 }
 
@@ -455,15 +461,19 @@ void TextList::setColumns(int cols, ...)
 {
 	va_list args;
 	va_start(args, cols);
+	vSetColumns(cols, args);
+	va_end(args);
+}
 
+void TextList::vSetColumns(int cols, va_list args)
+{
 	_columns.clear();
 	for (int i = 0; i < cols; ++i)
 	{
 		_columns.push_back(va_arg(args, int));
 	}
-
-	va_end(args);
 }
+
 
 /**
  * Replaces a certain amount of colors in the palette of all

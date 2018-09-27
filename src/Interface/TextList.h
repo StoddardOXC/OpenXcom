@@ -103,10 +103,12 @@ public:
 	size_t getVisibleRows() const;
 	/// Adds a new row to the text list.
 	void addRow(int cols, ...);
+	void vAddRow(int cols, va_list args);
 	/// Removes the last row from the text list.
 	void removeLastRow();
 	/// Sets the columns in the text list.
 	void setColumns(int cols, ...);
+	void vSetColumns(int cols, va_list args);
 	/// Sets the palette of the text list.
 	void setPalette(SDL_Color *colors, int firstcolor = 0, int ncolors = 256);
 	/// Initializes the resources for the text list.
