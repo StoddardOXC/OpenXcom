@@ -45,7 +45,7 @@ ListLoadState::ListLoadState(OptionsOrigin origin) : ListGamesState(origin, 0, t
 	_btnCancel->setX(180);
 
 	add(_btnOld, "button", "saveMenus");
-	
+
 	// Set up objects
 	_txtTitle->setText(tr("STR_SELECT_GAME_TO_LOAD"));
 
@@ -53,6 +53,7 @@ ListLoadState::ListLoadState(OptionsOrigin origin) : ListGamesState(origin, 0, t
 	_btnOld->onMouseClick((ActionHandler)&ListLoadState::btnOldClick);
 
 	centerAllSurfaces();
+
 }
 
 /**
@@ -110,6 +111,7 @@ void ListLoadState::init()
 {
 	ListGamesState::init();
 	if (_saves.size() > 0  && _origin == OPT_MENU && Options::getLoadLastSave())
+
 	{
 		// make it so that this fires only once
 		Options::expendLoadLastSave();
