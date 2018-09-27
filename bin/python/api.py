@@ -178,3 +178,64 @@ class TextButton(InteractiveSurface):
 
     def set_high_contrast(self):
         lib.btn_set_high_contrast(self.ptr)
+
+class TextList(InteractiveSurface):
+    def __init__(self, parent, w, h, x, y, ui_element, ui_category):
+        super(TextList, self).__init__()
+        self._ptr = lib.st_add_text_list(parent.ptr, int(w), int(h), int(x), int(y), ui_element.encode('utf-8'),
+                                           ui_category.encode('utf-8'))
+
+    def add_row(self, *args):
+        bargs = list(ffi.new("wchar_t[]", str(a)) for a in args)
+        lib.textlist_add_row(self.ptr, len(bargs), *bargs)
+
+    def set_columns(self, *args):
+        bargs = list(ffi.cast("int32_t", a) for a in args)
+        lib.textlist_set_columns(self.ptr, len(bargs), *bargs)
+
+    def set_selectable(self, flag):
+        pass
+
+    def set_background(self, what):
+        pass
+
+    def set_margin(self, margin):
+        pass
+
+    def set_arrow_column(self, ac):
+        pass
+
+class Game(object): # just a namespace.
+    @staticmethod
+    def tr(state, cstring):
+        return ffi.string(lib.st_translate(state.ptr, cstring)).decode('utf-8')
+
+    @staticmethod
+    def get_bases(state):
+        FAC_CAP = 6*6
+        bases = []
+        idx = 0
+        _c_base = ffi.new("struct _base_t *");
+        _c_facs = ffi.new("struct _facility_t[]", FAC_CAP)
+        while True:
+            rv = lib.get_base_facilities(state.ptr, idx, _c_base, _c_facs, FAC_CAP)
+            if rv <= 0:
+                if idx == 0:  # no bases : game might not be loaded
+                    return None
+                break
+            facilities = []
+            for i in range(rv):
+                f = _c_facs[i]
+                facilities.append({
+                        'type': Game.tr(state, ffi.string(f.id)),
+                        'online': f.online,
+                        'ware_cap': f.ware_capacity,
+                        'crew_cap': f.crew_capacity,
+                        'craft_cap': f.craft_capacity,
+                        'jail_cap': f.jail_capacity,
+                        'jail_type': f.jail_type,
+                        'maintenance': f.maintenance })
+            base = { 'name': ffi.string(_c_base.name), 'idx': _c_base.idx, 'facilities': facilities }
+            bases.append(base)
+            idx += 1
+        return bases
