@@ -63,7 +63,7 @@ def import_modules(drop_old = False):
     if drop_old:
         state_types = {}
     for pname in os.listdir(python_dir):
-        if  pname != '__pycache__' and (pname.endswith('.py') or os.path.isdir(os.path.join(python_dir, pname))):
+        if  pname not in ('api.py', '__pycache__') and (pname.endswith('.py') or os.path.isdir(os.path.join(python_dir, pname))):
             modname = pname
             if pname.endswith('.py'):
                 modname = pname[:-3]
