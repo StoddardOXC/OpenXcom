@@ -99,6 +99,8 @@ public:
 	void btnUfoTrackerClick(Action *action);
 	/// Handler for clicking the TechTreeViewer button.
 	void btnTechTreeViewerClick(Action *action);
+	/// Handler for clicking the Enterprise Resource Management button.
+	void btnEnterpriseResourceManagementClick(Action *action);
 	/// Handler for clicking the [SelectMusicTrack] button.
 	void btnSelectMusicTrackClick(Action *action);
 	/// Handler for clicking the [GlobalResearch] key.

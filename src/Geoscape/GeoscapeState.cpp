@@ -115,6 +115,8 @@
 #include "../Mod/RuleInterface.h"
 #include "../fmath.h"
 
+#include "../Python/module.h"
+
 namespace OpenXcom
 {
 
@@ -243,6 +245,7 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnInterceptClick, Options::keyGeoIntercept);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnUfoTrackerClick, Options::keyGeoUfoTracker);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnTechTreeViewerClick, Options::keyGeoTechTreeViewer);
+	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnEnterpriseResourceManagementClick, Options::keyEnterpriseResourceManagement);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnSelectMusicTrackClick, Options::keySelectMusicTrack);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnGlobalResearchClick, Options::keyGeoGlobalResearch);
 	_btnIntercept->setGeoscapeButton(true);
@@ -2581,6 +2584,11 @@ void GeoscapeState::btnUfoTrackerClick(Action *)
 void GeoscapeState::btnTechTreeViewerClick(Action *)
 {
 	_game->pushState(new TechTreeViewerState());
+}
+
+void GeoscapeState::btnEnterpriseResourceManagementClick(Action *)
+{
+	_game->pushState((State *)pypy_spawn_state("BaseFacilityList", this));
 }
 
 /**
