@@ -45,7 +45,7 @@ def log_verbose(*args):
     lib.logg(LOG_VERBOSE, _log_encode(*args))
 def log_exception(exc_type, exc_value, exc_traceback):
     for l in traceback.format_exception(exc_type, exc_value, exc_traceback):
-        log_error("PyPy: {}".format(l))
+        log_error("PyPy: {}".format(l)[:-1])
     log_fatal("PyPy code threw an exception: fatal.")
 
 def ptr2int(ptr):
