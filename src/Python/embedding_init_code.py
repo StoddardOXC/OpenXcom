@@ -57,11 +57,46 @@ python_dir = None
 
 state_types = {}
 state_instances = {}
+hooks = {}
+
+# default hooks:
+
+def game_abandoned(game):
+    pass
+def game_loaded(game, pod): # pod = Plain Old Data: something deserealized from yaml.
+    pass
+def saving_game(game, pod):
+    pass
+def clock_tick(game, step):
+    pass
+
+def battle_ended(game):
+    return 1
+def craft_shot_down(game, craft):
+    return 1
+def craft_at_target(game, craft, target):
+    return 1
+def alienbase_clicked(game, base, button, kmod):
+    return 1
+def base_clicked(game, base, button, kmod):
+    return 1
+def ufo_clicked(game, ufo, button, kmod):
+    return 1
+def craft_clicked(game, craft, button, kmod):
+    return 1
+
+def transfer_done(game, transfer):
+    return 1
+def research_done(game, research):
+    return 1
+def manufacture_done(game, manufacture):
+    return 1
 
 def import_modules(drop_old = False):
-    global state_types, python_dir
+    global state_types, python_dir, hooks
     if drop_old:
         state_types = {}
+        hooks = {}
     for pname in os.listdir(python_dir):
         if  pname not in ('api.py', '__pycache__') and (pname.endswith('.py') or os.path.isdir(os.path.join(python_dir, pname))):
             modname = pname
@@ -72,18 +107,27 @@ def import_modules(drop_old = False):
             log_info("import {} ({})".format(modname, pname))
             try:
                 mod = importlib.import_module(modname)
-                got_states = set()
+                got_stuff = set()
                 try:
-                    mod.__states__
-                except Exception as e:
-                    log_info("    mod {}: no __states__ : {}".format(modname, e))
-                    continue
+                    mod_states = mod.__states__
+                except:
+                    mod_states = {}
+                try:
+                    mod_hooks = mod.__hooks__
+                except:
+                    mod_hooks = {}
+                if len(mod_states) + len(mod_hooks) == 0:
+                    log_info("    mod {}: no __states__ or __hooks__".format(modname))
+
                 for memtuple in inspect.getmembers(mod):
                     memname, member = memtuple
-                    if memname in mod.__states__:
+                    if memname in mod_states:
                         state_types[memname] = member
-                        got_states.add(memname)
-                log_info("    imported {} [{}]".format(modname, ', '.join(got_states)))
+                        got_stuff.add(memname)
+                    elif memname in mod_hooks:
+                        hooks[memname] = member
+                        got_stuff.add(memname)
+                log_info("    imported {} [{}]".format(modname, ', '.join(got_stuff)))
             except Exception as e:
                 log_fatal("    mod ", modname, ": ", e)
                 raise
@@ -107,6 +151,9 @@ def pypy_initialize(p):
     log_info("PyPy states:")
     for stname in state_types.keys():
         log_info("    ", stname)
+    log_info("PyPy hooks:")
+    for hname in hooks.keys():
+        log_info("    ", hname)
     log_info("PyPy initialized.")
     return 42
 
@@ -125,7 +172,6 @@ def pypy_spawn_state(name, parent):
     log_info("pypy_spawn_state({}): returning {} for {}".format(name, newstate.ptr, newstate))
     return newstate.ptr
 
-
 @ffi.def_extern(onerror = log_exception)
 def pypy_handle_action(action):
     global state_types, state_instances
@@ -143,3 +189,78 @@ def pypy_handle_action(action):
         state_instances[state_id].handle(action)
     else:
         log_error("pypy_handle_action() : state {:x} not registered".format(state_id))
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_game_loaded(game, buffer, bufcap):
+    log_info("pypy_game_loaded(game={:x})".format(game))
+    lib.prepare_static_mod_data(game)
+    pod = None # deserialize it here.
+    hooks['game_loaded'](game, pod)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_saving_game(game, buffer, bufcap):
+    log_info("pypy_saving_game(game={:x})".format(game))
+    pod = saving_game(game)
+    # serialize pod into yaml here
+    # and write into the buffer.
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_game_abandoned(game):
+    log_info("pypy_game_abandoned(game={:x})".format(game))
+    game_abandoned(game)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_clock_tick(game, step):
+    log_info("pypy_clock_tick(game={:x} step={})".format(game, step))
+    clock_tick(game, step)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_battle_ended(game):
+    log_info("pypy_battle_ended(game={:x})".format(game))
+    return battle_ended(game)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_craft_clicked(game, craft, button, kmod):
+    log_info("pypy_craft_clicked(game={:x} craft={:x} btn={:x} kmod={:x})".format(game, craft, button, kmod))
+    return craft_clicked(game, craft, button, kmod)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_ufo_clicked(game, ufo, button, kmod):
+    log_info("pypy_ufo_clicked(game={:x} ufo={:x} btn={:x} kmod={:x})".format(game, base, button, kmod))
+    return ufo_clicked(game, ufo, button, kmod)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_base_clicked(game, base, button, kmod):
+    log_info("pypy_base_clicked(game={:x} base={:x} btn={:x} kmod={:x})".format(game, base, button, kmod))
+    return base_clicked(game, base, button, kmod)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_alienbase_clicked(game, base, button, kmod):
+    log_info("pypy_alienbase_clicked(game={:x} base={:x} btn={:x} kmod={:x})".format(game, base, button, kmod))
+    return alienbase_clicked(game, base, button, kmod)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_craft_at_target(game, craft, target):
+    log_info("pypy_craft_at_target(game={:x} craft={:x} target={:x})".format(game, craft, target))
+    return craft_at_target(game, craft, target)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_craft_shot_down(game, craft):
+    log_info("pypy_craft_shot_down(game={:x} craft={:x})".format(game, craft))
+    return craft_shot_down(game, craft)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_transfer_done(game, transfer):
+    log_info("pypy_transfer_done(game={:x} craft={:x})".format(game, transfer))
+    return transfer_done(game, transfer)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_research_done(game, research):
+    log_info("pypy_research_done(game={:x} craft={:x})".format(game, transfer))
+    return research_done(game, transfer)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_manufacture_done(game, manufacture):
+    log_info("pypy_manufacture_done(game={:x} craft={:x})".format(game, transfer))
+    return manufacture_done(game, transfer)
+

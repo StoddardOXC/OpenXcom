@@ -34,6 +34,7 @@ typedef struct _textlist_t textlist_t;
 typedef struct _textbutton_t textbutton_t;
 typedef struct _text_t text_t;
 typedef struct _state_t state_t;
+typedef struct _game_t game_t;
 
 state_t *new_state(state_t *parent, int32_t w, int32_t h, int32_t x, int32_t y,
 					int32_t anim_type, const char *ui_category,
@@ -54,6 +55,7 @@ void btn_set_keypress_handler(textbutton_t *btn, const char *keyname);
 /* just do something on the AnyKey pressed. */
 void btn_set_anykey_handler(textbutton_t *btn);
 
+void *st_get_window(state_t *st);
 /* just a static text. doesn't need any handlers or other crap */
 void st_add_text(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
 				 const char *ui_element, const char *ui_category,
@@ -64,6 +66,10 @@ textlist_t *st_add_text_list(state_t *st, int32_t w, int32_t h, int32_t x, int32
 								 const char *ui_element, const char *ui_category);
 void textlist_add_row(textlist_t *tl, int cols, ...);
 void textlist_set_columns(textlist_t *tl, int cols, ...);
+void textlist_set_arrow_column(textlist_t *tl, int pos, int orientation);
+void textlist_set_selectable(textlist_t *tl, bool flag);
+void textlist_set_background(textlist_t *tl, void *someptr);
+void textlist_set_margin(textlist_t *tl, int margin);
 
 const char *st_translate(state_t *st, const char *key);
 
@@ -81,15 +87,20 @@ void logg(int level, const char *message);
 /* Game data */
 
 typedef struct _base_t {
+	uintptr_t handle;
 	int32_t idx;
 	const char *name;			// NULL = end of list/no game loaded.
 	int32_t facility_count;		// exact number of facilities in the base
 	int32_t inventory_count;	// ceiling on item count in the base
 } base_t;
 
-#define MAX_JAIL_TYPES 8
+typedef struct _bat_cat_t {
+	const char *id;
+	uint64_t mask;
+} item_category_t;
 
 typedef struct _facility_t {
+	uintptr_t handle;
 	const char *id;				// STR_whatever. NULL for no such facility/invalid base num etc.
 	int32_t online;
 	int32_t ware_capacity;		// vaults
@@ -99,6 +110,115 @@ typedef struct _facility_t {
 	int32_t jail_type;
 	int32_t maintenance;		// monthly cost
 } facility_t;
+
+/* Base inventory: the hierarchy:
+	- just what's in the base at the moment. box_idx = -1.
+	- craft:
+		- craft weapons         	: craft's box_idx
+		- craft weapons' ammo		: craft weapon's box_idx
+		- items						: craft's box_idx
+		- assigned crew				: craft's box_idx
+		- assigned vehicles			: craft's box_idx
+		- assigned vehicles' ammo 	: vehicle's box_idx
+	- unassigned scientists
+	- unassigned engineers
+	- unassigned crew
+	- items in stores
+	- prisoners in jails
+	- researched: box_idx = -2
+	- items researched
+	- prisoners researched
+	- researchers assigned
+	?- craft researched? not possible atm.
+	- manufacturing supply: box_idx = -3
+	- engineers assigned
+	- craft manufactured: should consume a hangar but how? dere's no Craft instance for this. Okay, we'll synth.
+	?- precursor items for manufacturing (not possible now, they are consumed right away)
+	- manufacturing output (single item per job): box_idx = -4
+	- item
+	- craft out of base (craft->getState() == STR_OUT) : box_idx = -5
+	- craft:
+		- craft weapons         	: craft's box_idx
+		- craft weapons' ammo		: craft weapon's box_idx
+		- items						: craft's box_idx
+		- assigned crew				: craft's box_idx
+		- assigned vehicles			: craft's box_idx
+		- assigned vehicles' ammo 	: vehicle's box_idx
+	- transfers: box_idx = -6
+	- crew
+	- researchers
+	- scientists
+	- engineers
+	- crew
+	- items
+	- craft:
+		- craft weapons         	: craft's box_idx
+		- craft weapons' ammo		: craft weapon's box_idx
+		- items						: craft's box_idx
+		- assigned crew				: craft's box_idx
+		- assigned vehicles			: craft's box_idx
+		- assigned vehicles' ammo 	: vehicle's box_idx
+*/
+
+
+typedef enum _item_meta_type {
+	META_GENERIC_ITEM = 0,	// default in case I forgot something
+	META_COMPONENTS,       	// like, alien alloys
+	META_EQUIPMENT,			// what gets loaded onto the craft?
+	META_ARMOR,				// armor kinda.
+	META_CRAFT_EQUPMENT,	// guns and stuff and also ammo
+	META_CRAFT,				// craft, eh
+	META_VEHICLE,			// tanks, maybe. only those loaded in teh craft for now. TODO.
+	META_CREW,				// soldier
+	META_ENGI,				// engineer
+	META_BOFFIN,			// scientist
+	META_PRISONER,			// jailbird
+	META_RESEARCH,			// research project
+	META_MANUFACTURE		// manufacturing project
+} item_meta_type_t;
+
+typedef enum _inventory_box_type { // this is special box_idx values - pseudo containers
+	BOX_STORES 			= -1,
+	BOX_LABS 			= -2,
+	BOX_SHOP_INPUT 		= -3,
+	BOX_SHOP_OUTPUT		= -4,
+	BOX_OUTSIDE 		= -5,
+	BOX_TRANSFERS 		= -6,
+} inventory_box_type_t;
+
+typedef enum _researchablessness_type {
+	RLNT_DONE				= 0, 	// no indicator <- also means ufopaedia should be available for this.
+	RLNT_RIGHT_NOW 			= 1,  	// 'R'
+	RLNT_MISSES_FACILITY 	= 2,	// 'f' (dependencies are met, only facility is missing)
+	RLNT_MISSES_DEPENDENCY	= 3,	// 'p' (and maybe facility too)
+} researchablessness_type_t;
+
+typedef struct _item_t {
+	uintptr_t	handle;			// pointer to Soldier, Craft, CraftWeapon, ResearchProject, etc.
+	int32_t		meta;			// meta type
+	int32_t     box_idx;		// array index for the containing container or specbox
+								// because must unequip to transfer/sell/etc
+	int32_t     amount;			// the whole point of this
+	int32_t		completes_in;	// transfer, repair, reload, manufacturing time left, hours; (inf is 0 for manuf)
+	bool 		in_processing;	// being researched or working in lab/workshop, assigned to a craft, in transfer, etc.
+	bool 		pedia_unlocked;	// pedia article accessible. Hmm. Should be const char * to the pedia article to spawn the state
+	int32_t		researchable;	// some unresearched research depends on this - RLNT_*
+	bool 		precursor;		// some manufacture depends on this
+	bool 		autosell;		// if it gets autosold
+	// the rest depends on the ruleset, not the current state
+	const char *id;				// STR_whatever
+	uint64_t    cats;			// cats. cats are nice.
+	const char *name; 			// craft name if this is a craft, or the alternate item name.
+	int32_t		ware_size;		// what it takes to store..
+	int32_t 	crew_size;		// >1 == too fat ? :)
+	int32_t 	craft_size;		// basically 0 or 1. HMM. but whatever. let it be. maybe we store dinosaur skeletons in hangars
+	int32_t 	jail_size; 		// idk why reapers take only one jail cell
+	int32_t 	jail_type;		// https://openxcom.org/forum/index.php/topic,4830.msg69933.html#msg69933
+	int32_t 	buy_price;
+	int32_t 	rent_price;
+	int32_t 	sell_price;
+} item_t;
+
 // good old C - fac_vec is expected to hold at least fac_cap structs.
 // we can return ptr-to-prt to a buffer of structs internally allocated as std::vector
 // and then interned, but memory consumption then depends on usage patterns
@@ -110,6 +230,43 @@ typedef struct _facility_t {
 
 // just iterate over base_idx until you get -1 as rv. Returns the index of the base otherwise.
 int32_t get_base_facilities(state_t *st, int32_t base_idx, base_t *base, facility_t *fac_vec, size_t fac_cap);
+// same here. returns number of items written or -1 in case of no such base.
+int32_t get_base_inventory(state_t *st, int32_t base_idx, item_t *item_vec, size_t item_cap);
+// same here.
+//int32_t get_item_categories(state_t *st, item_category_t *cat_vec, size_t cat_cap);
+/* vanilla transfer cost multipliers; not moddable:
+	- Soldier:		 5
+	- Craft:		25
+	- Scientist:	 5
+	- Engineer:		 5
+	- Item:			 1
+
+	Multiplier multiplies straight line (not great arc) distance between bases on a sphere of R=51.2 (don't ask...) */
+int32_t transfer_cost(uintptr_t base_a, uintptr_t base_b, int32_t multiplier);
+
+// the meat of the thing
+int32_t buy_items(state_t *st, uintptr_t base_handle, const char *item_type, int32_t amount, int32_t unit_buy_price, int32_t time);
+int32_t buy_craft(state_t *st, uintptr_t base_handle, const char *craft_type, int32_t amount, int32_t unit_buy_price, int32_t time);
+int32_t hire_crew(state_t *st, uintptr_t base_handle, const char *crew_type, int32_t amount, int32_t unit_buy_price, int32_t time);
+int32_t hire_engi(state_t *st, uintptr_t base_handle, int32_t amount, int32_t unit_buy_price, int32_t time);
+int32_t hire_boffins(state_t *st, uintptr_t base_handle, int32_t amount, int32_t unit_buy_price, int32_t time);
+
+int32_t sell_items(state_t *st, uintptr_t base_handle, const char *item_type, int32_t amount, int32_t unit_sale_price);
+int32_t sell_craft(state_t *st, uintptr_t base_handle, uintptr_t handle, int32_t unit_sale_price);
+int32_t sack_crew(state_t *st, uintptr_t base_handle, uintptr_t handle, int32_t unit_sale_price);
+int32_t sack_engi(state_t *st, uintptr_t base_handle, int32_t amount, int32_t unit_sale_price);
+int32_t sack_boffins(state_t *st, uintptr_t base_handle, int32_t amount, int32_t unit_sale_price);
+
+int32_t transfer_items(state_t *st, uintptr_t base_from, uintptr_t base_to, const char *item_type, int32_t amount, int32_t time, int32_t unit_cost);
+int32_t transfer_craft(state_t *st, uintptr_t base_from, uintptr_t base_to, uintptr_t handle, int32_t time, int32_t cost);
+int32_t transfer_crew(state_t *st, uintptr_t base_from, uintptr_t base_to, uintptr_t handle, int32_t time, int32_t cost);
+int32_t transfer_engi(state_t *st, uintptr_t base_from, uintptr_t base_to, int32_t amount, int32_t time, int32_t unit_cost);
+int32_t transfer_boffins(state_t *st, uintptr_t base_from, uintptr_t base_to, int32_t amount, int32_t time, int32_t unit_cost);
+
+int32_t research_stuff(state_t *st,  uintptr_t base_handle, const char *item_type, int32_t workforce);
+
+// load various sets and stuff. unconditionally called at game_loaded.
+void prepare_static_mod_data(uintptr_t game);
 #ifdef __cplusplus
 } // extern "C" - this comment is required due to pypy/cffi build system
 #endif

@@ -246,6 +246,7 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnUfoTrackerClick, Options::keyGeoUfoTracker);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnTechTreeViewerClick, Options::keyGeoTechTreeViewer);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnEnterpriseResourceManagementClick, Options::keyEnterpriseResourceManagement);
+	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnExecutiveSummaryClick, Options::keyExecutiveSummary);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnSelectMusicTrackClick, Options::keySelectMusicTrack);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnGlobalResearchClick, Options::keyGeoGlobalResearch);
 	_btnIntercept->setGeoscapeButton(true);
@@ -2586,9 +2587,15 @@ void GeoscapeState::btnTechTreeViewerClick(Action *)
 	_game->pushState(new TechTreeViewerState());
 }
 
+void GeoscapeState::btnExecutiveSummaryClick(Action *)
+{
+	_game->pushState((State *)pypy_spawn_state("ExecutiveSummary", this));
+}
+
+
 void GeoscapeState::btnEnterpriseResourceManagementClick(Action *)
 {
-	_game->pushState((State *)pypy_spawn_state("BaseFacilityList", this));
+	_game->pushState((State *)pypy_spawn_state("EnterpriseResourceManagement", this));
 }
 
 /**

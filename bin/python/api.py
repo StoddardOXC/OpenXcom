@@ -51,6 +51,8 @@ ACTION_MOUSEPRESS       = 7
 ACTION_MOUSERELEASE     = 8
 ACTION_CHANGE           = 9
 
+ARROW_VERTICAL          = 0
+ARROW_HORIZONTAL        = 1
 
 # TODO: don't repeat this here; somehow import from the embedding_init_code.
 LOG_FATAL   = 0
@@ -75,6 +77,17 @@ def log_debug(*args):
     lib.logg(LOG_DEBUG, _log_encode(*args))
 def log_verbose(*args):
     lib.logg(LOG_VERBOSE, _log_encode(*args))
+
+BOX_NAMES = { # TODO: those should be translation keys
+    -1: "Stores",
+    -2: "Laboratories",
+    -3: "Workshop input",
+    -4: "Workshop output",
+    -5: "On a mission from god",
+    -6: "Incoming transfers",
+    -7: "Unknown",
+    -8: "Up a shit creek without a paddle",
+}
 
 def ptr2int(ptr):
     return int(ffi.cast("uintptr_t", ptr))
@@ -102,11 +115,16 @@ class State(object):
             self._parent_st = parent
 
         self._st = lib.new_state(parent, w, h, x, y, popmode, ui_category.encode('utf-8'), bg.encode('utf-8'))
+        self._window = lib.st_get_window(self._st)
         self.elements = {} # keyed by the ptr of the C++ object.
 
     @property
     def ptr(self):
         return self._st
+
+    @property
+    def window(self):
+        return self._window
 
     def tr(self, key):
         """ access translations """
@@ -194,21 +212,36 @@ class TextList(InteractiveSurface):
         lib.textlist_set_columns(self.ptr, len(bargs), *bargs)
 
     def set_selectable(self, flag):
-        pass
+        lib.textlist_set_selectable(self.ptr, flag)
 
-    def set_background(self, what):
-        pass
+    def set_background(self, bg):
+        lib.textlist_set_background(self.ptr, bg)
 
     def set_margin(self, margin):
+        lib.textlist_set_margin(self.ptr, margin)
+
+    def set_arrow_column(self, posn, ori):
+        lib.textlist_set_arrow_column(self.ptr, posn, ori)
+
+    def on_right_arrow_click(self, button, handler):
         pass
 
-    def set_arrow_column(self, ac):
+    def on_left_arrow_click(self, button, handler):
+        pass
+
+    def on_row_click(self, button, handler):
         pass
 
 class Game(object): # just a namespace.
     @staticmethod
-    def tr(state, cstring):
-        return ffi.string(lib.st_translate(state.ptr, cstring)).decode('utf-8')
+    def tr(state, cstring): # csting mub
+        if type(cstring) is bytes:
+            return ffi.string(lib.st_translate(state.ptr, cstring)).decode('utf-8')
+        elif type(cstring) is str:
+            return ffi.string(lib.st_translate(state.ptr, cstring.encode('utf-8'))).decode('utf-8')
+        else:
+            print(repr(cstring))
+            raise Hell
 
     @staticmethod
     def get_bases(state):
@@ -229,13 +262,54 @@ class Game(object): # just a namespace.
                 facilities.append({
                         'type': Game.tr(state, ffi.string(f.id)),
                         'online': f.online,
+                        'handle': f.handle,
                         'ware_cap': f.ware_capacity,
                         'crew_cap': f.crew_capacity,
                         'craft_cap': f.craft_capacity,
                         'jail_cap': f.jail_capacity,
                         'jail_type': f.jail_type,
                         'maintenance': f.maintenance })
-            base = { 'name': ffi.string(_c_base.name), 'idx': _c_base.idx, 'facilities': facilities }
+            base = {
+                    'name': ffi.string(_c_base.name).decode('utf-8'),
+                    'idx': _c_base.idx,
+                    'handle': _c_base.handle,
+                    'facilities': facilities,
+                    'inventory_count':  _c_base.inventory_count
+            }
             bases.append(base)
             idx += 1
         return bases
+
+    @staticmethod
+    def get_base_inventory(state, base_idx, item_cap):
+        item_vec = ffi.new("struct _item_t[]", item_cap)
+        item_count = lib.get_base_inventory(state.ptr, base_idx, item_vec, item_cap)
+        rv = []
+        for idx in range(item_count):
+            item = item_vec[idx]
+            name = ffi.string(item.name).decode("utf-8") if item.name != ffi.NULL else None
+            item_id = ffi.string(item.id).decode('utf-8') if item.id != ffi.NULL else None
+            rv.append({
+                'id': item_id,
+                'cats': item.cats,
+                'name': name,
+                'box_idx': item.box_idx,
+                'amount': item.amount,
+                'meta': item.meta,
+                'handle': item.handle,
+                'completes_in': item.completes_in,
+                'pedia_unlocked': item.pedia_unlocked,
+                'in_processing': item.in_processing,
+                'researchable': item.researchable,
+                'precursor': item.precursor,
+                'autosell': item.autosell,
+                'ware_size': item.ware_size,
+                'crew_size': item.crew_size,
+                'craft_size': item.craft_size,
+                'jail_size': item.jail_size,
+                'jail_type': item.jail_type,
+                'buy_price': item.buy_price,
+                'rent_price': item.rent_price,
+                'sell_price': item.sell_price,
+            })
+        return rv
