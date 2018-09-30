@@ -157,8 +157,25 @@ def pypy_initialize(p):
     log_info("PyPy initialized.")
     return 42
 
+# What happens is that this constructs a pypy state object by class name.
+#
+# State class' base class (State) constructor calls lib.new_state(),
+# which constructs a C++ object derived from oxce's State class.
+#
+# Then the constructed pypy state object inherits the ptr property,
+# which basically returns C++ object's address, which is used as key
+# in a dict used to dispatch events coming up from the oxce engine
+# such as input events and blit requests.
+#
+# A game frame is processed as follows:
+#
+# - all input events are converted to Action-s and fed to the topmost State only.
+# - topmost State's think() method is called.
+# - all States' blit() method is called.
+#
+#
 @ffi.def_extern(onerror = log_exception)
-def pypy_spawn_state(name, parent):
+def pypy_spawn_state(name):
     global state_types, state_instances
     name = ffi.string(name).decode('utf-8')
     try:
@@ -166,27 +183,36 @@ def pypy_spawn_state(name, parent):
     except KeyError:
         log_error("pypy_spawn_state({}): state class not found".format(name))
         return ffi.NULL
-    newstate = state_types[name](parent)
-    key = int(ffi.cast("uintptr_t", newstate.ptr))
-    state_instances[key] = newstate
+    newstate = state_types[name]()
+    state_id = ptr2int(newstate.ptr)
+    state_instances[state_id] = newstate
     log_info("pypy_spawn_state({}): returning {} for {}".format(name, newstate.ptr, newstate))
     return newstate.ptr
 
 @ffi.def_extern(onerror = log_exception)
-def pypy_handle_action(action):
+def pypy_state_input(state_ptr):
     global state_types, state_instances
-    """ here we dispatch the action to its target, again """
-    log_info("pypy_handle_action(st={:x}, el={:x}, is_mouse={} button={} kmod={:x} key={:x}".format(
-        ptr2int(action.state), ptr2int(action.element), action.is_mouse, action.button,
-        action.kmod, action.key))
-
-    for ikey, instance in state_instances.items():
-        log_info("pypy_handle_action(): state_instance  {:x} -> {!r}".format( ptr2int(ikey), instance))
-
-    state_id = ptr2int(action.state)
-    log_info("pypy_handle_action(): target state {:x}".format(state_id))
+    state_id = ptr2int(state_ptr)
     if state_id in state_instances:
-        state_instances[state_id].handle(action)
+        state_instances[state_id]._inner_handle()
+    else:
+        log_error("pypy_state_input() : state {:x} not registered".format(state_id))
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_state_blit(state_ptr):
+    global state_types, state_instances
+    state_id = ptr2int(state_ptr)
+    if state_id in state_instances:
+        state_instances[state_id]._inner_blit()
+    else:
+        log_error("pypy_state_blit() : state {:x} not registered".format(state_id))
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_state_think(state_ptr):
+    global state_types, state_instances
+    state_id = ptr2int(state_ptr)
+    if state_id in state_instances:
+        state_instances[state_id]._inner_think()
     else:
         log_error("pypy_handle_action() : state {:x} not registered".format(state_id))
 

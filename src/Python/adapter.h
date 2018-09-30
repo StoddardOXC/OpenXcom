@@ -36,41 +36,15 @@ typedef struct _text_t text_t;
 typedef struct _state_t state_t;
 typedef struct _game_t game_t;
 
-state_t *new_state(state_t *parent, int32_t w, int32_t h, int32_t x, int32_t y,
-					int32_t anim_type, const char *ui_category,
-					const char *background);
-
-void push_state(state_t *state);
-void pop_state(state_t *state);
-
-textbutton_t *st_add_text_button(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
-					const char *ui_element, const char *ui_category, const char *text_utf8);
-
-void btn_set_high_contrast(textbutton_t *btn, bool high_contrast);
-void btn_set_text_utf8(textbutton_t *btn, const char *text);
-void btn_set_click_handler(textbutton_t *btn, int button);
-
-/* keyname is a string corresponding to an OptionsInfo's _id for a keybinding */
-void btn_set_keypress_handler(textbutton_t *btn, const char *keyname);
-/* just do something on the AnyKey pressed. */
-void btn_set_anykey_handler(textbutton_t *btn);
-
-void *st_get_window(state_t *st);
-/* just a static text. doesn't need any handlers or other crap */
-void st_add_text(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
-				 const char *ui_element, const char *ui_category,
-				 int32_t halign, int32_t valign,
-				 bool do_wrap, bool is_big, const char *text_utf8);
-
-textlist_t *st_add_text_list(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
-								 const char *ui_element, const char *ui_category);
-void textlist_add_row(textlist_t *tl, int cols, ...);
-void textlist_set_columns(textlist_t *tl, int cols, ...);
-void textlist_set_arrow_column(textlist_t *tl, int pos, int orientation);
-void textlist_set_selectable(textlist_t *tl, bool flag);
-void textlist_set_background(textlist_t *tl, void *someptr);
-void textlist_set_margin(textlist_t *tl, int margin);
-
+state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category);
+void st_clear(state_t *state);
+void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);
+void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc);
+uintptr_t st_intern_sub(state_t *state, const char *name, int32_t idx);
+uintptr_t st_intern_surface(state_t *state, const char *name);
+uintptr_t st_intern_text(state_t *state, int32_t w, int32_t h, const char *text, int32_t halign, int32_t valign, int32_t wrap,
+		int32_t primary, int32_t secondary, int32_t is_small);
+void st_play_ui_sound(state_t *state, const char *name);
 const char *st_translate(state_t *st, const char *key);
 
 /* log levels:

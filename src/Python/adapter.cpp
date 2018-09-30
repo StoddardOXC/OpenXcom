@@ -20,9 +20,15 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <cmath>
+#include <iostream>
+#include <string>
+#include <locale>
+#include <codecvt>
 
 #include "module.h" // for the action_t
 #include "adapter.h"
+
+#include "SDL_mixer.h"
 
 #include "../Engine/Language.h"
 #include "../Engine/Logger.h"
@@ -36,6 +42,10 @@
 #include "../Engine/Exception.h"
 #include "../Engine/Options.h"
 #include "../Engine/CrossPlatform.h"
+#include "../Engine/Sound.h"
+#include "../Interface/Window.h"
+#include "../Interface/Text.h"
+#include "../Interface/TextButton.h"
 #include "../Mod/Mod.h"
 #include "../Mod/RuleItem.h"
 #include "../Mod/RuleSoldier.h"
@@ -44,11 +54,8 @@
 #include "../Engine/LocalizedText.h"
 #include "../Engine/State.h"
 #include "../Engine/Logger.h"
-#include "../Interface/TextButton.h"
-#include "../Interface/Window.h"
-#include "../Interface/Text.h"
-#include "../Interface/TextList.h"
-#include "../Interface/ArrowButton.h"
+#include "../Engine/Surface.h"
+#include "../Engine/SurfaceSet.h"
 #include "../Savegame/Production.h"
 #include "../Savegame/ResearchProject.h"
 #include "../Savegame/Transfer.h"
@@ -87,52 +94,133 @@ void logg(int level, const char *message) {
 		exit(0);
 }
 //}
-//{ ui
+//{ ui hook
+/* this state is an ui container.
+ * exists to grab input from and return a single surface to the engine
+ * incidentally helds some stuff like strings for passing into python code
+*/
 struct _state_t : public State {
-	Window *_window;
+	Surface *_surface;
+	int32_t _w, _h, _x, _y;
+	double _xscale, _yscale;
+	int32_t _left, _top;
 	std::string _id, _category;
 	std::vector<std::string *> _interned_strings;
+	std::vector<Surface *> _interned_surfaces;
+	std::vector<Text *> _interned_texts;
 
-	_state_t(State *parent, int32_t w, int32_t h, int32_t x, int32_t y, WindowPopup anim_type,
-			 const char *ui_category, const char *background) {
+	// input state
+	int32_t _mousebuttons; // pressed/released bitmap
+	int32_t _mousex, _mousey;
+	int32_t _keysym, _keymod, _keyunicode;
 
-		_screen = false; // wtf is this, aha, it's if it replaces the whole screen. ok.
+	_state_t(int32_t w, int32_t h, int32_t x, int32_t y, const std::string &id, const std::string &category) {
+		_screen = false; // it's if it replaces the whole screen, so no.
+		_surface = new Surface(w, h, x, y); // our blit target
+		bool alterpal = false;
+		setInterface(category, alterpal, _game->getSavedGame() ? _game->getSavedGame()->getSavedBattle() : 0);
+		add(_surface, id, category); // this calls setPalette on it... hmm. ah, to hell with it.
 
-		_window = new Window(this, w, h, x, y, anim_type);
-
-		// here go elements' constuctors in the openxcom code.
-
-		// "geoscape" is the ui_category
-		const bool alterPal = false;
-		setInterface(ui_category, alterPal, _game->getSavedGame() ? _game->getSavedGame()->getSavedBattle() : 0);
-
-		auto bg_surface = _game->getMod()->getSurface(background);
-		if (bg_surface)
-			_window->setBackground(bg_surface);
-		else
-			Log(LOG_ERROR) << "_state_t(): failed to get background surface" << background;
-
-		add(_window, "window", ui_category);
+		_mousebuttons = 0;
+		_mousex = 0;
+		_mousey = 0;
+		_keysym = -1;
+		_keymod = 0;
+		_keyunicode = -1;
 	}
-	~_state_t() { for (auto is: _interned_strings) { delete is; } }
+	/// Initializes the state. All done in the constructor. Just activates itself here.
+	virtual void init() { /* _game->pushState(this); */}
 
-	// a chance to do something before elements get to it
-	// for now just does nothing
-	void handle(Action *action) { State::handle(action); }
+	void set_mb_state(int button, bool pressed) {
+		if (pressed) {
+			_mousebuttons |= 1<<button;
+		} else {
+			_mousebuttons &= ~(1<<button);
+		}
+	}
+	// converts coords, also checks if it's in our box.
+	bool set_mouse_posn(int sx, int sy) {
+		if ((sx < _left+_x) or (sy < _top+_y) or (sx >= _left+_x+_w) or (sy >= _top+_y+_h)) {
+			// outside of our box
+			return false;
+		}
+		_mousex = (int32_t)((sx - _left - _x) / _xscale);
+		_mousey = (int32_t)((sy - _top - _y) / _yscale);
+		return true;
+	}
+	// pass input events up to pypy code
+	// Action gets here before the souping up in InteractiveSurface::handle
+	// so we must do that here. Besides the SDL_Event, this provides
+	// scale and offset of the draw area so that we can transform the mouse coords
+	// and filter'em based on coords.
+	//
+	// to get rid of input drops due to low frame rate
+	// we can run the logic for each event without rendering
+	// then run it again for the last event with rendering. hmm. let's see.
+	virtual void handle(Action *action) {
+		bool pass_on = false;
+		_xscale = action->getXScale();
+		_yscale = action->getYScale();
+		_left = action->getLeftBlackBand();
+		_top = action->getTopBlackBand();
+		SDL_Event *ev = action->getDetails();
+		switch (ev->type) {
+			case SDL_MOUSEBUTTONUP:
+				if(set_mouse_posn(ev->button.x, ev->button.y)) {
+					set_mb_state(ev->button.button, false);
+					Log(LOG_INFO) << "SDL_MOUSEBUTTONUP" << ((int)(ev->button.button));
+					pass_on = true;
+				}
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if(set_mouse_posn(ev->button.x, ev->button.y)) {
+					set_mb_state(ev->button.button, true);
+					Log(LOG_INFO) << "SDL_MOUSEBUTTONDOWN" << ((int)(ev->button.button));
+					pass_on = true;
+				}
+				break;
+			case SDL_MOUSEMOTION:
+				if(set_mouse_posn(ev->motion.x, ev->motion.y)) {
+					pass_on = true;
+				}
+				break;
+			case SDL_KEYDOWN:
+				_keysym = ev->key.keysym.sym;
+				_keymod = ev->key.keysym.mod;
+				Log(LOG_INFO) << "SDL_KEYDOWN" << ((int)(ev->key.keysym.sym));
+				break;
+			case SDL_KEYUP:
+				break;
+			default:
+				break;
+		}
+		if (pass_on) {
+			pypy_state_input(this);
+		}
+		// reset kbd data
+		_keysym = -1;
+		_keyunicode = -1;
+		// keep _keymod
+		//State::handle(action); why?
+	}
 
-	// an explicitly empty handler that does nothing.
-	// used for signalling the openxcom code that the event is handled.
-	// see
-	void empty_handler(Action *action, State *state) { }
+	/// Runs state functionality every cycle.
+	virtual void think() {
+		Log(LOG_INFO)<<"state_t::think()";
+		pypy_state_think(this);
+	}
 
-	// push it. do it after init, if ever.
-	void push_self() { centerAllSurfaces(); _game->pushState(this); } // showAll(); } //_window->popup(); }
+	/// Blits the state to the screen.
+	virtual void blit() {
+		Log(LOG_INFO)<<"state_t::blit()";
+		pypy_state_blit(this); // draw to the underlying surface
+		State::blit(); // blit to the actual screen
+	}
 
-	// pop self
+	virtual void resize(int &dX, int &dY) { Log(LOG_ERROR)<< "state_t::resize(): not implemented. " << dX << ":" <<dY; }
+
+	// pop self assuming we're the last.
 	void pop_self() { _game->popState(); }
-
-	Window *get_window() { return _window; }
-	void toggle_screen() { toggleScreen(); }
 
 	// get game
 	Game *get_game() { return _game; }
@@ -143,227 +231,119 @@ struct _state_t : public State {
 		_interned_strings.push_back(is);
 		return is->c_str();
 	}
-
 	// same for the disgusting wstrings
 	const char *intern_string(const std::wstring &ws) {
 		return intern_string(Language::wstrToUtf8(ws));
 	}
-};
-
-// gives a bit of info to the handler, so it's not completely in the dark about what happened
-static action_t convert_action(State *state, InteractiveSurface *element, Action *action, action_type_t atype) {
-	action_t rv;
-
-	rv.state = state;
-	rv.element = element;
-	rv.atype = atype;
-	rv.is_mouse = action->isMouseAction();
-	rv.kmod = SDL_GetModState();
-
-	auto ev = action->getDetails();
-	rv.key = ev->key.keysym.sym;
-	rv.button = ev->button.button; // yeah, might not be defined.
-	return rv;
-}
-
-// have to derive our own classes on top of supported UI elements
-// to reroute events to our own hanlders.
-struct _textbutton_t : public TextButton {
-
-	_textbutton_t(int w, int32_t h, int32_t x, int32_t y, const char *text_utf8) : TextButton(w, h, x, y) {
-		setText(Language::utf8ToWstr(text_utf8));
+	void intern_surface(Surface *s) {
+		_interned_surfaces.push_back(s);
 	}
-
-	void set_click_handler(int32_t button) {
-		// state that the action is handled
-		onMouseClick((ActionHandler)&state_t::empty_handler, button);
-		// our own handler was set in the python code.
+	void intern_text(Text *t) {
+		_interned_texts.push_back(t);
 	}
-	void set_keypress_handler(const char *keyname) {
-		auto optvec = Options::getOptionInfo();
-		// do a table scan, we have cycles to burn here.
-		// maybe later convert it to a local hash, but how to restock it after options screen?
-		for (auto i = optvec.cbegin(); i != optvec.cend(); ++i) {
-			if (i->type() == OPTION_KEY and i->id() == keyname) {
-				onKeyboardPress((ActionHandler)(&_state_t::empty_handler), *(i->asKey()));
-				return;
-			}
-		}
-	}
-	void set_anykey_handler() {
-		onKeyboardPress((ActionHandler)(&_state_t::empty_handler));
-	}
-	virtual void mouseClick(Action *action, State *state) {
-		//TextButton::mousePress(action, state);
-		Log(LOG_INFO)<<"_textbutton_t::mouseClick(): handling, btn: " << ((int)action->getDetails()->button.button);
-		// if we're here, the handler for the action was registered.
-		// so we just set up action_t and pass it for dispatch to the python code.
-		auto our_action = convert_action(state, this, action, ACTION_MOUSECLICK);
-		pypy_handle_action(&our_action);
-	}
-	virtual void keyboardPress(Action *action, State *state) {
-		//TextButton::keyboardPress(action, state);
-		Log(LOG_INFO)<<"_textbutton_t::keyboardPress(): handling, keysym: "<<action->getDetails()->key.keysym.sym;
-		auto our_action = convert_action(state, this, action, ACTION_KEYBOARDPRESS);
-		pypy_handle_action(&our_action);
+	~_state_t() {
+		// _surface is deleted in State destructor
+		// interned surfaces are supposed to be mods' surfaces so no deletion here
+		for (auto is: _interned_strings) { delete is; }
+		for (auto it: _interned_texts) { delete it; }
 	}
 };
 
-// parent gets passed with events.
-state_t *new_state(state_t *parent, int32_t w, int32_t h, int32_t x, int32_t y,
-				   int32_t anim_type, const char *ui_category,  const char *background) {
-	WindowPopup at_enum;
-	switch (anim_type) {
+std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> _wsconverter;
+static std::wstring utf8_to_wstr(const char *str) { return  _wsconverter.from_bytes(str); }
+
+state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category) {
+	return new state_t(w, h, x, y, ui_id, ui_category);
+}
+
+void st_pop_self(state_t *state) { state->pop_self(); delete state; }
+void st_clear(state_t *state) { state->_surface->clear(0); }
+void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color) { state->_surface->drawRect(x, y, w, h, color); }
+void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc) {
+	Surface *src = reinterpret_cast<Surface *>(upsrc);
+	src->setX(dst_x);
+	src->setY(dst_y);
+	src->getCrop()->x = src_x;
+	src->getCrop()->y = src_y;
+	src->getCrop()->w = src_w;
+	src->getCrop()->h = src_h;
+	src->blit(state->_surface);
+}
+uintptr_t st_intern_surface(state_t *state, const char *name) {
+	auto src = state->get_game()->getMod()->getSurface(name);
+	if (src == NULL) {
+		Log(LOG_ERROR) << "Surface '" << name << "' not found";
+		return 0;
+	}
+	state->intern_surface(src);
+	return reinterpret_cast<uintptr_t>(src);
+}
+uintptr_t st_intern_sub(state_t *state, const char *name, int32_t idx) {
+	auto srcset = state->get_game()->getMod()->getSurfaceSet(name, false);
+	if (srcset == NULL) {
+		Log(LOG_ERROR) << "SurfaceSet '" << name << "' not found";
+		return 0;
+	}
+	auto src = srcset->getFrame(idx);
+	if (src == NULL) {
+		Log(LOG_ERROR) << "Surface '" << name << "[" << idx << "]' not found";
+		return 0;
+	}
+	state->intern_surface(src);
+	return reinterpret_cast<uintptr_t>(src);
+}
+uintptr_t st_intern_text(state_t *state, int32_t w, int32_t h, const char *text, int32_t halign, int32_t valign, int32_t wrap,
+		int32_t primary, int32_t secondary, int32_t is_small) {
+
+	Options::debugUi = true;
+	auto _text = new Text(w, h, 0, 0);
+	_text->initText(state->get_game()->getMod()->getFont("FONT_BIG"),
+					state->get_game()->getMod()->getFont("FONT_SMALL"),
+					state->get_game()->getLanguage());
+	if (is_small) { _text->setSmall(); } else { _text->setBig(); }
+	_text->setPalette(state->getPalette());
+	_text->setColor(primary);
+	_text->setSecondaryColor(secondary);
+	switch (halign) {
 		case 0:
-			at_enum = POPUP_NONE;
+			_text->setAlign(ALIGN_LEFT);
 			break;
 		case 1:
-			at_enum = POPUP_HORIZONTAL;
+			_text->setAlign(ALIGN_CENTER);
 			break;
 		case 2:
-			at_enum = POPUP_VERTICAL;
-			break;
-		case 3:
-		default:
-			at_enum = POPUP_BOTH;
+			_text->setAlign(ALIGN_RIGHT);
 			break;
 	}
-	return new _state_t(parent, w, h, x, y, at_enum, ui_category, background);
-}
-
-void push_state(state_t *state) {
-  state->push_self();
-}
-
-void pop_state(state_t *state) {
-  state->pop_self();
-}
-
-void *st_get_window(state_t *st) {
-	return st->get_window();
-}
-
-void st_add_element(state_t *st,const char *ui_element, const char *ui_category) {
-	//st->add(
-}
-
-textbutton_t *st_add_text_button(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
-								 const char *ui_element, const char *ui_category, const char *text_utf8) {
-	  auto rv = new textbutton_t(w, h, x, y, text_utf8);
-	  st->add(rv, ui_element, ui_category);
-	  return rv;
-}
-
-void btn_set_text_utf8(textbutton_t *btn, const char *text) {
-	btn->setText(Language::utf8ToWstr(text));
-}
-
-void btn_set_high_contrast(textbutton_t *btn, bool high_contrast) {
-	btn->setHighContrast(high_contrast);
-}
-
-void btn_set_click_handler(textbutton_t *btn, int32_t button) {
-	btn->set_click_handler(button);
-}
-
-/* keyname is a string corresponding to an OptionsInfo's _id for a keybinding */
-void btn_set_keypress_handler(textbutton_t *btn, const char *key) {
-	btn->set_keypress_handler(key);
-}
-
-void btn_set_anykey_handler(textbutton_t *btn) {
-	btn->set_anykey_handler();
-}
-
-/* just a static text. doesn't need any action handlers or other methods, thus no object. */
-void st_add_text(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
-				 const char *ui_element, const char *ui_category,
-				 int32_t halign, int32_t valign, bool do_wrap, bool is_big, const char *text_utf8) {
-	auto text = new Text(w, h, x, y);
-	if (is_big)
-		text->setBig();
-	else
-		text->setSmall();
-	if (do_wrap)
-		text->setWordWrap(do_wrap);
-	text->setText(Language::utf8ToWstr(text_utf8));
-
-	// enum TextHAlign { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
-	// enum TextVAlign { ALIGN_TOP, ALIGN_MIDDLE, ALIGN_BOTTOM };
-
-	switch(halign) {
-		default:
+	switch (valign) {
 		case 0:
-			text->setAlign(ALIGN_LEFT);
+			_text->setVerticalAlign(ALIGN_TOP);
 			break;
 		case 1:
-			text->setAlign(ALIGN_CENTER);
+			_text->setVerticalAlign(ALIGN_MIDDLE);
 			break;
 		case 2:
-			text->setAlign(ALIGN_RIGHT);
-			break;
-		}
-	switch(valign) {
-		default:
-		case 0:
-			text->setVerticalAlign(ALIGN_TOP);
-			break;
-		case 1:
-			text->setVerticalAlign(ALIGN_MIDDLE);
-			break;
-		case 2:
-			text->setVerticalAlign(ALIGN_BOTTOM);
+			_text->setVerticalAlign(ALIGN_BOTTOM);
 			break;
 	}
-	st->add(text, ui_element, ui_category);
+	_text->setText(utf8_to_wstr(text));
+	_text->draw();
+	state->intern_text(_text);
+	return reinterpret_cast<uintptr_t>(_text);
 }
-
-// enum ArrowOrientation { ARROW_VERTICAL, ARROW_HORIZONTAL };   0, 1
-
-
-struct _textlist_t : public TextList {
-	_textlist_t(int w, int32_t h, int32_t x, int32_t y) : TextList(w, h, x, y) { }
-
-	void onLeftArrowClick(Action *a) { }
-	void onRightArrowClick(Action *a) { }
-};
-textlist_t *st_add_text_list(state_t *st, int32_t w, int32_t h, int32_t x, int32_t y,
-								 const char *ui_element, const char *ui_category) {
-
-	  auto rv = new textlist_t(w, h, x, y);
-	  st->add(rv, ui_element, ui_category);
-	  return rv;
+void st_play_ui_sound(state_t *state, const char *name) {
+	auto s = std::string(name);
+	if (s == "BUTTON_PRESS") { TextButton::soundPress->play(Mix_GroupAvailable(0)); }
+	else if (s == "WINDOW_POPUP_0") { Window::soundPopup[0]->play(Mix_GroupAvailable(0)); }
+	else if (s == "WINDOW_POPUP_1") { Window::soundPopup[1]->play(Mix_GroupAvailable(0)); }
+	else if (s == "WINDOW_POPUP_2") { Window::soundPopup[2]->play(Mix_GroupAvailable(0)); }
+	else { Log(LOG_ERROR) << "unsuppored ui sound '" << s << "'"; }
 }
-void textlist_add_row(textlist_t *tl, int cols, ...)  {
-	va_list args;
-	va_start(args, cols);
-	tl->vAddRow(cols, args);
-	va_end(args);
-}
-void textlist_set_columns(textlist_t *tl, int cols, ...)  {
-	va_list args;
-	va_start(args, cols);
-	tl->vSetColumns(cols, args);
-	va_end(args);
-}
-void textlist_set_selectable(textlist_t *tl, bool flag)  {\
-	tl->setSelectable(flag);
-}
-void textlist_set_arrow_column(textlist_t *tl, int pos, int orientation)  {
-	tl->setArrowColumn(pos, orientation ? ARROW_HORIZONTAL : ARROW_VERTICAL);
-}
-void textlist_set_background(textlist_t *tl, void *someptr)  {
-	tl->setBackground(static_cast<Surface *>(someptr));
-}
-void textlist_set_margin(textlist_t *tl, int margin)  {
-	tl->setMargin(margin);
-}
-
-//} ui
+//}
 //{ translations
 // just so we have some lifetime to the values returned by st_translate().
 std::unordered_map<std::string, std::string> translations;
-void pypy_reset_translations(void) {
+void reset_translations(void) {
 	translations.clear();
 }
 /* get STR_whatever translations in utf8 */

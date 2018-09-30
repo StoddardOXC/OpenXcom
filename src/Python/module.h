@@ -38,60 +38,14 @@ typedef struct {
 	const char *data_dir;
 } pypy_syspaths_t;
 
-/* what ons/action listeners do we have :
-	onChange                    -- ComboBox, TextEdit, Slider
-	onEnter                     -- TextEdit
-	onLeftArrowClick            -- TextList ...
-	onLeftArrowPress
-	onLeftArrowRelease
-	onRightArrowClick
-	onRightArrowPress
-	onRightArrowRelease         -- ... TextList
-	onListMouseIn               -- ComboBox ...
-	onListMouseOut
-	onListMouseOver             -- ... ComboBox
-
-	onKeyboardPress             -- InteractiveSurface (all of them)
-	onKeyboardRelease
-	onMouseClick
-	onMouseIn
-	onMouseOut
-	onMouseOver
-	onMousePress
-	onMouseRelease
-
-	onTimer
- */
-typedef enum {
-	ACTION_OTHER = 0,
-	ACTION_KEYBOARDPRESS,
-	ACTION_KEYBOARDRELEASE,
-	ACTION_MOUSECLICK,
-	ACTION_MOUSEIN,
-	ACTION_MOUSEOUT,
-	ACTION_MOUSEOVER,
-	ACTION_MOUSEPRESS,
-	ACTION_MOUSERELEASE,
-	ACTION_CHANGE,
-} action_type_t;
-
-typedef union SDL_Event SDL_Event;
-
-typedef struct _action_t {
-	void *element;              // the element that got this action
-	void *state;                // the state the element belongs to
-	action_type_t atype;        // which event map to look this up in
-	int32_t is_mouse;
-	int32_t button;
-	int32_t kmod;               // SDLMod/SDL_Keymod depending on SDL version.
-	int32_t key;                // keysym or keycode depending on SDL version.
-} action_t;
 
 typedef struct _state_t state_t;
 
 CFFI_DLLEXPORT int32_t pypy_initialize(pypy_syspaths_t *paths);
-CFFI_DLLEXPORT void *pypy_spawn_state(const char *state_name, void *parent_state);
-CFFI_DLLEXPORT void pypy_handle_action(action_t *action);
+CFFI_DLLEXPORT void *pypy_spawn_state(const char *state_name);
+CFFI_DLLEXPORT void pypy_state_input(void *state);
+CFFI_DLLEXPORT void pypy_state_blit(void *state);
+CFFI_DLLEXPORT void pypy_state_think(void *state);
 
 /* non-overriding hooks */
 CFFI_DLLEXPORT void pypy_game_loaded(void *game, void *pypy_data, int32_t data_size);

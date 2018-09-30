@@ -34,9 +34,10 @@ def filter_a_header(fname):
 ffibuilder.embedding_api(filter_a_header('module.h'))
 
 ffibuilder.cdef(filter_a_header('adapter.h'))
-ffibuilder.cdef("""
-extern "Python" void pypy_action_handler(action_t);
-""")
+
+#ffibuilder.cdef("""
+#extern "Python" void pypy_action_handler(action_t);
+#""")
 
 ffibuilder.set_source("pypycom", r'''
     #include "module.h"

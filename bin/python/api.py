@@ -78,6 +78,130 @@ def log_debug(*args):
 def log_verbose(*args):
     lib.logg(LOG_VERBOSE, _log_encode(*args))
 
+def ptr2int(ptr):
+    return int(ffi.cast("uintptr_t", ptr))
+
+class State(object):
+    """ Base class for UI states aka windows, a wrapper for state_t from adapter.cpp"""
+    def __init__(self, w, h, x, y, ui_id, ui_category):
+        """
+            parent - parent state.
+            w,h,x,y - int
+            popmode - WindowPopup
+            ui_category, bg - interface stuff, pass "geoscape", "saveMenus" for now
+            bg - background image name, like "BACK01.SCR"
+         """
+
+        self._st = lib.new_state(w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'))
+        self._ran_this_frame = False
+        self._frame_count = 0
+        self._cbuf = []
+
+    @property
+    def ptr(self):
+        return self._st
+
+    def tr(self, key):
+        """ access translations """
+        return ffi.string(lib.st_translate(self._st, key.encode('utf-8'))).decode('utf-8')
+
+    def pop(self):
+        """ pop itself. after this the c++ object is deleted.  """
+        lib.pop_state(self._st)
+
+    def run(self):
+        """ this method to be overriden to run the actual useful code """
+        pass
+
+    def _inner_input(self):
+        print("ImmUITest _inner_input")
+        # if that's a subsequent run for this frame,
+        # drop the previous command buffer
+        if self._ran_this_frame:
+            self._cbuf = []
+        # extract underlying event from the underlying class.
+        self._mousebuttons = lib.st_get_mousebuttons(self._st);
+        self._mousex = lib.st_get_mousex(self._st);
+        self._mousey = lib.st_get_mousey(self._st);
+        self._keysym = lib.st_get_keysym(self._st);
+        self._keymod = lib.st_get_keymod(self._st);
+        self._keyunicode = lib.st_keyunicode(self._st);
+        self.run()
+        self._ran_this_frame = True
+
+    # A game frame is processed as follows:
+    #
+    # - all input events are converted to Action-s and fed to the topmost State only.
+    # - topmost State's think() method is called.
+    # - all States' blit() method is called.
+    #
+    # Since our states all first blit to an underlying Surface, which then
+    # gets blitted on a blit() call in C++ code, an inactive (not topmost) state
+    # only has to not clear that surface.
+
+    def _inner_think(self):
+        if not self._ran_this_frame:
+            print("ImmUITest _inner_think")
+            self.run()  # generate command list
+            self._ran_this_frame = True
+
+    def _inner_blit(self):
+        print("ImmUITest _inner_blit")
+        if self._ran_this_frame:
+            self._execute() # execute it
+            self._cbuf = [] # drop the buffer
+            self._frame_count += 1
+            self._ran_this_frame = False # okay, that's the next frame
+
+    # opcodes for the buffer
+    FILL = 1        # (cmd (x,y,w,h), color
+    BLIT = 2        # (cmd (x,y,w,h), interned surface_handle)
+    SOUND = 3  # (cmd name)  one of BUTTON_PRESS; WINDOW_POPUP_{012}
+
+    # rendering command submission
+    def blit(self, dst, srcrect, handle, index=0):
+        """ blit sprite (sub) image """
+        self._cbuf.append((self.BLIT, dst, srcrect, handle, index))
+
+    def fill(self, rect, color):
+        self._cbuf.append((self.FILL, rect, color))
+
+    def sound(self, sound):
+        self._cbuf.append((self.SOUND, sound))
+
+    def get_surface(self, name, idx = None):
+        if idx is None:
+            return lib.st_intern_surface(self.ptr, name.encode('utf-8'))
+        else:
+            return lib.st_intern_sub(self.ptr, name.encode('utf-8'), idx)
+
+    def get_text(self, w, h, text, ha, va, wrap, prim, seco, small):
+        return lib.st_intern_text(self.ptr, w, h, text.encode('utf-8'), ha, va, wrap, prim, seco, small)
+
+    def _execute(self):
+        """ does the actual blits to the underlying surface """
+        # first, clear the surface to be transparent.
+        lib.st_clear(self.ptr)
+        # execute commands
+        for cmd in self._cbuf:
+            opcode = cmd[0]
+
+            if opcode == self.FILL:
+                x,y,w,h = cmd[1]
+                color = cmd[2]
+                lib.st_fill(self.ptr, x,y, w, h, color)
+            elif opcode == self.BLIT:
+                dstx, dsty = cmd[1]
+                srcx,srcy, srcw,srch = cmd[2]
+                src_handle = cmd[3]
+                if src_handle == 0:
+                    continue
+                lib.st_blit(self.ptr, dstx, dsty, srcx, srcy, srcw, srch, src_handle)
+            elif opcode == self.SOUND:
+                lib.st_cue_sound(self.ptr, cmd[1].encode('utf-8'))
+            else:
+                pass
+
 BOX_NAMES = { # TODO: those should be translation keys
     -1: "Stores",
     -2: "Laboratories",
@@ -88,149 +212,6 @@ BOX_NAMES = { # TODO: those should be translation keys
     -7: "Unknown",
     -8: "Up a shit creek without a paddle",
 }
-
-def ptr2int(ptr):
-    return int(ffi.cast("uintptr_t", ptr))
-
-class State(object):
-    """ The derived classes must have a constructor of the form:
-            def __init__(self, parent): and no more parameters there.
-        This constructor is only for calling up from them.
-        See aboutpy.py """
-    def __init__(self, parent, w, h, x, y, popmode, ui_category, bg):
-        """
-            parent - parent state.
-            w,h,x,y - int
-            popmode - WindowPopup
-            ui_category, bg - interface stuff, pass "geoscape", "saveMenus" for now
-            bg - background image name, like "BACK01.SCR"
-         """
-
-        # hmm. not so sure about this. and if it's even needed
-        # this should be expilict, if anything
-        # OTOH, digging up .ptr every time doesn't look right anyway
-        if isinstance(parent, State):
-            self._parent_st = parent.ptr
-        else: # elif cffi.whatever_type
-            self._parent_st = parent
-
-        self._st = lib.new_state(parent, w, h, x, y, popmode, ui_category.encode('utf-8'), bg.encode('utf-8'))
-        self._window = lib.st_get_window(self._st)
-        self.elements = {} # keyed by the ptr of the C++ object.
-
-    @property
-    def ptr(self):
-        return self._st
-
-    @property
-    def window(self):
-        return self._window
-
-    def tr(self, key):
-        """ access translations """
-        return ffi.string(lib.st_translate(self._st, key.encode('utf-8'))).decode('utf-8')
-
-    def pop(self):
-        """ pop itself """
-        lib.pop_state(self._st)
-
-    def add(self, element):
-        element_id = int(ffi.cast("uintptr_t", element.ptr))
-        if element_id in self.elements:
-            log_error("py::State::add(): adding an element twice: {!r}".format(element))
-        else:
-            self.elements[element_id] = element
-
-    def handle(self, action):
-        element_id = ptr2int(action.element)
-        if element_id in self.elements:
-            log_info("py::State::handle() got action {!r}".format(action))
-            self.elements[element_id].handle(action)
-        else:
-            log_info("py::State::handle() skipping action action for element {!r} {!r}".format(action.element, action))
-
-    def add_text(self, w, h, x, y, ui_element, ui_category, halign, valign, do_wrap, is_big, text):
-        lib.st_add_text(self.ptr, w, h, x, y, ui_element.encode('utf-8'), ui_category.encode('utf-8'), halign, valign, do_wrap, is_big, text.encode('utf-8'))
-
-class InteractiveSurface(object):
-    def __init__(self):
-        self._handlers = {}
-        self._ptr = ffi.NULL
-
-    @property
-    def ptr(self):
-        return self._ptr
-
-    def onMouseClick(self, handler, button):
-        lib.btn_set_click_handler(self.ptr, button)
-        akey = (ACTION_MOUSECLICK, button)
-        self._handlers[akey] = handler
-
-    def onKeyboardPress(self, handler, keysym = None):
-        if keysym is None:
-            lib.btn_set_anykey_handler(self.ptr)
-        else:
-            lib.btn_set_keypress_handler(self.ptr, keysym)
-        akey = (ACTION_KEYBOARDPRESS, keysym)
-        self._handlers[akey] = handler
-
-    def handle(self, action):
-        if action.atype in (ACTION_KEYBOARDPRESS, ACTION_KEYBOARDRELEASE):
-            akey = (action.atype, action.key)
-            if akey not in self._handlers:
-                akey = (action.atype, None)
-        elif action.atype  in (ACTION_MOUSECLICK, ACTION_MOUSEPRESS, ACTION_MOUSERELEASE):
-            akey = (action.atype, action.button)
-        elif action.atype  in (ACTION_MOUSEIN, ACTION_MOUSEOUT, ACTION_MOUSEOVER):
-            akey = (action.atype, "mousemove")
-        elif action.atype in (ACTION_CHANGE, ACTION_OTHER):
-            akey = (action.atype,)
-        if akey in self._handlers:
-            self._handlers[akey](action)
-
-class TextButton(InteractiveSurface):
-    def __init__(self, parent, w, h, x, y, ui_element, ui_category, text):
-        super(TextButton, self).__init__()
-        self._ptr = lib.st_add_text_button(parent.ptr, int(w), int(h), int(x), int(y), ui_element.encode('utf-8'),
-                                           ui_category.encode('utf-8'), text.encode('utf-8'))
-
-    def set_high_contrast(self):
-        lib.btn_set_high_contrast(self.ptr)
-
-class TextList(InteractiveSurface):
-    def __init__(self, parent, w, h, x, y, ui_element, ui_category):
-        super(TextList, self).__init__()
-        self._ptr = lib.st_add_text_list(parent.ptr, int(w), int(h), int(x), int(y), ui_element.encode('utf-8'),
-                                           ui_category.encode('utf-8'))
-
-    def add_row(self, *args):
-        bargs = list(ffi.new("wchar_t[]", str(a)) for a in args)
-        lib.textlist_add_row(self.ptr, len(bargs), *bargs)
-
-    def set_columns(self, *args):
-        bargs = list(ffi.cast("int32_t", a) for a in args)
-        lib.textlist_set_columns(self.ptr, len(bargs), *bargs)
-
-    def set_selectable(self, flag):
-        lib.textlist_set_selectable(self.ptr, flag)
-
-    def set_background(self, bg):
-        lib.textlist_set_background(self.ptr, bg)
-
-    def set_margin(self, margin):
-        lib.textlist_set_margin(self.ptr, margin)
-
-    def set_arrow_column(self, posn, ori):
-        lib.textlist_set_arrow_column(self.ptr, posn, ori)
-
-    def on_right_arrow_click(self, button, handler):
-        pass
-
-    def on_left_arrow_click(self, button, handler):
-        pass
-
-    def on_row_click(self, button, handler):
-        pass
 
 class Game(object): # just a namespace.
     @staticmethod

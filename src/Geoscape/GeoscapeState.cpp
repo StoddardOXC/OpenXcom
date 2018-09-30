@@ -2589,13 +2589,13 @@ void GeoscapeState::btnTechTreeViewerClick(Action *)
 
 void GeoscapeState::btnExecutiveSummaryClick(Action *)
 {
-	_game->pushState((State *)pypy_spawn_state("ExecutiveSummary", this));
+	_game->pushState((State *)pypy_spawn_state("ExecutiveSummary"));
 }
 
 
 void GeoscapeState::btnEnterpriseResourceManagementClick(Action *)
 {
-	_game->pushState((State *)pypy_spawn_state("EnterpriseResourceManagement", this));
+	_game->pushState((State *)pypy_spawn_state("EnterpriseResourceManagement"));
 }
 
 /**

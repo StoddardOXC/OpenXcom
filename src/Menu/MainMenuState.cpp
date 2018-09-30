@@ -167,7 +167,7 @@ void MainMenuState::btnQuitClick(Action *)
 
 void MainMenuState::aboutPythonClick(Action *)
 {
-	auto aboutpy = pypy_spawn_state("AboutPyPy", this);
+	auto aboutpy = pypy_spawn_state("AboutPyPy");
 	_game->pushState((State *)aboutpy);
 }
 
