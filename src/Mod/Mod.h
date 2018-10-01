@@ -614,6 +614,8 @@ public:
 	int getPediaReplaceCraftFuelWithRangeType() const;
 	/// Gets information on an interface element.
 	RuleInterface *getInterface(const std::string &id, bool error = true) const;
+	/// Gets all interface elements information
+	void getInterfacesYaml(std::string& s) const;
 	/// Gets the ruleset for the globe.
 	RuleGlobe *getGlobe() const;
 	/// Gets the ruleset for the converter.

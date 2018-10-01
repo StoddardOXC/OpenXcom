@@ -30,11 +30,7 @@ typedef uint8_t bool;
 
 /* UI */
 
-typedef struct _textlist_t textlist_t;
-typedef struct _textbutton_t textbutton_t;
-typedef struct _text_t text_t;
 typedef struct _state_t state_t;
-typedef struct _game_t game_t;
 
 state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category);
 void st_clear(state_t *state);
@@ -45,7 +41,11 @@ uintptr_t st_intern_surface(state_t *state, const char *name);
 uintptr_t st_intern_text(state_t *state, int32_t w, int32_t h, const char *text, int32_t halign, int32_t valign, int32_t wrap,
 		int32_t primary, int32_t secondary, int32_t is_small);
 void st_play_ui_sound(state_t *state, const char *name);
-const char *st_translate(state_t *st, const char *key);
+const char* st_translate(state_t* state, const char* key);
+void drop_translations(void);
+
+// stuff to be used from the loaded_game / saving_game hooks
+const char *get_interface_rules();  	// this one spits out a complete 'interfaces' map in yaml, direct from Mod.
 
 /* log levels:
  *    LOG_FATAL = 0
@@ -240,7 +240,29 @@ int32_t transfer_boffins(state_t *st, uintptr_t base_from, uintptr_t base_to, in
 int32_t research_stuff(state_t *st,  uintptr_t base_handle, const char *item_type, int32_t workforce);
 
 // load various sets and stuff. unconditionally called at game_loaded.
-void prepare_static_mod_data(uintptr_t game);
+// TODO: split it into  at_mod_load, at_game_load
+void prepare_static_mod_data(void *game);
+
+/* Geoscape modding approaches:
+
+	- Custom UFOs and their strategies:
+		- design an api on the Target level:
+		    - get existing oxce-driven targets: bases, abases, craft, ufos
+			- spawn/remove
+			- set visibile/invisible
+			- notify of detection
+			- move
+			- calculate distances
+			- handle click -> open UI corresponding to.
+		- interface to existing dogfight UI:
+			- custom ufos that are fully defined in yaml
+			- set strategies: hold off, aggressive, etc.
+			- handle ticks
+		- custom dogfight UI - well, write it
+		- interface to the battlescape mission generator:
+			- for a start just mimic default behavior  vv
+
+*/
 #ifdef __cplusplus
 } // extern "C" - this comment is required due to pypy/cffi build system
 #endif

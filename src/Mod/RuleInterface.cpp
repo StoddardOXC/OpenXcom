@@ -87,7 +87,28 @@ void RuleInterface::load(const YAML::Node& node, Mod *mod)
 		_elements[id] = element;
 	}
 }
+YAML::Node RuleInterface::save() const {
+	YAML::Node node, elements;
 
+	node["palette"] = _palette;
+	node["parent"] = _parent;
+	node["backgroundImage"] = _backgroundImage;
+	node["music"] = _music;
+	node["sound"] = _sound;
+
+	for (auto it = _elements.cbegin(); it != _elements.cend(); ++it) {
+		YAML::Node element;
+		element["pos"] = std::make_pair((*it).second.x, (*it).second.y);
+		element["size"] = std::make_pair((*it).second.w, (*it).second.h);
+		element["border"] = (*it).second.border;
+		element["color"] = (*it).second.color;
+		element["color2"] = (*it).second.color2;
+		element["TFTDMode"] = (*it).second.TFTDMode;
+		node["elements"][(*it).first] = element;
+	}
+
+	return node;
+}
 /**
  * Retrieves info on an element
  * @param id String defining the element.

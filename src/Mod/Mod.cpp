@@ -96,6 +96,8 @@
 #include "RuleConverter.h"
 #include "RuleSoldierTransformation.h"
 
+#include "../Python/module.h"
+
 #define ARRAYLEN(x) (sizeof(x) / sizeof(x[0]))
 
 namespace OpenXcom
@@ -3075,6 +3077,22 @@ int Mod::getPediaReplaceCraftFuelWithRangeType() const
 RuleInterface *Mod::getInterface(const std::string &id, bool error) const
 {
 	return getRule(id, "Interface", _interfaces, error);
+}
+
+/**
+ * Gets all interface rules serialized as YAML
+ * @return the string
+ */
+void Mod::getInterfacesYaml(std::string& s) const
+{
+	YAML::Node interfaces;
+	for (auto it = _interfaces.cbegin(); it != _interfaces.cend(); ++it)
+	{
+		interfaces[(*it).first] = (*it).second->save();
+	}
+	YAML::Emitter out;
+	out << interfaces;
+	s.assign(out.c_str());
 }
 
 /**

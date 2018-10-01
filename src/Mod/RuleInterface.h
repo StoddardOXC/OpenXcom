@@ -52,6 +52,8 @@ public:
 	~RuleInterface();
 	/// Load from YAML.
 	void load(const YAML::Node& node, Mod *mod);
+	/// Save to YAML.
+	YAML::Node save() const;
 	/// Get an element.
 	Element *getElement(const std::string &id);
 	/// Get palette.

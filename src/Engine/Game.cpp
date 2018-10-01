@@ -45,6 +45,8 @@
 #include "../Menu/TestState.h"
 #include <algorithm>
 
+#include "../Python/module.h"
+
 namespace OpenXcom
 {
 
@@ -690,6 +692,7 @@ void Game::loadLanguage(const std::string &filename)
 	{
 		_lang->load(it->second);
 	}
+	pypy_lang_changed();
 }
 
 void Game::loadLanguageCommon(const std::string &filename, const std::string &directory, bool checkIfExists)
@@ -759,6 +762,7 @@ void Game::loadMods()
 	delete _mod;
 	_mod = new Mod();
 	_mod->loadAll(FileMap::getRulesets());
+	pypy_mods_loaded(this);
 }
 
 /**

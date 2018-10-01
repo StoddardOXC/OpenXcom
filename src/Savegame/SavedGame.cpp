@@ -62,6 +62,8 @@
 #include "MissionStatistics.h"
 #include "SoldierDeath.h"
 
+#include "../Python/module.h"
+
 namespace OpenXcom
 {
 
@@ -749,6 +751,18 @@ void SavedGame::load(const std::string &filename, Mod *mod)
 		_battleGame->load(battle, mod, this);
 	}
 
+	{ // get pypydata as yaml if it's there.
+		std::string pypydata;
+		if (file.size() > 2)
+		{
+			auto pypynode = file[2];
+
+			YAML::Emitter out;
+			out << pypynode;
+			pypydata = out.c_str();
+		}
+		pypy_game_loaded(pypydata.c_str(), pypydata.size());
+	}
 }
 
 /**
@@ -918,6 +932,16 @@ void SavedGame::save(const std::string &filename, Mod *mod) const
 	}
 	out << node;
 	sav << out.c_str();
+	{ // save the pypydata
+		pypy_dumb_buf_t buf;
+		pypy_saving_game(&buf);
+		if (buf.ptr != NULL and buf.size > 0)
+		{
+			auto pypydata = std::string(buf.ptr, buf.size);
+			sav << "\n---\n" << pypydata << "\n";
+		}
+		pypy_game_saved();
+	}
 	sav.close();
 }
 

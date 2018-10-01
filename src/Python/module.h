@@ -1,5 +1,5 @@
 /*
-# Copyright 2017 Stoddard, https://github.com/StoddardOXC.
+# Copyright 2017,2018 Stoddard, https://github.com/StoddardOXC.
  *
  * This file is a part of OpenXcom.
  *
@@ -31,27 +31,42 @@ extern "C" {
 #  endif
 #endif
 
-typedef struct {
+typedef struct _pypy_syspaths_t {
 	const char *python_dir;
 	const char *cfg_dir;
 	const char *user_dir;
 	const char *data_dir;
 } pypy_syspaths_t;
 
+typedef struct _pypy_dumb_buf_t {
+	const char *ptr;
+	int32_t size;
+} pypy_dumb_buf_t;
 
 typedef struct _state_t state_t;
 
 CFFI_DLLEXPORT int32_t pypy_initialize(pypy_syspaths_t *paths);
+
+/* ui hooks */
 CFFI_DLLEXPORT void *pypy_spawn_state(const char *state_name);
 CFFI_DLLEXPORT void pypy_state_input(void *state);
 CFFI_DLLEXPORT void pypy_state_blit(void *state);
 CFFI_DLLEXPORT void pypy_state_think(void *state);
 
 /* non-overriding hooks */
-CFFI_DLLEXPORT void pypy_game_loaded(void *game, void *pypy_data, int32_t data_size);
-CFFI_DLLEXPORT void pypy_saving_game(void *game, void **pypy_data, int32_t *data_size);
-CFFI_DLLEXPORT void pypy_game_abandoned(void *game);
-CFFI_DLLEXPORT void pypy_clock_tick(void *game, int32_t step);
+CFFI_DLLEXPORT void pypy_mods_loaded(void *game);
+CFFI_DLLEXPORT void pypy_lang_changed();
+CFFI_DLLEXPORT void pypy_game_loaded(const char *pypy_data, int32_t data_size);
+CFFI_DLLEXPORT void pypy_saving_game(pypy_dumb_buf_t *buf);
+CFFI_DLLEXPORT void pypy_game_saved();
+CFFI_DLLEXPORT void pypy_game_abandoned();
+
+CFFI_DLLEXPORT void pypy_time_5sec(void *game);
+CFFI_DLLEXPORT void pypy_time_10min(void *game);
+CFFI_DLLEXPORT void pypy_time_30min(void *game);
+CFFI_DLLEXPORT void pypy_time_1hour(void *game);
+CFFI_DLLEXPORT void pypy_time_1day(void *game);
+CFFI_DLLEXPORT void pypy_time_1mon(void *game);
 
 /* overriding hooks: return value: nonzero if orig code is supposed to run. */
 CFFI_DLLEXPORT int32_t pypy_battle_ended(void *game);

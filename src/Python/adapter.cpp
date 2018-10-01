@@ -50,6 +50,7 @@
 #include "../Mod/RuleItem.h"
 #include "../Mod/RuleSoldier.h"
 #include "../Mod/RuleCraftWeapon.h"
+#include "../Mod/RuleInterface.h"
 #include "../Mod/Armor.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/State.h"
@@ -105,7 +106,7 @@ struct _state_t : public State {
 	double _xscale, _yscale;
 	int32_t _left, _top;
 	std::string _id, _category;
-	std::vector<std::string *> _interned_strings;
+	std::vector<const std::string *> _interned_strings;
 	std::vector<Surface *> _interned_surfaces;
 	std::vector<Text *> _interned_texts;
 
@@ -225,7 +226,7 @@ struct _state_t : public State {
 	// get game
 	Game *get_game() { return _game; }
 
-	// keep a string for the lifetime of the state
+	// copy and keep a string for the lifetime of the state
 	const char *intern_string(const std::string& s) {
 		auto *is = new std::string(s);
 		_interned_strings.push_back(is);
@@ -234,6 +235,11 @@ struct _state_t : public State {
 	// same for the disgusting wstrings
 	const char *intern_string(const std::wstring &ws) {
 		return intern_string(Language::wstrToUtf8(ws));
+	}
+	// just keep a string for the lifetime of the state
+	const char *intern_string(const std::string *is) {
+		_interned_strings.push_back(is);
+		return is->c_str();
 	}
 	void intern_surface(Surface *s) {
 		_interned_surfaces.push_back(s);
@@ -343,14 +349,14 @@ void st_play_ui_sound(state_t *state, const char *name) {
 //{ translations
 // just so we have some lifetime to the values returned by st_translate().
 std::unordered_map<std::string, std::string> translations;
-void reset_translations(void) {
+void drop_translations(void) {
 	translations.clear();
 }
 /* get STR_whatever translations in utf8 */
-const char *st_translate(state_t *st, const char *key) {
+const char *st_translate(state_t *state, const char *key) {
 	auto i = translations.find(key);
 	if (i == translations.end()) {
-		auto trans = st->tr(key);
+		auto trans = state->tr(key);
 		auto utf8 = Language::wstrToUtf8(trans);
 		translations[key] = utf8;
 	}
@@ -365,31 +371,32 @@ std::unordered_set<std::string> static_craft_weapon_types;
 std::unordered_set<std::string> static_armor_types;
 std::unordered_set<std::string> static_item_categories;
 std::unordered_set<std::string> static_precursor_items;
+std::string static_interface_rules;
 
-void prepare_static_mod_data(uintptr_t _game) {
+const char *get_interface_rules() { return static_interface_rules.c_str(); }
+
+void prepare_static_mod_data(void *_game) {
 	Game *game = reinterpret_cast<Game *>(_game);
-	static_craft_weapon_types.clear();
-	static_armor_types.clear();
-	static_item_categories.clear();
-	static_precursor_items.clear();
 
+	static_craft_weapon_types.clear();
 	auto& cw = game->getMod()->getCraftWeaponsList();
-	for (auto i = cw.begin(); i != cw.end(); ++i)
-	{
+	for (auto i = cw.begin(); i != cw.end(); ++i) {
 		RuleCraftWeapon *rule = game->getMod()->getCraftWeapon(*i);
 		static_craft_weapon_types.insert(rule->getLauncherItem());
 		static_craft_weapon_types.insert(rule->getClipItem());
 	}
+	static_armor_types.clear();
 	auto& ar = game->getMod()->getArmorsList();
-	for (auto i = ar.begin(); i != ar.end(); ++i)
-	{
+	for (auto i = ar.begin(); i != ar.end(); ++i) {
 		Armor *rule = game->getMod()->getArmor(*i);
 		static_armor_types.insert(rule->getStoreItem());
 	}
+	static_item_categories.clear();
 	auto& cats = game->getMod()->getItemCategoriesList();
 	for (auto i = cats.cbegin(); i != cats.cend(); ++i) {
 		static_item_categories.insert(*i);
 	}
+	static_precursor_items.clear();
 	auto& manu_projects = game->getMod()->getManufactureList();
 	for (auto mpi = manu_projects.cbegin(); mpi != manu_projects.cend(); ++mpi ) {
 		auto rule = game->getMod()->getManufacture(*mpi);
@@ -398,6 +405,7 @@ void prepare_static_mod_data(uintptr_t _game) {
 			static_precursor_items.insert((*req).first->getType());
 		}
 	}
+	game->getMod()->getInterfacesYaml(static_interface_rules);
 }
 // stuff that changes with research progression
 // dat basically all projects with required_items methinks.

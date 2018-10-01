@@ -31,6 +31,8 @@
 #include "../Savegame/SavedBattleGame.h"
 #include "SaveGameState.h"
 
+#include "../Python/module.h"
+
 namespace OpenXcom
 {
 
@@ -118,6 +120,7 @@ void AbandonGameState::btnYesClick(Action *)
 	{
 		_game->pushState(new SaveGameState(OPT_GEOSCAPE, SAVE_IRONMAN_END, _palette));
 	}
+	pypy_game_abandoned();
 }
 
 /**
