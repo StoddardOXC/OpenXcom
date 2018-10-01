@@ -356,8 +356,8 @@ def pypy_saving_game(buf):
     buf.ptr = ffi.NULL
     buf.size = 0
     pod = Hooks.saving_game()
-    log_info("pypy_saving_game(): got {!r}".format(yaml_str))
     if pod is None:
+        log_info("pypy_saving_game(): got None, saving nothing")
         return
     yaml = YAML()
     yaml.default_flow_style = False
