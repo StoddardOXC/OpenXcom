@@ -766,22 +766,22 @@ void GeoscapeState::timeAdvance()
 		switch (trigger)
 		{
 		case TIME_1MONTH:
-			pypy_time_1mon(_game);
+			pypy_time_1mon();
 			time1Month();
 		case TIME_1DAY:
-			pypy_time_1day(_game);
+			pypy_time_1day();
 			time1Day();
 		case TIME_1HOUR:
-			pypy_time_1hour(_game);
+			pypy_time_1hour();
 			time1Hour();
 		case TIME_30MIN:
-			pypy_time_30min(_game);
+			pypy_time_30min();
 			time30Minutes();
 		case TIME_10MIN:
-			pypy_time_10min(_game);
+			pypy_time_10min();
 			time10Minutes();
 		case TIME_5SEC:
-			pypy_time_5sec(_game);
+			pypy_time_5sec();
 			time5Seconds();
 		}
 	}

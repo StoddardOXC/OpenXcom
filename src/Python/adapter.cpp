@@ -25,44 +25,55 @@
 #include <locale>
 #include <codecvt>
 
-#include "module.h" // for the action_t
-#include "adapter.h"
-
 #include "SDL_mixer.h"
+
+#include "module.h"
+#include "adapter.h"
 
 #include "../Engine/Language.h"
 #include "../Engine/Logger.h"
-#include "../Savegame/SavedGame.h"
-#include "../Savegame/Base.h"
-#include "../Savegame/BaseFacility.h"
-#include "../Savegame/ItemContainer.h"
-#include "../Savegame/CraftWeapon.h"
 #include "../Engine/Game.h"
 #include "../Engine/Action.h"
 #include "../Engine/Exception.h"
 #include "../Engine/Options.h"
 #include "../Engine/CrossPlatform.h"
 #include "../Engine/Sound.h"
+#include "../Engine/Screen.h"
+#include "../Engine/FileMap.h"
+#include "../Engine/LocalizedText.h"
+#include "../Engine/State.h"
+#include "../Engine/Logger.h"
+#include "../Engine/Surface.h"
+#include "../Engine/SurfaceSet.h"
+
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "../Interface/TextButton.h"
+
+#include "../Menu/ErrorMessageState.h"
+
 #include "../Mod/Mod.h"
 #include "../Mod/RuleItem.h"
 #include "../Mod/RuleSoldier.h"
 #include "../Mod/RuleCraftWeapon.h"
 #include "../Mod/RuleInterface.h"
 #include "../Mod/Armor.h"
-#include "../Engine/LocalizedText.h"
-#include "../Engine/State.h"
-#include "../Engine/Logger.h"
-#include "../Engine/Surface.h"
-#include "../Engine/SurfaceSet.h"
+
+#include "../Savegame/SavedGame.h"
+#include "../Savegame/Base.h"
+#include "../Savegame/BaseFacility.h"
+#include "../Savegame/ItemContainer.h"
+#include "../Savegame/CraftWeapon.h"
 #include "../Savegame/Production.h"
 #include "../Savegame/ResearchProject.h"
 #include "../Savegame/Transfer.h"
 #include "../Savegame/Vehicle.h"
 
 using namespace OpenXcom;
+
+std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> _wsconverter;
+static std::wstring utf8_to_wstr(const char *str) { return  _wsconverter.from_bytes(str); }
+static std::wstring utf8_to_wstr(const std::string &str) { return  _wsconverter.from_bytes(str); }
 
 //{ logging
 static enum SeverityLevel int2loglevel(int level) {
@@ -93,6 +104,27 @@ void logg(int level, const char *message) {
 	Log(l) << message;
 	if (l == LOG_FATAL)
 		exit(0);
+}
+//}
+//{ The Game object is in fact static in the lifetime of main(). Why does anyone pretend otherwise?
+//  This is not a multiboard chess game, period.
+Game *GAME = NULL;
+void set_game_ptr(void *g) {
+	GAME = reinterpret_cast<Game *>(g);
+	Log(LOG_INFO)<<"PyPy: set_game_ptr(" << g << ")";
+}
+//}
+//{ The most important error message
+void *state_not_found(const char *name) {
+	std::string nstr(name);
+	std::string msg("Attempt to spawn an undefined state '" + nstr + "'\nPlease check enabled modules.");
+	std::string bg = "BACK01.SCR";
+	Uint8 color = GAME->getMod()->getInterface("errorMessages")->getElement("geoscapeColor")->color;
+	if ((GAME->getSavedGame() != 0) && (GAME->getSavedGame()->getSavedBattle() != 0)) {
+		color = GAME->getMod()->getInterface("errorMessages")->getElement("battlescapeColor")->color;
+		bg = "TAC00.SCR";
+	}
+	return new ErrorMessageState(utf8_to_wstr(msg), GAME->getScreen()->getPalette(), color, bg ,-1);
 }
 //}
 //{ ui hook
@@ -221,10 +253,10 @@ struct _state_t : public State {
 	virtual void resize(int &dX, int &dY) { Log(LOG_ERROR)<< "state_t::resize(): not implemented. " << dX << ":" <<dY; }
 
 	// pop self assuming we're the last.
-	void pop_self() { _game->popState(); }
+	static void pop_self() { GAME->popState(); }
 
 	// get game
-	Game *get_game() { return _game; }
+	static Game *get_game() { return GAME; }
 
 	// copy and keep a string for the lifetime of the state
 	const char *intern_string(const std::string& s) {
@@ -254,9 +286,6 @@ struct _state_t : public State {
 		for (auto it: _interned_texts) { delete it; }
 	}
 };
-
-std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> _wsconverter;
-static std::wstring utf8_to_wstr(const char *str) { return  _wsconverter.from_bytes(str); }
 
 state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category) {
 	return new state_t(w, h, x, y, ui_id, ui_category);
@@ -375,8 +404,8 @@ std::string static_interface_rules;
 
 const char *get_interface_rules() { return static_interface_rules.c_str(); }
 
-void prepare_static_mod_data(void *_game) {
-	Game *game = reinterpret_cast<Game *>(_game);
+void prepare_static_mod_data() {
+	Game *game = GAME;
 
 	static_craft_weapon_types.clear();
 	auto& cw = game->getMod()->getCraftWeaponsList();

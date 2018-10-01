@@ -1208,6 +1208,11 @@ void Mod::loadFile(const std::string &filename, ModScript &parsers)
 {
 	YAML::Node doc = YAML::LoadFile(filename);
 
+	if (const YAML::Node &pythonPath = doc["pythonPath"])
+	{
+		auto str = doc["pythonPath"].as<std::string>();
+		pypy_hook_up(filename.c_str(), str.c_str());
+	}
 	if (const YAML::Node &extended = doc["extended"])
 	{
 		_scriptGlobal->load(extended);

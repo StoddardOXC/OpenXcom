@@ -762,7 +762,6 @@ void Game::loadMods()
 	delete _mod;
 	_mod = new Mod();
 	_mod->loadAll(FileMap::getRulesets());
-	pypy_mods_loaded(this);
 }
 
 /**

@@ -45,8 +45,10 @@ typedef struct _pypy_dumb_buf_t {
 
 typedef struct _state_t state_t;
 
-CFFI_DLLEXPORT int32_t pypy_initialize(pypy_syspaths_t *paths);
-
+CFFI_DLLEXPORT void pypy_initialize(void *);
+CFFI_DLLEXPORT void pypy_hook_up(const char *, const char *);
+CFFI_DLLEXPORT void pypy_reset_mods_statics();
+CFFI_DLLEXPORT void pypy_mods_loaded();
 /* ui hooks */
 CFFI_DLLEXPORT void *pypy_spawn_state(const char *state_name);
 CFFI_DLLEXPORT void pypy_state_input(void *state);
@@ -54,33 +56,32 @@ CFFI_DLLEXPORT void pypy_state_blit(void *state);
 CFFI_DLLEXPORT void pypy_state_think(void *state);
 
 /* non-overriding hooks */
-CFFI_DLLEXPORT void pypy_mods_loaded(void *game);
 CFFI_DLLEXPORT void pypy_lang_changed();
 CFFI_DLLEXPORT void pypy_game_loaded(const char *pypy_data, int32_t data_size);
 CFFI_DLLEXPORT void pypy_saving_game(pypy_dumb_buf_t *buf);
 CFFI_DLLEXPORT void pypy_game_saved();
 CFFI_DLLEXPORT void pypy_game_abandoned();
 
-CFFI_DLLEXPORT void pypy_time_5sec(void *game);
-CFFI_DLLEXPORT void pypy_time_10min(void *game);
-CFFI_DLLEXPORT void pypy_time_30min(void *game);
-CFFI_DLLEXPORT void pypy_time_1hour(void *game);
-CFFI_DLLEXPORT void pypy_time_1day(void *game);
-CFFI_DLLEXPORT void pypy_time_1mon(void *game);
+CFFI_DLLEXPORT void pypy_time_5sec();
+CFFI_DLLEXPORT void pypy_time_10min();
+CFFI_DLLEXPORT void pypy_time_30min();
+CFFI_DLLEXPORT void pypy_time_1hour();
+CFFI_DLLEXPORT void pypy_time_1day();
+CFFI_DLLEXPORT void pypy_time_1mon();
 
 /* overriding hooks: return value: nonzero if orig code is supposed to run. */
-CFFI_DLLEXPORT int32_t pypy_battle_ended(void *game);
-CFFI_DLLEXPORT int32_t pypy_craft_clicked(void *game, void *craft, int32_t button, int32_t kmod);
-CFFI_DLLEXPORT int32_t pypy_ufo_clicked(void *game, void *ufo, int32_t button, int32_t kmod);
-CFFI_DLLEXPORT int32_t pypy_base_clicked(void *game, void *base, int32_t button, int32_t kmod);
-CFFI_DLLEXPORT int32_t pypy_alienbase_clicked(void *game, void *abase, int32_t button, int32_t kmod);
-CFFI_DLLEXPORT int32_t pypy_craft_shot_down(void *game, void *craft);
-CFFI_DLLEXPORT int32_t pypy_craft_at_target(void *game, void *craft, void *target);
-CFFI_DLLEXPORT int32_t pypy_transfer_done(void *game, void *transfer);
-CFFI_DLLEXPORT int32_t pypy_research_done(void *game, void *research);
-CFFI_DLLEXPORT int32_t pypy_manufacture_done(void *game, void *manufacture);
+CFFI_DLLEXPORT int32_t pypy_battle_ended();
+CFFI_DLLEXPORT int32_t pypy_craft_clicked(void *craft, int32_t button, int32_t kmod);
+CFFI_DLLEXPORT int32_t pypy_ufo_clicked(void *ufo, int32_t button, int32_t kmod);
+CFFI_DLLEXPORT int32_t pypy_base_clicked(void *base, int32_t button, int32_t kmod);
+CFFI_DLLEXPORT int32_t pypy_alienbase_clicked(void *abase, int32_t button, int32_t kmod);
+CFFI_DLLEXPORT int32_t pypy_craft_shot_down(void *craft);
+CFFI_DLLEXPORT int32_t pypy_craft_at_target(void *craft, void *target);
+CFFI_DLLEXPORT int32_t pypy_transfer_done(void *transfer);
+CFFI_DLLEXPORT int32_t pypy_research_done(void *research);
+CFFI_DLLEXPORT int32_t pypy_manufacture_done(void *manufacture);
 /*
-CFFI_DLLEXPORT int32_t pypy_(void *game, );
+CFFI_DLLEXPORT int32_t pypy_(, );
 */
 
 #ifdef __cplusplus

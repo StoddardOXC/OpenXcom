@@ -28,10 +28,12 @@ extern "C" {
 typedef uint8_t bool;
 #endif
 
-/* UI */
+void set_game_ptr(void *g);
 
+/* UI */
 typedef struct _state_t state_t;
 
+void *state_not_found(const char *name);
 state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category);
 void st_clear(state_t *state);
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);
@@ -241,7 +243,7 @@ int32_t research_stuff(state_t *st,  uintptr_t base_handle, const char *item_typ
 
 // load various sets and stuff. unconditionally called at game_loaded.
 // TODO: split it into  at_mod_load, at_game_load
-void prepare_static_mod_data(void *game);
+void prepare_static_mod_data(); // see Mod::resetGlobalStatics()
 
 /* Geoscape modding approaches:
 
