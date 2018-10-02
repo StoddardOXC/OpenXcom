@@ -21,6 +21,10 @@
 # a bit close to the C++ ui framework - src/Interface/, src/Menu
 #
 
+__states__ = []
+__hooks__ = ['mods_loaded']
+
+from ruamel.yaml import YAML
 from pypycom import ffi, lib
 
 # enum WindowPopup { ... }
@@ -81,9 +85,97 @@ def log_verbose(*args):
 def ptr2int(ptr):
     return int(ffi.cast("uintptr_t", ptr))
 
+class IRULEMENT(object):
+    def __init__(self, pod):
+        for pname, val in pod.items():
+            if pname.startswith('_'):
+                log_error("InterfaceRule element member '{}' ignored.".format(pname))
+                continue
+            if pname == 'pos':
+                self.x, self.y = val
+            elif pname == 'size':
+                self.w, self.h = val
+            else:
+                setattr(self, pname, val)
+
+class IRULE(object):
+    _prohibited = ('name', 'parent', 'backgroundImage', 'music', 'sound')
+    def __init__(self, name, pod):
+        """ the palette IRULE property and palette IRULE element:
+        1. palette propery is renamed to palname
+
+        2. State::setInterface() (which _IS_ called):
+
+             - first, pal is gotten from the property. It is a string, like "PAL_GEOSCAPE" (which is the default for not-battlescape btw)
+             - if we haven't got "palette" element here, we try to fetch such element from the parent.
+             - if we haven't got "palette" property here we try to get it from the parent
+             - if we've got the element:
+                 - depending on alterPal, backPal color is set to either color2 (true) or color property of the "palette" element
+             - if we haven't got the element, backPal is -1
+             - if we're in battlescape, battleGame->setPaletteByDepth(this) is called (this is State)
+             - if we're in geoscape and pal is empty, it's reset to PAL_GEOSCAPE and setPalette(pal, backPal) is called.
+                - in case backPal is -1 ...
+             - finally, setPalette(pal, backPal) is called, where pal is a string from a palette property from either the rule or its parent,
+               or "PAL_GEOSCAPE" if the rule or the parent doesn't exist, or do not have the property.
+
+        3. State::setPalette():
+            - first it changes the cursor if palette is one of
+            - then if backPal is not -1, it replaces 16 colors from posn Palette::backPos = 224
+              with the ones at backPal*16 starting posn in BACKPALS.DAT palette.
+
+        """
+        self.name = name
+        self.palname = "PAL_GEOSCAPE"
+        #self.parent = None
+        #self.backgroundImage = None
+        #self.music = None
+        #self.sound = None
+        for pname, val in pod.items():
+            if pname == 'palette':
+                self.palname = val
+            elif pname == 'elements':
+                for elname, elt in val.items():
+                    if elname in self._prohibited or elname.startswith('_'):
+                        log_error("    InterfaceRule element name '{}' ignored.".format(elname))
+                        continue
+                    setattr(self, elname, IRULEMENT(elt))
+                    log_info("    InterfaceRule element {}".format(elname))
+            elif pname in self._prohibited:
+                setattr(self, pname, val)
+
+class INTERFACE_RULES(object):
+    def __init__(self):
+        yaml = YAML()
+        irul_str = ffi.string(lib.get_interface_rules())
+        irul_pod =yaml.load(irul_str);
+        if irul_pod is None:
+            log_error("get_interface_rules returned '{}': can't parse".format(irul_str))
+            return
+        print(dir(irul_pod))
+        print(repr(irul_pod))
+        for catname, cat in irul_pod.items():
+            if catname.startswith('_'):
+                log_error("Ignoring interface rule '{}'".format(catname))
+                continue
+            log_info("IRULE {}".format(catname))
+            setattr(self, catname, IRULE(catname, cat))
+
+        log_info("INTERFACE_RULES id {:x}".format(id(self)))
+        # TBD: resolve parent references in rules, which seems to be not necessary, since
+        # we call setInterface anyways.
+
+IRUL = INTERFACE_RULES()
+
+def mods_loaded():
+    global IRUL
+    log_info("api.py::mods_loaded")
+    IRUL = INTERFACE_RULES()
+    log_info("IRUL id {:x}".format(id(IRUL)))
+
+
 class State(object):
     """ Base class for UI states aka windows, a wrapper for state_t from adapter.cpp"""
-    def __init__(self, w, h, x, y, ui_id, ui_category):
+    def __init__(self, w, h, x, y, ui_id, ui_category, alterpal):
         """
             parent - parent state.
             w,h,x,y - int
@@ -92,11 +184,13 @@ class State(object):
             bg - background image name, like "BACK01.SCR"
          """
         log_info("State({}, {}, {}, {}, '{}', '{}')".format(w, h, x, y, ui_id, ui_category))
-        self._st = lib.new_state(w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'))
+        self._st = lib.new_state(w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'), alterpal)
         self._ran_this_frame = False
         self._frame_count = 0
         self._cbuf = []
         self.input = lib.st_get_input_state(self._st)
+        log_info("IRUL id {:x}".format(id(IRUL)))
+        self.IR = getattr(IRUL, ui_category)
 
     @property
     def ptr(self):

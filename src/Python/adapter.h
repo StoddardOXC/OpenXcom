@@ -42,7 +42,7 @@ typedef struct _state_input_state_t {
 } st_input_t;
 
 void *state_not_found(const char *name);
-state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category);
+state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category, int32_t alterpal);
 void pop_state(state_t *state);
 void st_clear(state_t *state);
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);

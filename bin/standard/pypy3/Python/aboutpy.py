@@ -30,11 +30,11 @@ from api import *
 import sys, pprint
 
 class ImmUITest(State):
-    ui_cat = "saveMenus"
-    ui_id = "window"
-    def __init__(self, w = 300, h = 180, x = 42, y = 23):
+    ui_cat = "aboutpypy"
+    ui_id = "sysvers"
+    def __init__(self, w = 320, h = 200, x = 42, y = 23):
         super(ImmUITest, self).__init__(w,h,x,y,
-                        ui_id = self.ui_id, ui_category = self.ui_cat)
+                        ui_id = self.ui_id, ui_category = self.ui_cat, alterpal=False)
 
         self.w = w
         self.h = h
@@ -44,12 +44,11 @@ class ImmUITest(State):
         self.command_buffer = []
         self.next_id = -1
 
-
-
-        #self.some_text = self.gget_text(w, h, text, ha, va, wrap, prim, seco, small)
-        print("ImmUITest init")
-        self.bg = self.get_surface("BACK01.SCR")
-        self.some_text = self.get_text(100, 40, "yoba", 0, 1, False, 23, 42, False)
+        self.bg = self.get_surface(self.IR.backgroundImage)
+        self.sysvers = self.get_text(
+                self.IR.sysvers.w, self.IR.sysvers.h, sys.version,
+                0, 1, False,
+                self.IR.sysvers.color, self.IR.sysvers.color2, False)
 
     def get_id(self):
         self.next_id += 1
@@ -74,23 +73,35 @@ class ImmUITest(State):
         elif self.active is None:
             self.active = -1 # duh! why?
 
+    def drawframe(self, x, y, w, h, color): # 1px frame of color
+            self.fill((x,     y,     w, 1), color) # top horizontal
+            self.fill((x,     y+h-1, w, 1), color) # bottom horizontal
+            self.fill((x,     y,     1, h), color) # left vertical
+            self.fill((x+w-1, y,     1, h), color) # right vertical
+
     def border(self, rect, dark, bright, fill = None):
         """ draws teh fancy border on the target
             dark: dark color idx
             bright: bright color idx
             fill: fill with this color if not None.
         """
-        def drawframe(x, y, w, h, color): # 1px frame of color
-            self.fill((x,   y,   w, 1), color) # top horizontal
-            self.fill((x,   y+h, w, 1), color) # bottom horizontal
-            self.fill((x,   y,   1, h), color) # left vertical
-            self.fill((x+w, y,   1, h), color) # right vertical
-        x,y,w,h = rect
-        drawframe(x,   y,   w,   h, dark)               # outer
-        drawframe(x+1, y+1, w-2, h-2, bright)      # middle
-        drawframe(x+2, y+2, w-4, h-4, dark)        # inner
+        self.drawframe(x,   y,   w,   h, dark)     # outer
+        self.drawframe(x+1, y+1, w-2, h-2, bright) # middle
+        self.drawframe(x+2, y+2, w-4, h-4, dark)   # inner
         if fill is not None:
             self.fill((x+3, y+3, w-6, h-6), fill)
+
+    def winborder(self, rect, dark, bright, fill = None):
+        # typical window border of 5 px: dark, med, bright, med, dark
+        med = (dark+bright)//2
+        x,y,w,h = rect
+        self.drawframe(x,   y,   w,   h, dark)     # outer
+        self.drawframe(x+1, y+1, w-2, h-2, med)    # middle
+        self.drawframe(x+2, y+2, w-4, h-4, bright) # center
+        self.drawframe(x+3, y+3, w-6, h-6, med)    # middle
+        self.drawframe(x+4, y+4, w-8, h-8, dark)   # inner
+        if fill is not None:
+            self.fill((x+4, y+4, w-8, h-81), fill)
 
     def text_button(self, rect, text, pressed):
         """ your plain text button """
@@ -120,9 +131,9 @@ class ImmUITest(State):
     def logick(self):
         if self.input.keysym == 27:
             self.pop()
+        self.blit((self.IR.sysvers.x, self.IR.sysvers.y), (0,0,0,0), self.sysvers)
         self.blit((0,0), (0,0,0,0), self.bg)
-        self.border((0,0,self.w, self.h), 3, 8)
-        self.blit((10,10), (0,0,0,0), self.some_text)
+        self.winborder((0,0,self.w, self.h), self.IR.border.color, self.IR.border.color2)
 
 AboutPyPy = ImmUITest
 

@@ -1,0 +1,9 @@
+#
+# metadata.yaml for PyPy3 
+
+name: "Embedded Python"
+version: 0.1
+description: "Turns the game engine inside out. Also Python and giggles."
+author: Stoddard
+
+master: "*"

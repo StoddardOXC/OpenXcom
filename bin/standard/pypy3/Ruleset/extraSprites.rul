@@ -1,0 +1,13 @@
+extraSprites:
+  - type: PicardFacepalm320
+    width: 320
+    height: 200
+    singleImage: true
+    files:
+      0: Resources/Backgrounds/picard-facepalm320.png
+  - type: PicardFacepalm640
+    width: 640
+    height: 400
+    singleImage: true
+    files:
+      0: Resources/Backgrounds/picard-facepalm640.png

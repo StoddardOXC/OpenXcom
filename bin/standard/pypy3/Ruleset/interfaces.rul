@@ -1,0 +1,32 @@
+# color2 is by convention here a darker one
+#
+interfaces:
+  - type: aboutpypy
+    #parent: geoscapeMenu
+    backgroundImage: PicardFacepalm320
+    elements:
+      - id: border
+        color:  0xf9
+        color2: 0xf7
+      - id: sysvers
+        size: [192, 32]
+        pos: [32, 8]
+        color:  0xf6
+        color2: 0xf9
+
+
+# - type: alloftheshitthatisthere
+#   palette: str
+#   parent: str
+#   backgroundImage: str
+#   music: str
+#   sound: int/GEO.CAT
+#   elements:
+#      - id: str
+#        pos: [int, int]
+#        size: [int, int]
+#        color: int
+#        color2: int
+#        border: int
+#        TFTDMode: bool
+

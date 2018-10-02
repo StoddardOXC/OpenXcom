@@ -145,13 +145,12 @@ struct _state_t : public State {
 	// input state
 	st_input_t _st;
 
-	_state_t(int32_t w, int32_t h, int32_t x, int32_t y, const std::string &id, const std::string &category) {
+	_state_t(int32_t w, int32_t h, int32_t x, int32_t y, const std::string &id, const std::string &category, bool alterpal) {
 		_screen = false; // it's if it replaces the whole screen, so no.
 		_w = w; _h = h; _x = x; _y = y;
 		_xscale = 1.0; _yscale = 1.0;
 		_left = 0; _top = 0;
 		_surface = new Surface(w, h, x, y); // our blit target
-		bool alterpal = false;
 		setInterface(category, alterpal, _game->getSavedGame() ? _game->getSavedGame()->getSavedBattle() : 0);
 		add(_surface, id, category); // this calls setPalette on it... hmm. ah, to hell with it.
 
@@ -294,10 +293,10 @@ struct _state_t : public State {
 	}
 };
 
-state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category) {
-	return new state_t(w, h, x, y, ui_id, ui_category);
+state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category, int32_t alterpal) {
+	return new state_t(w, h, x, y, ui_id, ui_category, alterpal);
 }
-void pop_state(state_t *state) {  pypy_forget_state(state); GAME->popState();}
+void pop_state(state_t *state) { pypy_forget_state(state); GAME->popState(); /* that last one does delete */ }
 void st_clear(state_t *state) { state->_surface->clear(0); }
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color) { state->_surface->drawRect(x, y, w, h, color); }
 void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc) {
@@ -336,7 +335,6 @@ uintptr_t st_intern_sub(state_t *state, const char *name, int32_t idx) {
 uintptr_t st_intern_text(state_t *state, int32_t w, int32_t h, const char *text, int32_t halign, int32_t valign, int32_t wrap,
 		int32_t primary, int32_t secondary, int32_t is_small) {
 
-	Options::debugUi = true;
 	auto _text = new Text(w, h, 0, 0);
 	_text->initText(state->get_game()->getMod()->getFont("FONT_BIG"),
 					state->get_game()->getMod()->getFont("FONT_SMALL"),
