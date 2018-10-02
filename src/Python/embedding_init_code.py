@@ -149,41 +149,37 @@ def import_modules(python_dir, drop_old = False):
     got_hooks = set()
     got_states = set()
     for pname in os.listdir(python_dir):
-        if  pname not in ('api.py', '__pycache__') and (pname.endswith('.py') or os.path.isdir(os.path.join(python_dir, pname))):
+        if  pname != '__pycache__' and (pname.endswith('.py') or os.path.isdir(os.path.join(python_dir, pname))):
             modname = pname
             if pname.endswith('.py'):
                 modname = pname[:-3]
             elif os.path.isdir(os.path.join(python_dir, pname)):
                 pname += '/'
             log_info("import {} ({})".format(modname, os.path.join(python_dir, pname)))
+            mod = importlib.import_module(modname)
+            got_stuff = set()
             try:
-                mod = importlib.import_module(modname)
-                got_stuff = set()
-                try:
-                    mod_states = mod.__states__
-                except:
-                    mod_states = {}
-                try:
-                    mod_hooks = mod.__hooks__
-                except:
-                    mod_hooks = {}
-                if len(mod_states) + len(mod_hooks) == 0:
-                    log_info("    mod {}: no __states__ or __hooks__".format(modname))
+                mod_states = mod.__states__
+            except:
+                mod_states = {}
+            try:
+                mod_hooks = mod.__hooks__
+            except:
+                mod_hooks = {}
+            if len(mod_states) + len(mod_hooks) == 0:
+                log_info("    mod {}: no __states__ or __hooks__".format(modname))
 
-                for memtuple in inspect.getmembers(mod):
-                    memname, member = memtuple
-                    if memname in mod_states:
-                        state_types[memname] = member
-                        got_stuff.add(memname)
-                        got_states.add(memname)
-                    elif memname in mod_hooks:
-                        Hooks._add_hook(memname, member)
-                        got_stuff.add(memname)
-                        got_hooks.add(memname)
-                log_info("    imported {} [{}]".format(modname, ', '.join(got_stuff)))
-            except Exception as e:
-                log_fatal("    mod ", modname, ": ", e)
-                raise
+            for memtuple in inspect.getmembers(mod):
+                memname, member = memtuple
+                if memname in mod_states:
+                    state_types[memname] = member
+                    got_stuff.add(memname)
+                    got_states.add(memname)
+                elif memname in mod_hooks:
+                    Hooks._add_hook(memname, member)
+                    got_stuff.add(memname)
+                    got_hooks.add(memname)
+            log_info("    imported {} [{}]".format(modname, ', '.join(got_stuff)))
     return got_states, got_hooks
 
 @ffi.def_extern(onerror = log_exception)
