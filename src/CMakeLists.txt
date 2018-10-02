@@ -543,13 +543,13 @@ if (${CMAKE_SYSTEM_NAME} MATCHES FreeBSD OR ${CMAKE_SYSTEM_NAME} MATCHES NetBSD 
 endif ()
 
 if (CMAKE_HOST_UNIX)
-if (WIN32)
-set(CMAKE_EXE_LINKER_FLAGS -Wl,--export-all-symbols)
-set(WIN32_LIBS  imagehlp dbghelp)
-endif(WIN32)
-target_link_libraries ( openxcom ${system_libs} ${PKG_SDLIMAGE_LIBRARIES} ${PKG_SDLMIXER_LIBRARIES} ${PKG_SDLGFX_LIBRARIES} ${PKG_SDL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${PKG_YAMLCPP_LIBRARIES} ${WIN32_LIBS} ${PYPY3_LIBRARY} )
+  if (WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS -Wl,--export-all-symbols)
+    set(WIN32_LIBS  imagehlp dbghelp)
+  endif(WIN32)
+  target_link_libraries ( openxcom ${system_libs} ${PKG_SDLIMAGE_LIBRARIES} ${PKG_SDLMIXER_LIBRARIES} ${PKG_SDLGFX_LIBRARIES} ${PKG_SDL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${PKG_YAMLCPP_LIBRARIES} ${WIN32_LIBS} ${PYPY3_LIBRARY} )
 else (CMAKE_HOST_UNIX)
-target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_gl_LIBRARY} debug ${YAMLCPP_LIBRARY_DEBUG} optimized ${YAMLCPP_LIBRARY} )
+  target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_gl_LIBRARY} debug ${YAMLCPP_LIBRARY_DEBUG} optimized ${YAMLCPP_LIBRARY} )
 endif (CMAKE_HOST_UNIX)
 
 # Pack libraries into bundle and link executable appropriately
