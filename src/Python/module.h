@@ -46,7 +46,8 @@ typedef struct _pypy_dumb_buf_t {
 typedef struct _state_t state_t;
 
 CFFI_DLLEXPORT void pypy_initialize(void *);
-CFFI_DLLEXPORT void pypy_hook_up(const char *, const char *);
+CFFI_DLLEXPORT void pypy_set_modpath(const char *);
+CFFI_DLLEXPORT void pypy_hook_up(const char *);
 CFFI_DLLEXPORT void pypy_reset_mods_statics();
 CFFI_DLLEXPORT void pypy_mods_loaded();
 /* ui hooks */

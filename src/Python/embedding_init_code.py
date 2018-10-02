@@ -210,56 +210,44 @@ def pypy_initialize(game):
 #   - chain hook calls in (some) order of mods having been loaded subject to hooks' retval
 #
 #
-# This below is so going to be rewritten... because oxc's default action is to ignore dirs and merge
-# folders, which isn't anywhere near desired modus operandi
+# Since OXCE's loadFile function has zero idea about the mod root path and I'd rather not
+# change that, or save pythonDir in the Mod object,
+# first the Mod::loadAll() calls this to set the currently loading mods' root
+#
+_current_modpath = None
+@ffi.def_extern(onerror = log_exception)
+def pypy_set_modpath(modpath):
+    global _current_modpath
+    _current_modpath = ffi.string(modpath).decode('utf-8')
+#
+# Then if mod defines a pythonDir, this gets called, with python_dir being relative to mod root.
+# Can in fact define several, but currently only the last one will be useful
 #
 @ffi.def_extern(onerror = log_exception)
-def pypy_hook_up(rulefile_name, python_dir):
+def pypy_hook_up(python_dir):
     Hooks._reset()  # reset what previous mods did
     if python_dir == ffi.NULL: # okay, just reset hooks. equal to being disabled.
         log_info("PyPy: pypy_hook_up(): reset.")
         return
-    python_dir = ffi.string(python_dir).decode("utf-8")
-    rulefile_name = ffi.string(rulefile_name).decode("utf-8")  # rulefile name where we got mentioned
-    log_info("PyPy: pypy_hook_up(rulefile_name={}, python_dir={})".format(rulefile_name, python_dir))
 
-    # possible ruleset dirs see comment in Mod::loadFile()1
-    rulefile_dir = os.path.dirname(rulefile_name)
-    mod_dir = os.path.dirname(rulefile_dir) # tentative ... assuming no dir nesting for Ruleset ...
-    log_info("PyPy: pypy_hook_up(): dirs rc={} mc={}".format(rulefile_dir, mod_dir))
-
-    # parent dir realpaths
-    rulefile_dir = os.path.realpath(rulefile_dir)
-    mod_dir = os.path.realpath(mod_dir) # tentative ... assuming no dir nesting for Ruleset ...
-    log_info("PyPy: pypy_hook_up(): realdirs rc={} mc={}".format(rulefile_dir, mod_dir))
-
-    # python dir realpaths
-    rule_candidate = os.path.realpath(os.path.join(rulefile_dir, python_dir))
-    mod_candidate =  os.path.realpath(os.path.join(mod_dir, python_dir))
-    log_info("PyPy: pypy_hook_up(): cans rc={} mc={}".format(rule_candidate, mod_candidate))
-
-    # check if we've got something
-    states_got_r, hooks_got_r = set(), set()
-    states_got_m, hooks_got_m = set(), set()
-
-    if os.path.isdir(rule_candidate):
-        log_info("PyPy: pypy_hook_up(): {} exists, importing".format(rule_candidate))
-        sys.path.append(rule_candidate)
-        states_got_r, hooks_got_m = import_modules(rule_candidate)
-    if os.path.isdir(mod_candidate):
-        log_info("PyPy: pypy_hook_up(): {} exists, importing".format(mod_candidate))
-        sys.path.append(mod_candidate)
-        states_got_m, hooks_got_m = import_modules(mod_candidate)
+    fullpydir = os.path.realpath(os.path.join(_current_modpath, ffi.string(python_dir).decode("utf-8")))
+    if os.path.isdir(fullpydir):
+        log_info("PyPy: pypy_hook_up(): {} exists, importing".format(fullpydir))
+        sys.path.append(fullpydir)
+        states_got, hooks_got = import_modules(fullpydir)
+    else:
+        log_info("PyPy: '{}' does not exist, ignoring".format(fullpydir))
+        return
 
     log_info("PyPy sys.path:")
     for p in sys.path:
         log_info("    ", p)
 
     log_info("PyPy states defined:")
-    for stname in states_got_r.union(states_got_m):
+    for stname in states_got:
         log_info("    ", stname)
     log_info("PyPy hooks set:")
-    for hkname in hooks_got_r.union(hooks_got_m):
+    for hkname in hooks_got:
         log_info("    ", hkname)
 
 #

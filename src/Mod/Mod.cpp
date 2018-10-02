@@ -1002,6 +1002,9 @@ void Mod::loadAll(const std::vector< std::pair< std::string, std::vector<std::st
 		_scriptGlobal->setMod((int)modOffsets[i]);
 		try
 		{
+			auto it = Options::getModInfos().find(mods[i].first);
+			pypy_set_modpath((*it).second.getPath().c_str());
+
 			loadMod(mods[i].second, modOffsets[i], parser);
 		}
 		catch (Exception &e)
@@ -1210,8 +1213,7 @@ void Mod::loadFile(const std::string &filename, ModScript &parsers)
 
 	if (const YAML::Node &pythonPath = doc["pythonPath"])
 	{
-		auto str = doc["pythonPath"].as<std::string>();
-		pypy_hook_up(filename.c_str(), str.c_str());
+		pypy_hook_up(doc["pythonPath"].as<std::string>().c_str());
 	}
 	if (const YAML::Node &extended = doc["extended"])
 	{
