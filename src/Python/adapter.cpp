@@ -143,47 +143,58 @@ struct _state_t : public State {
 	std::vector<Text *> _interned_texts;
 
 	// input state
-	int32_t _mousebuttons; // pressed/released bitmap
-	int32_t _mousex, _mousey;
-	int32_t _keysym, _keymod, _keyunicode;
+	st_input_t _st;
 
 	_state_t(int32_t w, int32_t h, int32_t x, int32_t y, const std::string &id, const std::string &category) {
 		_screen = false; // it's if it replaces the whole screen, so no.
+		_w = w; _h = h; _x = x; _y = y;
+		_xscale = 1.0; _yscale = 1.0;
+		_left = 0; _top = 0;
 		_surface = new Surface(w, h, x, y); // our blit target
 		bool alterpal = false;
 		setInterface(category, alterpal, _game->getSavedGame() ? _game->getSavedGame()->getSavedBattle() : 0);
 		add(_surface, id, category); // this calls setPalette on it... hmm. ah, to hell with it.
 
-		_mousebuttons = 0;
-		_mousex = 0;
-		_mousey = 0;
-		_keysym = -1;
-		_keymod = 0;
-		_keyunicode = -1;
+		_st.buttons = 0;
+		_st.mx = 0;
+		_st.my = 0;
+		_st.keysym = -1;
+		_st.keymod = 0;
+		_st.unicode = -1;
 	}
 	/// Initializes the state. All done in the constructor. Just activates itself here.
 	virtual void init() { /* _game->pushState(this); */}
 
 	void set_mb_state(int button, bool pressed) {
 		if (pressed) {
-			_mousebuttons |= 1<<button;
+			_st.buttons |= 1<<button;
 		} else {
-			_mousebuttons &= ~(1<<button);
+			_st.buttons &= ~(1<<button);
 		}
 	}
 	// converts coords, also checks if it's in our box.
 	bool set_mouse_posn(int sx, int sy) {
-		if ((sx < _left+_x) or (sy < _top+_y) or (sx >= _left+_x+_w) or (sy >= _top+_y+_h)) {
+		// well duh. st, sy,  _left,_top are in system pixels, while _x is in logical pixels. as are _w and _h
+		// to reduce confusion,
+		// first decide if we're letterboxxedd?
+		int sysleft = round(_x  *_xscale) + _left;
+		int systop = round(_y * _yscale) + _top;
+		int sysright = sysleft + round(_w * _xscale);
+		int sysbottom = systop + round(_h * _yscale);
+		if ((sx < sysleft) or (sy < systop) or (sx >= sysright) or (sy >= sysbottom)) {
 			// outside of our box
+			Log(LOG_INFO)<<"mouseposn: sx="<<sx<<" sy="<<sy<<" left="<<sysleft<<" top="<<systop<<" right="<<sysright<<" bottom="<<sysbottom;
 			return false;
 		}
-		_mousex = (int32_t)((sx - _left - _x) / _xscale);
-		_mousey = (int32_t)((sy - _top - _y) / _yscale);
+		// calculate mouse coords inside our window/surface/whatever
+		_st.mx = round((sx - sysleft)/_xscale);
+		_st.my = round((sy - systop)/_yscale);
+		Log(LOG_INFO)<<"mouseposn: got "<<_st.mx<<":"<<_st.my;
 		return true;
 	}
 	// pass input events up to pypy code
 	// Action gets here before the souping up in InteractiveSurface::handle
-	// so we must do that here. Besides the SDL_Event, this provides
+	// so we must do the same here. Besides the SDL_Event, this provides
 	// scale and offset of the draw area so that we can transform the mouse coords
 	// and filter'em based on coords.
 	//
@@ -218,9 +229,10 @@ struct _state_t : public State {
 				}
 				break;
 			case SDL_KEYDOWN:
-				_keysym = ev->key.keysym.sym;
-				_keymod = ev->key.keysym.mod;
-				Log(LOG_INFO) << "SDL_KEYDOWN" << ((int)(ev->key.keysym.sym));
+				_st.keysym = ev->key.keysym.sym;
+				_st.keymod = ev->key.keysym.mod;
+				Log(LOG_INFO) << "SDL_KEYDOWN keysym.sym=" << ((int)(ev->key.keysym.sym));
+				pass_on = true;
 				break;
 			case SDL_KEYUP:
 				break;
@@ -231,29 +243,24 @@ struct _state_t : public State {
 			pypy_state_input(this);
 		}
 		// reset kbd data
-		_keysym = -1;
-		_keyunicode = -1;
+		_st.keysym = -1;
+		_st.unicode = -1;
 		// keep _keymod
 		//State::handle(action); why?
 	}
 
 	/// Runs state functionality every cycle.
 	virtual void think() {
-		Log(LOG_INFO)<<"state_t::think()";
 		pypy_state_think(this);
 	}
 
 	/// Blits the state to the screen.
 	virtual void blit() {
-		Log(LOG_INFO)<<"state_t::blit()";
 		pypy_state_blit(this); // draw to the underlying surface
 		State::blit(); // blit to the actual screen
 	}
 
 	virtual void resize(int &dX, int &dY) { Log(LOG_ERROR)<< "state_t::resize(): not implemented. " << dX << ":" <<dY; }
-
-	// pop self assuming we're the last.
-	static void pop_self() { GAME->popState(); }
 
 	// get game
 	static Game *get_game() { return GAME; }
@@ -290,8 +297,7 @@ struct _state_t : public State {
 state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category) {
 	return new state_t(w, h, x, y, ui_id, ui_category);
 }
-
-void st_pop_self(state_t *state) { state->pop_self(); delete state; }
+void pop_state(state_t *state) {  pypy_forget_state(state); GAME->popState();}
 void st_clear(state_t *state) { state->_surface->clear(0); }
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color) { state->_surface->drawRect(x, y, w, h, color); }
 void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc) {
@@ -374,6 +380,7 @@ void st_play_ui_sound(state_t *state, const char *name) {
 	else if (s == "WINDOW_POPUP_2") { Window::soundPopup[2]->play(Mix_GroupAvailable(0)); }
 	else { Log(LOG_ERROR) << "unsuppored ui sound '" << s << "'"; }
 }
+st_input_t *st_get_input_state(state_t *state) { return &state->_st; }
 //}
 //{ translations
 // just so we have some lifetime to the values returned by st_translate().

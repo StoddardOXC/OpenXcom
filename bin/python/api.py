@@ -91,11 +91,12 @@ class State(object):
             ui_category, bg - interface stuff, pass "geoscape", "saveMenus" for now
             bg - background image name, like "BACK01.SCR"
          """
-
+        log_info("State({}, {}, {}, {}, '{}', '{}')".format(w, h, x, y, ui_id, ui_category))
         self._st = lib.new_state(w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'))
         self._ran_this_frame = False
         self._frame_count = 0
         self._cbuf = []
+        self.input = lib.st_get_input_state(self._st)
 
     @property
     def ptr(self):
@@ -110,22 +111,15 @@ class State(object):
         lib.pop_state(self._st)
 
     def run(self):
-        """ this method to be overriden to run the actual useful code """
+        """ this method to be overriden to run the actually useful code """
         pass
 
     def _inner_input(self):
-        print("ImmUITest _inner_input")
-        # if that's a subsequent run for this frame,
-        # drop the previous command buffer
+        # if that's a subsequent run for this frame, drop the previous command buffer
         if self._ran_this_frame:
             self._cbuf = []
         # extract underlying event from the underlying class.
-        self._mousebuttons = lib.st_get_mousebuttons(self._st);
-        self._mousex = lib.st_get_mousex(self._st);
-        self._mousey = lib.st_get_mousey(self._st);
-        self._keysym = lib.st_get_keysym(self._st);
-        self._keymod = lib.st_get_keymod(self._st);
-        self._keyunicode = lib.st_keyunicode(self._st);
+        self.input = lib.st_get_input_state(self._st)
         self.run()
         self._ran_this_frame = True
 
@@ -141,12 +135,10 @@ class State(object):
 
     def _inner_think(self):
         if not self._ran_this_frame:
-            print("ImmUITest _inner_think")
             self.run()  # generate command list
             self._ran_this_frame = True
 
     def _inner_blit(self):
-        print("ImmUITest _inner_blit")
         if self._ran_this_frame:
             self._execute() # execute it
             self._cbuf = [] # drop the buffer

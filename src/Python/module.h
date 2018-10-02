@@ -52,6 +52,7 @@ CFFI_DLLEXPORT void pypy_reset_mods_statics();
 CFFI_DLLEXPORT void pypy_mods_loaded();
 /* ui hooks */
 CFFI_DLLEXPORT void *pypy_spawn_state(const char *state_name);
+CFFI_DLLEXPORT void pypy_forget_state(void *);
 CFFI_DLLEXPORT void pypy_state_input(void *state);
 CFFI_DLLEXPORT void pypy_state_blit(void *state);
 CFFI_DLLEXPORT void pypy_state_think(void *state);

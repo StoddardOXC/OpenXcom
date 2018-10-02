@@ -29,11 +29,6 @@ from api import *
 
 import sys, pprint
 
-"""
-    well, shit. this idea about sending x and y to every fucking element there is
-    is particularly idiotic.
-
-"""
 class ImmUITest(State):
     ui_cat = "saveMenus"
     ui_id = "window"
@@ -46,23 +41,25 @@ class ImmUITest(State):
         self.hot = None
         self.active = None
 
-        self.mouse_x = None
-        self.mouse_y = None
-        self.mouse_b = None
-
         self.command_buffer = []
         self.next_id = -1
-        self.init()
+
+
+
+        #self.some_text = self.gget_text(w, h, text, ha, va, wrap, prim, seco, small)
+        print("ImmUITest init")
+        self.bg = self.get_surface("BACK01.SCR")
+        self.some_text = self.get_text(100, 40, "yoba", 0, 1, False, 23, 42, False)
 
     def get_id(self):
         self.next_id += 1
         return self.next_id
 
     def regionhit(self, rect):
-        out = ((self.mouse_x < rect[0]) or
-               (self.mouse_y < rect[1]) or
-               (self.mouse_x >= rect[0] + rect[2]) or
-               (self.mouse_y >= rect[1] + rect[3]))
+        out = ((self.input.mx  < rect[0]) or
+               (self.input.my  < rect[1]) or
+               (self.input.my >= rect[0] + rect[2]) or
+               (self.input.my >= rect[1] + rect[3]))
         return not out
 
     def run(self):
@@ -72,7 +69,7 @@ class ImmUITest(State):
         # call the logic
         self.logick()
         # clean up ui state
-        if self.mouse_b is None:
+        if self.input.mx == -1:
             self.active = None
         elif self.active is None:
             self.active = -1 # duh! why?
@@ -120,18 +117,12 @@ class ImmUITest(State):
     def image_button(self, rect, image, pressed):
         pass
 
-    def init(self):
-        #self.some_text = self.gget_text(w, h, text, ha, va, wrap, prim, seco, small)
-        print("ImmUITest init")
-        self.bg = self.get_surface("BACK01.SCR")
-        self.some_text = self.get_text(100, 40, "yoba", 0, 1, False, 23, 42, False)
-
     def logick(self):
+        if self.input.keysym == 27:
+            self.pop()
         self.blit((0,0), (0,0,0,0), self.bg)
         self.border((0,0,self.w, self.h), 3, 8)
         self.blit((10,10), (0,0,0,0), self.some_text)
-
-        print("ImmUITest logick")
 
 AboutPyPy = ImmUITest
 

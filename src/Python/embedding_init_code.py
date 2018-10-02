@@ -285,11 +285,17 @@ def pypy_spawn_state(name):
     return newstate.ptr
 
 @ffi.def_extern(onerror = log_exception)
+def pypy_forget_state(state_ptr):
+    state_id = ptr2int(state_ptr)
+    del state_instances[state_id]
+    log_info("pypy_forget_state({}) done.".format(state_ptr))
+
+@ffi.def_extern(onerror = log_exception)
 def pypy_state_input(state_ptr):
     global state_types, state_instances
     state_id = ptr2int(state_ptr)
     if state_id in state_instances:
-        state_instances[state_id]._inner_handle()
+        state_instances[state_id]._inner_input()
     else:
         log_error("pypy_state_input() : state {:x} not registered".format(state_id))
 
