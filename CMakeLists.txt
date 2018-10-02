@@ -58,7 +58,7 @@ set ( DEPS_DIR "${default_deps_dir}" CACHE STRING "Dependencies directory" )
 
 # TODO: detect it the right way
 set ( PYPY3_ROOT_DIR "/opt/pypy/pypy3-v6.0.0-linux64" CACHE PATH PYPY3_ROOT_DIR )
-set ( PYPY3_LIBRARY pypy3-c )
+set ( PYPY3_LIBRARY pypy3-c pthread )
 
 set ( PYPY3_BIN ${PYPY3_ROOT_DIR}/bin/pypy3 )
 include_directories ( ${PYPY3_ROOT_DIR}/include )
@@ -81,7 +81,7 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
 elseif (CMAKE_HOST_UNIX)
   set(ENV{PKG_CONFIG_PATH} "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/")
 
-  set(CMAKE_C_FLAGS "-fno-omit-frame-pointer -f")
+  set(CMAKE_C_FLAGS "-fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -ggdb3")
   set(CMAKE_C_FLAGS_RELEASE "-O3 -ggdb3")
