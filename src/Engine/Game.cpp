@@ -434,6 +434,7 @@ void Game::run()
 			(*i)->blit();
 		}
 		engineTimings.set_text_stuff(this);
+
 		if (Options::fpsCounter)
 		{
 			engineTimings.blit(_screen->getSurface(), frameNominalDuration); // previous frame's stats
@@ -455,6 +456,7 @@ void Game::run()
 		{
 			SDL_Delay(idleTime);
 		}
+
 		// here we go again
 		continue;
 
