@@ -432,8 +432,8 @@ void Game::run()
 		{
 			(*i)->blit();
 		}
-		engineTimings.set_text_stuff(this);
 
+		engineTimings.set_text_stuff(this);
 		if (Options::fpsCounter)
 		{
 			engineTimings.blit(_screen->getSurface(), frameNominalDuration); // previous frame's stats
@@ -444,9 +444,10 @@ void Game::run()
 		auto blitDoneAt = SDL_GetTicks();
 		auto blittingTime = blitDoneAt - blitStartedAt;
 
-		// update the stats
-		auto frameTimeSpentSoFar = SDL_GetTicks() - frameStartedAt;
+		auto frameTimeSpentSoFar = blitDoneAt - frameStartedAt;
 		int32_t idleTime = frameNominalDuration - frameTimeSpentSoFar;
+
+		// update the stats
 		engineTimings.update(inputProcessingTime, logicProcessingTime, blittingTime, idleTime);
 
 		// sleep until next frame
@@ -454,7 +455,6 @@ void Game::run()
 		{
 			SDL_Delay(idleTime);
 		}
-
 		// here we go again
 		continue;
 
