@@ -29,6 +29,7 @@
 #include "Screen.h"
 #include "Sound.h"
 #include "Music.h"
+#include "Font.h"
 #include "Language.h"
 #include "Logger.h"
 #include "../Interface/Cursor.h"
@@ -222,13 +223,27 @@ public:
 };
 
 struct EngineTimings {
+	const int _w = 80, _w_dos = 160;
+	const int _h = 48, _h_dos = 96;
 	Text _text;
-	Game *_game;
+	Font *_font;
+	Language *_lang;
+	bool _dos;
 
 	ema_filter_t _input, _logic, _blit, _idle, _total, _frame;
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> _wsconverter;
 
-	EngineTimings() : _text(64, 8*6, 0, 0), _game(0), _input(), _logic(), _blit(), _idle(), _frame() {	}
+	EngineTimings() : _text(_w_dos, _h_dos, 0, 0), _font(0), _lang(0), _dos(true),
+				_input(), _logic(), _blit(), _idle(), _frame(), _wsconverter() {
+		_font = new Font();
+		_font->loadTerminal();
+		_lang = new Language();
+		position(Options::baseXResolution, Options::baseYResolution);
+		_text.setPalette(_font->getPalette(), 0, 2);
+		_text.initText(_font, _font, _lang);
+		_text.setColor(0);
+		_text.setSmall();
+	}
 	void update(const int  inputProcessingTime, const int  logicProcessingTime, const int  blittingTime, const int idleTime) {
 		_input.update(inputProcessingTime);
 		_logic.update(logicProcessingTime);
@@ -237,25 +252,30 @@ struct EngineTimings {
 		_frame.update(inputProcessingTime + logicProcessingTime + blittingTime + idleTime);
 	}
 	void set_text_stuff(Game *game) {
-		if (game->getMod() ==  NULL) {
-			return;
-		} else {
-			_game = game;
+		if (game->getMod() !=  NULL) {
+			// so we've got a mod. set its font&lang&palette.
+			// lang we don't need, so no tracking of its changing
+			auto mod_font = game->getMod()->getFont("FONT_SMALL", false);
+			if (mod_font != NULL ) {
+				auto mod_lang = game->getLanguage();
+				_text.setPalette(mod_font->getPalette());
+				_text.initText(mod_font, mod_font, mod_lang);
+				_text.setColor(0xf6);
+				_dos = false;
+			} else { // well, no mod. revert to the terminal font.
+				_text.initText(_font, _font, _lang);
+				_text.setPalette(_font->getPalette(), 0, 2);
+				_text.setColor(0);
+				_dos = true;
+			}
 		}
-		_text.setSmall();
-		_text.setColor(0xf6);
-
-		auto fb = game->getMod()->getFont("FONT_BIG", false);
-		auto fs = game->getMod()->getFont("FONT_SMALL", false);
-		auto lang = _game->getLanguage();
-
-		if ( fb  == NULL or fs == NULL or lang == NULL) {
-			return;
-		}
-
-		_text.initText(fb, fs, lang);
 	}
-	void blit(Surface *s, const int limit) {
+	void position(int w, int h) {
+		_text.setX(w- (_dos ? _w_dos : _w  - 1));
+		_text.setY(0);
+	}
+	void blit(Surface *s, const int limit, int dw, int dh) {
+		position(dw, dh);
 		_text.setPalette(s->getPalette()); // hgmm...
 		_text.setVisible(true);
 		_text.setHidden(false);
@@ -407,7 +427,8 @@ void Game::run()
 		Uint32 frameNominalDuration = 1; // 1e3 FPS should be enough for anybody
 		if (Options::FPS > 0 )
 		{
-			 frameNominalDuration = 1000 / Options::FPS; // limited FPS
+			auto fpsLimit = SDL_GetAppState() & SDL_APPINPUTFOCUS ? Options::FPS : Options::FPSInactive;
+			frameNominalDuration += 1000 / fpsLimit;
 		}
 		auto inputProcessedAt = SDL_GetTicks();
 		auto inputProcessingTime = inputProcessedAt - frameStartedAt;
@@ -437,7 +458,8 @@ void Game::run()
 		engineTimings.set_text_stuff(this);
 		if (Options::fpsCounter)
 		{
-			engineTimings.blit(_screen->getSurface(), frameNominalDuration); // previous frame's stats
+			auto ss = _screen->getSurface();
+			engineTimings.blit(ss, frameNominalDuration, ss->getWidth(), 0); // previous frame's stats
 		}
 		_cursor->blit(_screen->getSurface());
 		_screen->flip();
@@ -456,62 +478,7 @@ void Game::run()
 		{
 			SDL_Delay(idleTime);
 		}
-		// here we go again
-		continue;
-
-		// Process rendering
-		if (runningState != PAUSED)
-		{
-			// Process logic
-			_states.back()->think();
-			_fpsCounter->think();
-			if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
-			{
-				// Update our FPS delay time based on the time of the last draw.
-				int fps = SDL_GetAppState() & SDL_APPINPUTFOCUS ? Options::FPS : Options::FPSInactive;
-
-				_timeUntilNextFrame = (1000.0f / fps) - (SDL_GetTicks() - _timeOfLastFrame);
-			}
-			else
-			{
-				_timeUntilNextFrame = 0;
-			}
-
-			if (_init && _timeUntilNextFrame <= 0)
-			{
-				// make a note of when this frame update occurred.
-				_timeOfLastFrame = SDL_GetTicks();
-				_fpsCounter->addFrame();
-				_screen->clear();
-				std::list<State*>::iterator i = _states.end();
-				do
-				{
-					--i;
-				}
-				while (i != _states.begin() && !(*i)->isScreen());
-
-				for (; i != _states.end(); ++i)
-				{
-					(*i)->blit();
-				}
-				_fpsCounter->blit(_screen->getSurface());
-				_cursor->blit(_screen->getSurface());
-				_screen->flip();
-			}
-		}
-
-		// Save on CPU
-		switch (runningState)
-		{
-			case RUNNING:
-				SDL_Delay(1); //Save CPU from going 100%
-				break;
-			case SLOWED: case PAUSED:
-				SDL_Delay(100); break; //More slowing down.
-		}
-
 	}
-
 	Options::save();
 }
 
