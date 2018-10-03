@@ -268,7 +268,6 @@ struct EngineTimings {
 		int fps = round(1000.0/frm);
 		actual_text<<"input:  "<<ipg<<" ms\nlogic:  "<<lgg<<" ms\nblit:  "<<blg<<" ms\nidle:  " <<idg<<" ms\nframe:  "<<frm<<"/"<<limit<<" ms\n";
 		actual_text<<"\"fps\"   "<<fps;
-		printf("%s\n\n", actual_text.str().c_str());
 		_text.setText(_wsconverter.from_bytes(actual_text.str().c_str()));
 		_text.draw();
 		_text.blit(s);
