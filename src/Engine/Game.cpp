@@ -253,8 +253,7 @@ struct EngineTimings {
 	}
 	void set_text_stuff(Game *game) {
 		if (game->getMod() !=  NULL) {
-			// so we've got a mod. set its font&lang&palette.
-			// lang we don't need, so no tracking of its changing
+			// so we've got a mod loaded - use its font&lang&palette.
 			auto mod_font = game->getMod()->getFont("FONT_SMALL", false);
 			if (mod_font != NULL ) {
 				auto mod_lang = game->getLanguage();
@@ -287,7 +286,7 @@ struct EngineTimings {
 		int blg = round(_blit.get());
 		int idg = round(_idle.get());
 		int frm = round(_frame.get());
-		int fps = round(1000.0/frm);
+		int fps = round(1000.0/_frame.get());
 		actual_text<<"input:  "<<ipg<<" ms\nlogic:  "<<lgg<<" ms\nblit:  "<<blg<<" ms\nidle:  " <<idg<<" ms\nframe:  "<<frm<<"/"<<limit<<" ms\n";
 		actual_text<<"\"fps\"   "<<fps;
 		_text.setText(_wsconverter.from_bytes(actual_text.str().c_str()));
@@ -474,7 +473,7 @@ void Game::run()
 		engineTimings.update(inputProcessingTime, logicProcessingTime, blittingTime, idleTime);
 
 		// sleep until next frame
-		if (idleTime > 2)  // 2 to have some leg room if we're close to the limit
+		if (idleTime > 1)  // 1 is to have some leg room if we're that close to the limit
 		{
 			SDL_Delay(idleTime);
 		}
