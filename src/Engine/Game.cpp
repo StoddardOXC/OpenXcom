@@ -20,6 +20,10 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <cmath>
+#include <string>
+#include <locale>
+#include <codecvt>
 #include <SDL_mixer.h>
 #include "State.h"
 #include "Screen.h"
@@ -32,6 +36,7 @@
 #include "../Mod/Mod.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
+#include "../Interface/Text.h"
 #include "Action.h"
 #include "Exception.h"
 #include "Options.h"
@@ -76,7 +81,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 
 	// trap the mouse inside the window
 	SDL_WM_GrabInput(Options::captureMouse);
-	
+
 	// Set the window icon
 	CrossPlatform::setWindowIcon(103, FileMap::getFilePath("openxcom.png"));
 
@@ -90,7 +95,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 
 	// Create cursor
 	_cursor = new Cursor(9, 13);
-	
+
 	// Create invisible hardware cursor to workaround bug with absolute positioning pointing devices
 	SDL_ShowCursor(SDL_ENABLE);
 	Uint8 cursor = 0;
@@ -132,6 +137,144 @@ Game::~Game()
 	SDL_Quit();
 }
 
+/*  Exponential Moving Average.
+
+    Used to smooth out various metrics, like framerates.
+
+    Alpha: detemines the speed with which the returned value
+		approaches the last submitted one. Defines the 'memory'
+		of sorts. Typical value 0.025 for millisecond-order updates.
+
+    Value: metric value
+
+    Seed ceiling: number of initial values to ignore before the returned
+		value can be considered meaning anything. Typical: 10.
+
+    Reseed threshold:
+
+    To avoid noticeable stabilization periods like after major
+    metric spikes, during which no useful data is provided,
+    there's the reseed_threshold parameter, which triggers
+    a reseed if abs((sample-value)/value) gets larger than it
+    (value being the spike value).
+
+    So when the metric spikes for some reason its value is considerably
+    larger than any previous and this triggers a reseed while dropping
+    the sample so that it doesn't skew the returned value.
+
+    This thing can be applied to graphics fps, if for some reason
+    (large magnitude resize or zoom) it drops or raises abruptly.
+    In this case the sample can be used as first seed value, but
+    to keep the interface sane it is dropped anyway.
+
+    Don't set it too low, or it'll keep dropping data
+    and reseeding all the time.
+
+    Default very large value disables this functionality.
+
+    For the typical use displaying the FPS as a reciprocal of frame time
+    in milliseconds, a threshold of about 100 is usually adequate.
+*/
+
+class ema_filter_t {
+    float alpha;
+    float value;
+    float seedsum;
+    unsigned seedceil;
+    unsigned seedcount;
+    float reseed_threshold;
+
+public:
+    ema_filter_t(float _alpha = 0.025, float _value = 0.0, unsigned _seedceil = 8, float _reseed_threshold = 100) :
+        alpha(_alpha),
+        value(_value),
+        seedsum(0),
+        seedceil(_seedceil),
+        seedcount(0),
+        reseed_threshold(_reseed_threshold) { }
+
+    float update(const float sample) {
+        if (fabsf((sample-value)/value) > reseed_threshold) {
+            reset(sample);
+            return sample;
+        }
+
+        if (seedcount < seedceil) {
+            seedsum += sample;
+            if (seedcount++ == seedceil)
+                value = seedsum / seedcount;
+
+        } else {
+            value = alpha * sample + (1.0 - alpha) * value;
+        }
+        return value;
+    }
+
+    const float get(void) const { return value; }
+
+    void reset(const float value) {
+        this->value = value;
+        seedcount = 0;
+        seedsum = 0;
+    }
+};
+
+struct EngineTimings {
+	Text _text;
+	Game *_game;
+
+	ema_filter_t _input, _logic, _blit, _idle, _total, _frame;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> _wsconverter;
+
+	EngineTimings() : _text(64, 8*6, 0, 0), _game(0), _input(), _logic(), _blit(), _idle(), _frame() {	}
+	void update(const int  inputProcessingTime, const int  logicProcessingTime, const int  blittingTime, const int idleTime) {
+		_input.update(inputProcessingTime);
+		_logic.update(logicProcessingTime);
+		_blit.update(blittingTime);
+		_idle.update(idleTime);
+		_frame.update(inputProcessingTime + logicProcessingTime + blittingTime + idleTime);
+	}
+	void set_text_stuff(Game *game) {
+		if (game->getMod() ==  NULL) {
+			return;
+		} else {
+			_game = game;
+		}
+		_text.setSmall();
+		_text.setColor(0xf6);
+
+		auto fb = game->getMod()->getFont("FONT_BIG", false);
+		auto fs = game->getMod()->getFont("FONT_SMALL", false);
+		auto lang = _game->getLanguage();
+
+		if ( fb  == NULL or fs == NULL or lang == NULL) {
+			return;
+		}
+
+		_text.initText(fb, fs, lang);
+	}
+	void blit(Surface *s, const int limit) {
+		_text.setPalette(s->getPalette()); // hgmm...
+		_text.setVisible(true);
+		_text.setHidden(false);
+		_text.setAlign(ALIGN_LEFT);
+		_text.setVerticalAlign(ALIGN_TOP);
+		std::ostringstream actual_text;
+		int ipg = round(_input.get());
+		int lgg = round(_logic.get());
+		int blg = round(_blit.get());
+		int idg = round(_idle.get());
+		int frm = round(_frame.get());
+		int fps = round(1000.0/frm);
+		actual_text<<"input:  "<<ipg<<" ms\nlogic:  "<<lgg<<" ms\nblit:  "<<blg<<" ms\nidle:  " <<idg<<" ms\nframe:  "<<frm<<"/"<<limit<<" ms\n";
+		actual_text<<"\"fps\"   "<<fps;
+		printf("%s\n\n", actual_text.str().c_str());
+		_text.setText(_wsconverter.from_bytes(actual_text.str().c_str()));
+		_text.draw();
+		_text.blit(s);
+	}
+};
+
 /**
  * The state machine takes care of passing all the events from SDL to the
  * active state, running any code within and blitting all the states and
@@ -143,6 +286,7 @@ void Game::run()
 	static const ApplicationState kbFocusRun[4] = { RUNNING, RUNNING, SLOWED, PAUSED };
 	static const ApplicationState stateRun[4] = { SLOWED, PAUSED, PAUSED, PAUSED };
 	// this will avoid processing SDL's resize event on startup, workaround for the heap allocation error it causes.
+	EngineTimings engineTimings;
 	bool startupEvent = Options::allowResize;
 	while (!_quit)
 	{
@@ -173,6 +317,7 @@ void Game::run()
 			_states.back()->handle(&action);
 		}
 
+		auto frameStartedAt = SDL_GetTicks();
 		// Process events
 		while (SDL_PollEvent(&_event))
 		{
@@ -258,7 +403,61 @@ void Game::run()
 					break;
 			}
 		}
-		
+		Uint32 frameNominalDuration = 1; // 1e3 FPS should be enough for anybody
+		if (Options::FPS > 0 )
+		{
+			 frameNominalDuration = 1000 / Options::FPS; // limited FPS
+		}
+		auto inputProcessedAt = SDL_GetTicks();
+		auto inputProcessingTime = inputProcessedAt - frameStartedAt;
+		auto logicStartedAt = inputProcessedAt;
+		// process logic
+		if (runningState != PAUSED)
+		{
+			_states.back()->think();
+		}
+		auto blitStartedAt = SDL_GetTicks();
+		auto logicProcessingTime = blitStartedAt - logicStartedAt;
+
+		// do the blit
+		_screen->getSurface()->clear();
+		auto i = _states.end();
+		do
+		{
+			--i;
+		}
+		while (i != _states.begin() && !(*i)->isScreen());
+
+		for (; i != _states.end(); ++i)
+		{
+			(*i)->blit();
+		}
+		engineTimings.set_text_stuff(this);
+
+		if (Options::fpsCounter)
+		{
+			engineTimings.blit(_screen->getSurface(), frameNominalDuration); // previous frame's stats
+		}
+		_cursor->blit(_screen->getSurface());
+		_screen->flip();
+
+		auto blitDoneAt = SDL_GetTicks();
+		auto blittingTime = blitDoneAt - blitStartedAt;
+
+		// update the stats
+		auto frameTimeSpentSoFar = SDL_GetTicks() - frameStartedAt;
+		int32_t idleTime = frameNominalDuration - frameTimeSpentSoFar;
+		engineTimings.update(inputProcessingTime, logicProcessingTime, blittingTime, idleTime);
+
+		// sleep until next frame
+		if (idleTime > 2)  // 2 to have some leg room if we're close to the limit
+		{
+			SDL_Delay(idleTime);
+		}
+
+		// here we go again
+		continue;
+
 		// Process rendering
 		if (runningState != PAUSED)
 		{
@@ -303,12 +502,13 @@ void Game::run()
 		// Save on CPU
 		switch (runningState)
 		{
-			case RUNNING: 
+			case RUNNING:
 				SDL_Delay(1); //Save CPU from going 100%
 				break;
 			case SLOWED: case PAUSED:
 				SDL_Delay(100); break; //More slowing down.
 		}
+
 	}
 
 	Options::save();
