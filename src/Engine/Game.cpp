@@ -107,6 +107,8 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 	_lang = new Language();
 
 	_timeOfLastFrame = 0;
+
+	_mod_ready = false;
 }
 
 /**
@@ -705,7 +707,7 @@ void Game::setSavedGame(SavedGame *save)
  */
 Mod *Game::getMod() const
 {
-	return _mod;
+	return _mod_ready ? _mod : NULL;
 }
 
 /**
@@ -713,10 +715,12 @@ Mod *Game::getMod() const
  */
 void Game::loadMods()
 {
+	_mod_ready = false;
 	Mod::resetGlobalStatics();
 	delete _mod;
 	_mod = new Mod();
 	_mod->loadAll(FileMap::getRulesets());
+	_mod_ready = true;
 }
 
 /**
