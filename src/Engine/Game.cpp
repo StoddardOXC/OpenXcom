@@ -176,7 +176,7 @@ Game::~Game()
     Default very large value disables this functionality.
 
     For the typical use displaying the FPS as a reciprocal of frame time
-    in milliseconds, a threshold of about 100 is usually adequate.
+    in milliseconds, a threshold of about 10 is usually adequate.
 */
 
 class ema_filter_t {
@@ -188,7 +188,7 @@ class ema_filter_t {
     float reseed_threshold;
 
 public:
-    ema_filter_t(float _alpha = 0.025, float _value = 0.0, unsigned _seedceil = 8, float _reseed_threshold = 100) :
+    ema_filter_t(float _alpha = 0.03, float _value = 0.0, unsigned _seedceil = 8, float _reseed_threshold = 3) :
         alpha(_alpha),
         value(_value),
         seedsum(0),
@@ -204,9 +204,9 @@ public:
 
         if (seedcount < seedceil) {
             seedsum += sample;
-            if (seedcount++ == seedceil)
+            if (seedcount++ == seedceil) {
                 value = seedsum / seedcount;
-
+			}
         } else {
             value = alpha * sample + (1.0 - alpha) * value;
         }
@@ -273,8 +273,8 @@ struct EngineTimings {
 		_text.setX(w- (_dos ? _w_dos : _w  - 1));
 		_text.setY(0);
 	}
-	void blit(Surface *s, const int limit, int dw, int dh) {
-		position(dw, dh);
+	void blit(Surface *s, const int limit) {
+		position(s->getWidth(), s->getHeight());
 		_text.setPalette(s->getPalette()); // hgmm...
 		_text.setVisible(true);
 		_text.setHidden(false);
@@ -427,7 +427,7 @@ void Game::run()
 		if (Options::FPS > 0 )
 		{
 			auto fpsLimit = SDL_GetAppState() & SDL_APPINPUTFOCUS ? Options::FPS : Options::FPSInactive;
-			frameNominalDuration += 1000 / fpsLimit;
+			frameNominalDuration = 1000 / fpsLimit;
 		}
 		auto inputProcessedAt = SDL_GetTicks();
 		auto inputProcessingTime = inputProcessedAt - frameStartedAt;
@@ -441,26 +441,22 @@ void Game::run()
 		auto logicProcessingTime = blitStartedAt - logicStartedAt;
 
 		// do the blit
-		_screen->getSurface()->clear();
+		auto screenSurface = _screen->getSurface();
+		screenSurface->clear();
+
+		// find the topmost full-screen state
 		auto i = _states.end();
-		do
-		{
-			--i;
-		}
-		while (i != _states.begin() && !(*i)->isScreen());
+		for (--i; i != _states.begin() && !(*i)->isScreen(); --i);
 
-		for (; i != _states.end(); ++i)
-		{
-			(*i)->blit();
-		}
+		// blit it and every other state on top of it
+		for (; i != _states.end(); (*(i++))->blit());
 
-		engineTimings.set_text_stuff(this);
 		if (Options::fpsCounter)
 		{
-			auto ss = _screen->getSurface();
-			engineTimings.blit(ss, frameNominalDuration, ss->getWidth(), 0); // previous frame's stats
+			engineTimings.set_text_stuff(this);
+			engineTimings.blit(screenSurface, frameNominalDuration);
 		}
-		_cursor->blit(_screen->getSurface());
+		_cursor->blit(screenSurface);
 		_screen->flip();
 
 		auto blitDoneAt = SDL_GetTicks();
