@@ -487,7 +487,6 @@ void Game::run()
 
 		auto blitDoneAt = SDL_GetTicks();
 		auto blittingTime = blitDoneAt - blitStartedAt;
-
 		auto frameTimeSpentSoFar = blitDoneAt - frameStartedAt;
 		int32_t idleTime = frameNominalDuration - frameTimeSpentSoFar;
 		if (idleTime < 0) // 1 is to have some leg room if we're that close to the limit
