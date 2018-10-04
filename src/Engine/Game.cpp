@@ -460,12 +460,15 @@ void Game::run()
 
 		auto frameTimeSpentSoFar = blitDoneAt - frameStartedAt;
 		int32_t idleTime = frameNominalDuration - frameTimeSpentSoFar;
-
+		if (idleTime < 0) // 1 is to have some leg room if we're that close to the limit
+		{
+			idleTime = 0;
+		}
 		// update the stats
 		engineTimings.update(inputProcessingTime, logicProcessingTime, blittingTime, idleTime);
 
 		// sleep until next frame
-		if (idleTime > 1)  // 1 is to have some leg room if we're that close to the limit
+		if (idleTime)
 		{
 			SDL_Delay(idleTime);
 		}
