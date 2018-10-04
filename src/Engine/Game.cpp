@@ -345,6 +345,13 @@ void Game::run()
 		}
 
 		auto frameStartedAt = SDL_GetTicks();
+		// note: state initialization time is not measured because of the control flow.
+		// if input handling or think() results in a new state being spawned, we need to do the above dance on it,
+		// then look for any input so that the we're responsive if init() was slow, then call think() on it,
+		// so that it is in a good state and ready to blit()
+		//
+		// the frame all this happens in is not counted for the purpose of statistics.
+
 		// Process events
 		while (SDL_PollEvent(&_event))
 		{
