@@ -220,7 +220,7 @@ public:
 };
 
 struct EngineTimings {
-	const int _w = 80, _w_dos = 160;
+	const int _w = 96, _w_dos = 160;
 	const int _h = 48, _h_dos = 96;
 	Text _text;
 	Font *_font;
@@ -230,16 +230,14 @@ struct EngineTimings {
 	ema_filter_t _input, _logic, _blit, _idle, _total, _frame;
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> _wsconverter;
 
-	EngineTimings() : _text(_w_dos, _h_dos, 0, 0), _font(0), _lang(0), _dos(true),
+	EngineTimings() : _text(_w_dos, _h_dos, 0, 0), _font(0), _lang(0), _dos(false),
 				_input(), _logic(), _blit(), _idle(), _frame(), _wsconverter() {
 		_font = new Font();
 		_font->loadTerminal();
 		_lang = new Language();
 		position(Options::baseXResolution, Options::baseYResolution);
-		_text.setPalette(_font->getPalette(), 0, 2);
-		_text.initText(_font, _font, _lang);
-		_text.setColor(0);
-		_text.setSmall();
+		set_text_stuff(NULL);
+
 	}
 	void update(const int  inputProcessingTime, const int  logicProcessingTime, const int  blittingTime, const int idleTime) {
 		_input.update(inputProcessingTime);
@@ -248,22 +246,34 @@ struct EngineTimings {
 		_idle.update(idleTime);
 		_frame.update(inputProcessingTime + logicProcessingTime + blittingTime + idleTime);
 	}
-	void set_text_stuff(Game *game) {
-		if (game->getMod() !=  NULL) {
-			// so we've got a mod loaded - use its font&lang&palette.
-			auto mod_font = game->getMod()->getFont("FONT_SMALL", false);
-			if (mod_font != NULL ) {
-				auto mod_lang = game->getLanguage();
-				_text.setPalette(mod_font->getPalette());
-				_text.initText(mod_font, mod_font, mod_lang);
-				_text.setColor(0xf6);
-				_dos = false;
-			} else { // well, no mod. revert to the terminal font.
-				_text.initText(_font, _font, _lang);
-				_text.setPalette(_font->getPalette(), 0, 2);
-				_text.setColor(0);
-				_dos = true;
+	void set_text_stuff(Game *game) { // handle dos/mod transition.
+		// determine current state
+		bool dos;
+		if ((!_dos && Options::reload) || (game == NULL)) { // first frame of the reload process or the constructor
+			dos = true;
+		} else { // have we started up / reloaded yet?
+			if (game->getMod() != NULL) {
+				dos = false;
+			} else {
+				dos = true;
 			}
+		}
+		// detect state change
+		if (_dos && !dos) { // we've got a mod loaded - use its font&lang.
+			auto mod_font = game->getMod()->getFont("FONT_SMALL", false);
+			auto mod_lang = game->getLanguage();
+			_text.initText(mod_font, mod_font, mod_lang);
+			_text.setPalette(mod_font->getPalette());
+			_text.setColor(0xf6);
+			_text.setSmall();
+			_dos = dos;
+		}
+		if (!_dos && dos) { // we're either starting-up or restarting
+			_text.initText(_font, _font, _lang);
+			_text.setPalette(_font->getPalette(), 0, 2);
+			_text.setColor(0);
+			_text.setSmall();
+			_dos = dos;
 		}
 	}
 	void position(int w, int h) {
