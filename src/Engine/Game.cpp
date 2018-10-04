@@ -442,12 +442,17 @@ void Game::run()
 		auto inputProcessedAt = SDL_GetTicks();
 		auto inputProcessingTime = inputProcessedAt - frameStartedAt;
 		auto logicStartedAt = inputProcessedAt;
+		// if we've got a new state after handling input, init it.
+		if (!_init)
+		{
+			continue;
+		}
 		// process logic
 		if (runningState != PAUSED)
 		{
 			_states.back()->think();
 		}
-		// if we've got changes in the state stack, handle them
+		// if we've got a new state after thinking, init it.
 		if (!_init)
 		{
 			continue;
