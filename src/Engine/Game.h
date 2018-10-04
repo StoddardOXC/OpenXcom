@@ -53,6 +53,7 @@ private:
 	unsigned int _timeOfLastFrame;
 	int _timeUntilNextFrame;
 	static const double VOLUME_GRADIENT;
+	bool _mod_ready;
 
 public:
 	/// Creates a new game and initializes SDL.
