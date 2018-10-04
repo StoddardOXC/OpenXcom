@@ -111,8 +111,10 @@ void ListLoadState::init()
 {
 	ListGamesState::init();
 	if (_saves.size() > 0  && _origin == OPT_MENU && Options::getLoadLastSave())
-
 	{
+		// hide the ui
+		toggleScreen();
+		hideAll();
 		// make it so that this fires only once
 		Options::expendLoadLastSave();
 		// sort the list so that what we need is at idx=0
