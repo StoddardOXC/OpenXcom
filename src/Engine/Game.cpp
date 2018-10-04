@@ -447,10 +447,14 @@ void Game::run()
 		{
 			_states.back()->think();
 		}
+		// if we've got changes in the state stack, handle them
+		if (!_init)
+		{
+			continue;
+		}
+		// do the blit
 		auto blitStartedAt = SDL_GetTicks();
 		auto logicProcessingTime = blitStartedAt - logicStartedAt;
-
-		// do the blit
 		auto screenSurface = _screen->getSurface();
 		screenSurface->clear();
 
