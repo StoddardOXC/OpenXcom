@@ -272,9 +272,6 @@
     <ClCompile Include="Savegame\BattleUnit.cpp">
       <Filter>Savegame</Filter>
     </ClCompile>
-    <ClCompile Include="Interface\FpsCounter.cpp">
-      <Filter>Interface</Filter>
-    </ClCompile>
     <ClCompile Include="Battlescape\UnitSprite.cpp">
       <Filter>Battlescape</Filter>
     </ClCompile>
@@ -1338,9 +1335,6 @@
     </ClInclude>
     <ClInclude Include="Savegame\BattleUnit.h">
       <Filter>Savegame</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface\FpsCounter.h">
-      <Filter>Interface</Filter>
     </ClInclude>
     <ClInclude Include="Battlescape\UnitSprite.h">
       <Filter>Battlescape</Filter>

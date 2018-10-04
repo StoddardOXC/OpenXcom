@@ -384,8 +384,6 @@ openxcom_SOURCES = \
 	src/Interface/ComboBox.h \
 	src/Interface/Cursor.cpp \
 	src/Interface/Cursor.h \
-	src/Interface/FpsCounter.cpp \
-	src/Interface/FpsCounter.h \
 	src/Interface/Frame.cpp \
 	src/Interface/Frame.h \
 	src/Interface/ImageButton.cpp \
