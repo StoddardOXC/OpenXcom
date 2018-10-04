@@ -213,7 +213,6 @@ set ( interface_src
   Interface/BattlescapeButton.cpp
   Interface/ComboBox.cpp
   Interface/Cursor.cpp
-  Interface/FpsCounter.cpp
   Interface/Frame.cpp
   Interface/ImageButton.cpp
   Interface/NumberText.cpp

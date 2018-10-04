@@ -33,7 +33,6 @@
 #include "Language.h"
 #include "Logger.h"
 #include "../Interface/Cursor.h"
-#include "../Interface/FpsCounter.h"
 #include "../Mod/Mod.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
@@ -102,9 +101,6 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 	Uint8 cursor = 0;
 	SDL_SetCursor(SDL_CreateCursor(&cursor, &cursor, 1,1,0,0));
 
-	// Create fps counter
-	_fpsCounter = new FpsCounter(15, 5, 0, 0);
-
 	// Create blank language
 	_lang = new Language();
 
@@ -131,7 +127,6 @@ Game::~Game()
 	delete _save;
 	delete _mod;
 	delete _screen;
-	delete _fpsCounter;
 
 	Mix_CloseAudio();
 
@@ -394,7 +389,6 @@ void Game::run()
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 					_screen->handle(&action);
 					_cursor->handle(&action);
-					_fpsCounter->handle(&action);
 					if (action.getDetails()->type == SDL_KEYDOWN)
 					{
 						// "ctrl-g" grab input
@@ -402,6 +396,10 @@ void Game::run()
 						{
 							Options::captureMouse = (SDL_GrabMode)(!Options::captureMouse);
 							SDL_WM_GrabInput(Options::captureMouse);
+						}
+						else if (action.getDetails()->key.keysym.sym == Options::keyFps)
+						{
+							Options::fpsCounter = ! Options::fpsCounter;
 						}
 						else if (Options::debug)
 						{
@@ -549,15 +547,6 @@ Screen *Game::getScreen() const
 Cursor *Game::getCursor() const
 {
 	return _cursor;
-}
-
-/**
- * Returns the FpsCounter used by the game.
- * @return Pointer to the FpsCounter.
- */
-FpsCounter *Game::getFpsCounter() const
-{
-	return _fpsCounter;
 }
 
 /**

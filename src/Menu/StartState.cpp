@@ -30,7 +30,6 @@
 #include "../Engine/Font.h"
 #include "../Engine/Timer.h"
 #include "../Engine/CrossPlatform.h"
-#include "../Interface/FpsCounter.h"
 #include "../Interface/Cursor.h"
 #include "../Interface/Text.h"
 #include "MainMenuState.h"
@@ -71,7 +70,7 @@ StartState::StartState() : _anim(0)
 	_text = new Text(Options::baseXResolution, Options::baseYResolution, 0, 0);
 	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
 	_timer = new Timer(150);
-	
+
 	setPalette(_font->getPalette(), 0, 2);
 
 	add(_text);
@@ -91,7 +90,6 @@ StartState::StartState() : _anim(0)
 
 	// Hide UI
 	_game->getCursor()->setVisible(false);
-	_game->getFpsCounter()->setVisible(false);
 
 	if (Options::reload)
 	{
@@ -177,7 +175,6 @@ void StartState::think()
 			Options::reload = false;
 		}
 		_game->getCursor()->setVisible(true);
-		_game->getFpsCounter()->setVisible(Options::fpsCounter);
 		break;
 	default:
 		break;

@@ -181,7 +181,6 @@
 #include "./Interface/BattlescapeButton.h"
 #include "./Interface/ComboBox.h"
 #include "./Interface/Cursor.h"
-#include "./Interface/FpsCounter.h"
 #include "./Interface/Frame.h"
 #include "./Interface/ImageButton.h"
 #include "./Interface/NumberText.h"

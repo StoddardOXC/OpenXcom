@@ -31,7 +31,6 @@ class Language;
 class SavedGame;
 class Mod;
 class ModInfo;
-class FpsCounter;
 
 /**
  * The core of the game engine, manages the game's entire contents and structure.
@@ -50,7 +49,6 @@ private:
 	SavedGame *_save;
 	Mod *_mod;
 	bool _quit, _init;
-	FpsCounter *_fpsCounter;
 	bool _mouseActive;
 	unsigned int _timeOfLastFrame;
 	int _timeUntilNextFrame;
@@ -73,8 +71,6 @@ public:
 	Screen *getScreen() const;
 	/// Gets the game's cursor.
 	Cursor *getCursor() const;
-	/// Gets the FpsCounter.
-	FpsCounter *getFpsCounter() const;
 	/// Resets the state stack to a new state.
 	void setState(State *state);
 	/// Pushes a new state into the state stack.

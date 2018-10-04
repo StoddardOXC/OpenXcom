@@ -424,7 +424,6 @@
     <ClCompile Include="Interface\BattlescapeButton.cpp" />
     <ClCompile Include="Interface\ComboBox.cpp" />
     <ClCompile Include="Interface\Cursor.cpp" />
-    <ClCompile Include="Interface\FpsCounter.cpp" />
     <ClCompile Include="Interface\Frame.cpp" />
     <ClCompile Include="Interface\ImageButton.cpp" />
     <ClCompile Include="Interface\NumberText.cpp" />
@@ -797,7 +796,6 @@
     <ClInclude Include="Interface\BattlescapeButton.h" />
     <ClInclude Include="Interface\ComboBox.h" />
     <ClInclude Include="Interface\Cursor.h" />
-    <ClInclude Include="Interface\FpsCounter.h" />
     <ClInclude Include="Interface\Frame.h" />
     <ClInclude Include="Interface\ImageButton.h" />
     <ClInclude Include="Interface\NumberText.h" />

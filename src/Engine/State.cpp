@@ -36,7 +36,6 @@
 #include "../Interface/Slider.h"
 #include "../Interface/ComboBox.h"
 #include "../Interface/Cursor.h"
-#include "../Interface/FpsCounter.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Mod/RuleInterface.h"
 
@@ -246,9 +245,7 @@ void State::init()
 	_game->getCursor()->setPalette(_palette);
 	_game->getCursor()->setColor(_cursorColor);
 	_game->getCursor()->draw();
-	_game->getFpsCounter()->setPalette(_palette);
-	_game->getFpsCounter()->setColor(_cursorColor);
-	_game->getFpsCounter()->draw();
+
 	if (_game->getMod() != 0)
 	{
 		_game->getMod()->setPalette(_palette);
@@ -492,8 +489,6 @@ void State::setPalette(SDL_Color *colors, int firstcolor, int ncolors, bool imme
 	{
 		_game->getCursor()->setPalette(_palette);
 		_game->getCursor()->draw();
-		_game->getFpsCounter()->setPalette(_palette);
-		_game->getFpsCounter()->draw();
 		if (_game->getMod() != 0)
 		{
 			_game->getMod()->setPalette(_palette);
