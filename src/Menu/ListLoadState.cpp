@@ -110,7 +110,7 @@ void ListLoadState::loadSave(size_t list_idx)
 void ListLoadState::init()
 {
 	ListGamesState::init();
-	if (_saves.size() > 0  && _origin == OPT_MENU && Options::getLoadLastSave())
+	if (_origin == OPT_MENU && Options::getLoadLastSave())
 	{
 		// hide the ui
 		toggleScreen();
@@ -128,7 +128,13 @@ void ListLoadState::init()
 				timestamp = (*it).timestamp;
 			}
 		}
-		loadSave(idx);
+		if (idx != -1)
+		{
+			// hide the ui
+			toggleScreen();
+			hideAll();
+			loadSave(idx);
+		}
 	}
 }
 
