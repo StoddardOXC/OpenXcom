@@ -52,25 +52,6 @@ class AboutPyPy(ImmUIState):
         #print("btn: {} hot: {} active: {} input {}".format(rv, self.hot, self.active, self.input.buttons));
         self.winborder(self.IR.border.rect, self.IR.border.color, self.IR.border.color2)
 
-class AboutPyPyX(State):
-    ui_category = "mainMenu"
-    def __init__(self, parent):
-        st_w = 300
-        btn_w = 60
-        super(AboutPyPy, self).__init__(parent,
-            w = st_w, h = 180, x = 10, y = 10,
-            popmode = POPUP_BOTH, ui_category = self.ui_category, bg = "BACK01.SCR")
-
-        version = "Python " + sys.version.replace(' (', ' \n(' )
-        self.add_text(280, 140, 20, 20, "text", self.ui_category, ALIGN_CENTER, ALIGN_MIDDLE, False, False, version)
-        btn = TextButton(self, btn_w, 20, st_w/2 - btn_w/2, 160, "button", "saveMenus", self.tr("STR_OK"));
-        btn.onMouseClick(self.btnOk, 1)
-        btn.onKeyboardPress(self.btnOk) # no keysym = any key
-        self.add(btn)
-
-    def btnOk(self, *args):
-        self.pop()
-
 class _ExecutiveSummary(State):
     ui_category = "geoscapeMenu"
     def __init__(self, parent):

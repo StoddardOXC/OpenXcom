@@ -300,6 +300,9 @@ class State(object):
     def invert_surface(self, handle, inverting_mid):
         lib.st_invert_surface(self.ptr, handle, inverting_mid)
 
+    def play_ui_sound(self, name):
+        lib.st_play_ui_sound(self.ptr, name)
+
 class ImmUIState(State):
     """ basic support for an immediate-mode ui """
     ui_cat = "aboutpypy"
@@ -452,6 +455,7 @@ class ImmUIState(State):
         # render done.
         # check if we've been clickedd
         if self.input.buttons == 0 and self.hot == this and self.active == this:
+            self.play_ui_sound(b"BUTTON_PRESS")
             return True
         return False
 

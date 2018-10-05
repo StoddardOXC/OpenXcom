@@ -382,10 +382,10 @@ uintptr_t st_intern_text(state_t *state, int32_t w, int32_t h, const char *text,
 }
 void st_play_ui_sound(state_t *state, const char *name) {
 	auto s = std::string(name);
-	if (s == "BUTTON_PRESS") { TextButton::soundPress->play(Mix_GroupAvailable(0)); }
-	else if (s == "WINDOW_POPUP_0") { Window::soundPopup[0]->play(Mix_GroupAvailable(0)); }
-	else if (s == "WINDOW_POPUP_1") { Window::soundPopup[1]->play(Mix_GroupAvailable(0)); }
-	else if (s == "WINDOW_POPUP_2") { Window::soundPopup[2]->play(Mix_GroupAvailable(0)); }
+	if (s == "BUTTON_PRESS") { if (TextButton::soundPress) TextButton::soundPress->play(Mix_GroupAvailable(0)); }
+	else if (s == "WINDOW_POPUP_0") { if (Window::soundPopup[0]) Window::soundPopup[0]->play(Mix_GroupAvailable(0)); }
+	else if (s == "WINDOW_POPUP_1") { if (Window::soundPopup[1]) Window::soundPopup[1]->play(Mix_GroupAvailable(0)); }
+	else if (s == "WINDOW_POPUP_2") { if (Window::soundPopup[2]) Window::soundPopup[2]->play(Mix_GroupAvailable(0)); }
 	else { Log(LOG_ERROR) << "unsuppored ui sound '" << s << "'"; }
 }
 st_input_t *st_get_input_state(state_t *state) { return &state->_st; }
