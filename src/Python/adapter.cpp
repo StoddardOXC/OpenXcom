@@ -182,13 +182,13 @@ struct _state_t : public State {
 		int sysbottom = systop + round(_h * _yscale);
 		if ((sx < sysleft) or (sy < systop) or (sx >= sysright) or (sy >= sysbottom)) {
 			// outside of our box
-			Log(LOG_INFO)<<"mouseposn: sx="<<sx<<" sy="<<sy<<" left="<<sysleft<<" top="<<systop<<" right="<<sysright<<" bottom="<<sysbottom;
+			//Log(LOG_INFO)<<"mouseposn: sx="<<sx<<" sy="<<sy<<" left="<<sysleft<<" top="<<systop<<" right="<<sysright<<" bottom="<<sysbottom;
 			return false;
 		}
 		// calculate mouse coords inside our window/surface/whatever
 		_st.mx = round((sx - sysleft)/_xscale);
 		_st.my = round((sy - systop)/_yscale);
-		Log(LOG_INFO)<<"mouseposn: got "<<_st.mx<<":"<<_st.my;
+		//Log(LOG_INFO)<<"mouseposn: got "<<_st.mx<<":"<<_st.my;
 		return true;
 	}
 	// pass input events up to pypy code
@@ -211,14 +211,14 @@ struct _state_t : public State {
 			case SDL_MOUSEBUTTONUP:
 				if(set_mouse_posn(ev->button.x, ev->button.y)) {
 					set_mb_state(ev->button.button, false);
-					Log(LOG_INFO) << "SDL_MOUSEBUTTONUP: " << ((int)(ev->button.button));
+					//Log(LOG_INFO) << "SDL_MOUSEBUTTONUP: " << ((int)(ev->button.button));
 					pass_on = true;
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if(set_mouse_posn(ev->button.x, ev->button.y)) {
 					set_mb_state(ev->button.button, true);
-					Log(LOG_INFO) << "SDL_MOUSEBUTTONDOWN: " << ((int)(ev->button.button));
+					//Log(LOG_INFO) << "SDL_MOUSEBUTTONDOWN: " << ((int)(ev->button.button));
 					pass_on = true;
 				}
 				break;
@@ -230,7 +230,7 @@ struct _state_t : public State {
 			case SDL_KEYDOWN:
 				_st.keysym = ev->key.keysym.sym;
 				_st.keymod = ev->key.keysym.mod;
-				Log(LOG_INFO) << "SDL_KEYDOWN keysym.sym=" << ((int)(ev->key.keysym.sym));
+				//Log(LOG_INFO) << "SDL_KEYDOWN keysym.sym=" << ((int)(ev->key.keysym.sym));
 				pass_on = true;
 				break;
 			case SDL_KEYUP:

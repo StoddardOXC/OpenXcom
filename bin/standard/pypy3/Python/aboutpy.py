@@ -46,12 +46,11 @@ class AboutPyPy(ImmUIState):
             self.pop()
         self.blit((self.IR.sysvers.x, self.IR.sysvers.y), (0,0,0,0), self.sysvers)
         self.blit((0,0), (0,0,0,0), self.bg)
-        btnOkClicked = self.text_button((100,100, 100, 32), "ze button",
-                self.IR.sysvers.color, self.IR.sysvers.color2, self.IR.sysvers.color2, False)
+        btnOkClicked = self.text_button(self.IR.button.rect, self.tr("STR_FACEPALM"), self.IR.button.color, False)
         if btnOkClicked:
             self.pop()
         #print("btn: {} hot: {} active: {} input {}".format(rv, self.hot, self.active, self.input.buttons));
-        self.winborder((0,0,self.w, self.h), self.IR.border.color, self.IR.border.color2)
+        self.winborder(self.IR.border.rect, self.IR.border.color, self.IR.border.color2)
 
 class AboutPyPyX(State):
     ui_category = "mainMenu"

@@ -6,12 +6,19 @@ interfaces:
     backgroundImage: PicardFacepalm320
     elements:
       - id: border
+        size: [320, 200]
+        pos: [0, 0]
         color:  0xf9
         color2: 0xf7
       - id: sysvers
         size: [192, 32]
         pos: [32, 8]
         color:  0xf6
+        color2: 0xf9
+      - id: button
+        size: [96, 20]
+        pos: [112, 160]
+        color: 0xf6
         color2: 0xf9
 
 

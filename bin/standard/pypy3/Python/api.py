@@ -87,6 +87,9 @@ def ptr2int(ptr):
     return int(ffi.cast("uintptr_t", ptr))
 
 class IRULEMENT(object):
+    x, y, w, h = None, None, None, None
+    color, color2 = None, None
+    border, TFTDMode = None, None
     def __init__(self, pod):
         for pname, val in pod.items():
             if pname.startswith('_'):
@@ -98,6 +101,7 @@ class IRULEMENT(object):
                 self.w, self.h = val
             else:
                 setattr(self, pname, val)
+        self.rect = (self.x, self.y, self.w, self.h)
 
 class IRULE(object):
     _prohibited = ('name', 'parent', 'backgroundImage', 'music', 'sound')
@@ -172,7 +176,6 @@ def mods_loaded():
     log_info("api.py::mods_loaded")
     IRUL = INTERFACE_RULES()
     log_info("IRUL id {:x}".format(id(IRUL)))
-
 
 class State(object):
     """ Base class for UI states aka windows, a wrapper for state_t from adapter.cpp"""
@@ -341,9 +344,10 @@ class ImmUIState(State):
         # typical button border
         med = (dark+bright)//2
         x,y,w,h = rect
-        self.drawframe(x,   y,   w,   h, dark)     # outer
+        self.drawframe(x,   y,   w,   h, dark)  # outer
         self.drawframe(x+1, y+1, w-2, h-2, med) # middle
-        self.fill((x+3, y+3, w-6, h-6), bright) # the rest
+        self.drawframe(x+2, y+2, w-4, h-4, bright) # inner
+        self.fill((x+3, y+3, w-6, h-6), bright) # fill
 
     def winborder(self, rect, dark, bright, fill = None):
         # typical window border of 5 px: dark, med, bright, med, dark
@@ -357,7 +361,47 @@ class ImmUIState(State):
         if fill is not None:
             self.fill((x+4, y+4, w-8, h-81), fill)
 
-    def text_button(self, rect, text, dark, bright, tcolor, pressed):
+    def das_button(self, rect, color, inverted, contrast = False, geoscapeButton = True):
+        # see TextButton::draw() and Surface::invert(Uint8 mid)
+        mul = 2 if contrast else 1
+        _color = color
+        color = _color + 1 * mul
+
+        if inverted:
+            if geoscapeButton:
+                inverting_mid = _color + 2 * mul
+            else:
+                inverting_mid = _color + 3 * mul
+            def inverted(pixel):
+                return pixel + 2 * (inverting_mid - pixel)
+        else:
+            inverted_mid = None
+            def inverted(pixel):
+                return pixel
+
+        x,y,w,h = rect
+        for i in range(5):
+            self.drawframe(x, y, w, h, inverted(color))
+            if i % 2 == 0:
+                x += 1; y += 1
+            w -= 1; h -= 1
+            if i == 0:
+                color = _color + 5 * mul;
+                self.fill((w, 0, 1, 1), inverted(color))
+            elif i == 1:
+                color = _color + 2 * mul
+            elif i == 2:
+                color = _color + 4 * mul
+                self.fill((w + 1, 1, 1, 1), inverted(color))
+            elif i == 3:
+                color = _color + 3 * mul
+            elif i == 4:
+                if geoscapeButton:
+                    self.fill((0, 0, 1, 1), inverted(_color))
+                    self.fill((1, 1, 1, 1), inverted(_color))
+        self.fill((x,y,w,h),inverted(color))
+
+    def text_button(self, rect, text, color, pressed):
         """ your plain text button """
         this = self.get_id()
         # logic
@@ -388,15 +432,9 @@ class ImmUIState(State):
             pass
 
         # render
-        # 1. btnborder, filled : need: colors (2)
-        if pressed:
-            self.btnborder(rect, dark, bright)
-        else:
-            self.btnborder(rect, bright, dark)
-        # 2. text : need :color.
-
+        self.das_button(rect, color, pressed)
         x,y,w,h = rect
-        textsurf = self.get_text(w-10, h-10, text, 1, 1, False, tcolor, dark, True)
+        textsurf = self.get_text(w-10, h-10, text, 1, 1, False, color, 0, True)
         self.blit((x+5, y+5), (0,0,0,0), textsurf)
         # render done.
         # check if we've been clickedd
