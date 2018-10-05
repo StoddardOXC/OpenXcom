@@ -24,6 +24,7 @@
 __states__ = []
 __hooks__ = ['mods_loaded']
 
+import pprint
 from ruamel.yaml import YAML
 from pypycom import ffi, lib
 
@@ -268,6 +269,7 @@ class State(object):
         """ does the actual blits to the underlying surface """
         # first, clear the surface to be transparent.
         lib.st_clear(self.ptr)
+        pprint.pprint(self._cbuf)
         # execute commands
         for cmd in self._cbuf:
             opcode = cmd[0]
@@ -287,6 +289,123 @@ class State(object):
                 lib.st_cue_sound(self.ptr, cmd[1].encode('utf-8'))
             else:
                 pass
+
+class ImmUIState(State):
+    """ basic support for an immediate-mode ui """
+    ui_cat = "aboutpypy"
+    ui_id = "sysvers"
+    alter_pal = False
+    def __init__(self, w, h, x, y):
+        super(ImmUIState, self).__init__(w,h,x,y,
+                        ui_id = self.ui_id,
+                        ui_category = self.ui_cat,
+                        alterpal=self.alter_pal)
+        self.w = w
+        self.h = h
+        self.hot = -1
+        self.active = -1
+        self.next_id = 1
+        self.bg = self.get_surface(self.IR.backgroundImage)
+
+    def get_id(self):
+        self.next_id += 1
+        return self.next_id
+
+    def hit(self, rect):
+        out = ((self.input.mx  < rect[0]) or
+               (self.input.my  < rect[1]) or
+               (self.input.my >= rect[0] + rect[2]) or
+               (self.input.my >= rect[1] + rect[3]))
+        return not out
+
+    def run(self):
+        """ gets called every frame  | input event """
+        # reset ui state
+        self.next_id = 0
+        self.hot = 0
+        # call the logic
+        self.logick()
+        # clean up ui state
+        if self.input.buttons == 0:
+            self.active = 0
+        elif self.active == 0:
+            self.active = -1 # duh! why?
+
+    def drawframe(self, x, y, w, h, color): # 1px frame of color
+            self.fill((x,     y,     w, 1), color) # top horizontal
+            self.fill((x,     y+h-1, w, 1), color) # bottom horizontal
+            self.fill((x,     y,     1, h), color) # left vertical
+            self.fill((x+w-1, y,     1, h), color) # right vertical
+
+    def btnborder(self, rect, dark, bright):
+        # typical button border
+        med = (dark+bright)//2
+        x,y,w,h = rect
+        self.drawframe(x,   y,   w,   h, dark)     # outer
+        self.drawframe(x+1, y+1, w-2, h-2, med) # middle
+        self.fill((x+3, y+3, w-6, h-6), bright) # the rest
+
+    def winborder(self, rect, dark, bright, fill = None):
+        # typical window border of 5 px: dark, med, bright, med, dark
+        med = (dark+bright)//2
+        x,y,w,h = rect
+        self.drawframe(x,   y,   w,   h, dark)     # outer
+        self.drawframe(x+1, y+1, w-2, h-2, med)    # middle
+        self.drawframe(x+2, y+2, w-4, h-4, bright) # center
+        self.drawframe(x+3, y+3, w-6, h-6, med)    # middle
+        self.drawframe(x+4, y+4, w-8, h-8, dark)   # inner
+        if fill is not None:
+            self.fill((x+4, y+4, w-8, h-81), fill)
+
+    def text_button(self, rect, text, dark, bright, tcolor, pressed):
+        """ your plain text button """
+        this = self.get_id()
+        # logic
+        if self.hit(rect):
+            self.hot = this
+        if self.active == 0 and self.input.buttons !=0:
+            self.active = this
+
+        if pressed is None:
+        # default behavior
+            pressed = self.hit(rect) and self.mouse_b is not None
+        else:
+        # selector buttons of a group
+            pass
+
+        # our state
+        pressed = False
+        mouseover = False
+        if self.hot == this:
+            if self.active == this:
+                # both hot and active
+                pressed = True
+            else:
+                # just hot
+                mouseover = True
+        else:
+            # unhot but active? the hell does this mean?
+            pass
+
+        # render
+        # 1. btnborder, filled : need: colors (2)
+        if pressed:
+            self.btnborder(rect, dark, bright)
+        else:
+            self.btnborder(rect, bright, dark)
+        # 2. text : need :color.
+
+        x,y,w,h = rect
+        textsurf = self.get_text(w-10, h-10, text, 1, 1, False, tcolor, dark, True)
+        self.blit((x+5, y+5), (0,0,0,0), textsurf)
+        # render done.
+        # check if we've been clickedd
+        if self.input.buttons == 0 and self.hot == this and self.active == this:
+            return True
+        return False
+
+    def image_button(self, rect, image, pressed):
+        pass
 
 BOX_NAMES = { # TODO: those should be translation keys
     -1: "Stores",

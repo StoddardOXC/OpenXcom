@@ -29,113 +29,29 @@ from api import *
 
 import sys, pprint
 
-class ImmUITest(State):
+class AboutPyPy(ImmUIState):
     ui_cat = "aboutpypy"
     ui_id = "sysvers"
+    alter_pal = False
     def __init__(self, w = 320, h = 200, x = 42, y = 23):
-        super(ImmUITest, self).__init__(w,h,x,y,
-                        ui_id = self.ui_id, ui_category = self.ui_cat, alterpal=False)
-
-        self.w = w
-        self.h = h
-        self.hot = None
-        self.active = None
-
-        self.command_buffer = []
-        self.next_id = -1
-
-        self.bg = self.get_surface(self.IR.backgroundImage)
+        super(AboutPyPy, self).__init__(w,h,x,y)
         self.sysvers = self.get_text(
                 self.IR.sysvers.w, self.IR.sysvers.h, sys.version,
                 0, 1, False,
                 self.IR.sysvers.color, self.IR.sysvers.color2, False)
-
-    def get_id(self):
-        self.next_id += 1
-        return self.next_id
-
-    def regionhit(self, rect):
-        out = ((self.input.mx  < rect[0]) or
-               (self.input.my  < rect[1]) or
-               (self.input.my >= rect[0] + rect[2]) or
-               (self.input.my >= rect[1] + rect[3]))
-        return not out
-
-    def run(self):
-        """ gets called every frame  | input event """
-        # reset ui state
-        self.hot = None
-        # call the logic
-        self.logick()
-        # clean up ui state
-        if self.input.mx == -1:
-            self.active = None
-        elif self.active is None:
-            self.active = -1 # duh! why?
-
-    def drawframe(self, x, y, w, h, color): # 1px frame of color
-            self.fill((x,     y,     w, 1), color) # top horizontal
-            self.fill((x,     y+h-1, w, 1), color) # bottom horizontal
-            self.fill((x,     y,     1, h), color) # left vertical
-            self.fill((x+w-1, y,     1, h), color) # right vertical
-
-    def border(self, rect, dark, bright, fill = None):
-        """ draws teh fancy border on the target
-            dark: dark color idx
-            bright: bright color idx
-            fill: fill with this color if not None.
-        """
-        self.drawframe(x,   y,   w,   h, dark)     # outer
-        self.drawframe(x+1, y+1, w-2, h-2, bright) # middle
-        self.drawframe(x+2, y+2, w-4, h-4, dark)   # inner
-        if fill is not None:
-            self.fill((x+3, y+3, w-6, h-6), fill)
-
-    def winborder(self, rect, dark, bright, fill = None):
-        # typical window border of 5 px: dark, med, bright, med, dark
-        med = (dark+bright)//2
-        x,y,w,h = rect
-        self.drawframe(x,   y,   w,   h, dark)     # outer
-        self.drawframe(x+1, y+1, w-2, h-2, med)    # middle
-        self.drawframe(x+2, y+2, w-4, h-4, bright) # center
-        self.drawframe(x+3, y+3, w-6, h-6, med)    # middle
-        self.drawframe(x+4, y+4, w-8, h-8, dark)   # inner
-        if fill is not None:
-            self.fill((x+4, y+4, w-8, h-81), fill)
-
-    def text_button(self, rect, text, pressed):
-        """ your plain text button """
-        this = self.get_id()
-        # logic
-        rv = None
-        if self.hit(rect):
-            self.hot = this
-        if self.active is None and self.mouse_b is not None:
-            self.active = this
-
-        if pressed is None:
-        # default behavior
-            pressed = self.hit(rect) and self.mouse_b is not None
-        else:
-        # selector buttons of a group
-            pass
-        # render
-        cbuf = []
-        cbuf.append("ohohoho")
-        self.submit(cbuf)
-        return rv
-
-    def image_button(self, rect, image, pressed):
-        pass
+        self.btntext = None
 
     def logick(self):
         if self.input.keysym == 27:
             self.pop()
         self.blit((self.IR.sysvers.x, self.IR.sysvers.y), (0,0,0,0), self.sysvers)
         self.blit((0,0), (0,0,0,0), self.bg)
+        btnOkClicked = self.text_button((100,100, 100, 32), "ze button",
+                self.IR.sysvers.color, self.IR.sysvers.color2, self.IR.sysvers.color2, False)
+        if btnOkClicked:
+            self.pop()
+        #print("btn: {} hot: {} active: {} input {}".format(rv, self.hot, self.active, self.input.buttons));
         self.winborder((0,0,self.w, self.h), self.IR.border.color, self.IR.border.color2)
-
-AboutPyPy = ImmUITest
 
 class AboutPyPyX(State):
     ui_category = "mainMenu"
