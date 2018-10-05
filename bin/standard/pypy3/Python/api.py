@@ -28,6 +28,34 @@ import pprint
 from ruamel.yaml import YAML
 from pypycom import ffi, lib
 
+# have to duplicate this here... TODO: use the logging module instead, find how to call stuff from the embedding_init.py.
+LOG_FATAL   = 0
+LOG_ERROR   = 1
+LOG_WARNING = 2
+LOG_INFO    = 3
+LOG_DEBUG   = 4
+LOG_VERBOSE = 5
+def _log_encode(*args):
+    t = ''.join(str(a) for a in args)
+    t = t.encode('utf-8')
+    return t
+def log_fatal(*args):
+    lib.logg(LOG_FATAL, _log_encode(*args))
+def log_error(*args):
+    lib.logg(LOG_ERROR, _log_encode(*args))
+def log_warning(*args):
+    lib.logg(LOG_WARNING, _log_encode(*args))
+def log_info(*args):
+    lib.logg(LOG_INFO, _log_encode(*args))
+def log_debug(*args):
+    lib.logg(LOG_DEBUG, _log_encode(*args))
+def log_verbose(*args):
+    lib.logg(LOG_VERBOSE, _log_encode(*args))
+def log_exception(exc_type, exc_value, exc_traceback):
+    for l in traceback.format_exception(exc_type, exc_value, exc_traceback):
+        log_error("PyPy: {}".format(l)[:-1])
+    log_fatal("PyPy code threw an exception: fatal.")
+
 # enum WindowPopup { ... }
 POPUP_NONE       = 0
 POPUP_HORIZONTAL = 1
@@ -58,33 +86,6 @@ ACTION_CHANGE           = 9
 
 ARROW_VERTICAL          = 0
 ARROW_HORIZONTAL        = 1
-
-# TODO: don't repeat this here; somehow import from the embedding_init_code.
-LOG_FATAL   = 0
-LOG_ERROR   = 1
-LOG_WARNING = 2
-LOG_INFO    = 3
-LOG_DEBUG   = 4
-LOG_VERBOSE = 5
-def _log_encode(*args):
-    t = ''.join(str(a) for a in args)
-    t = t.encode('utf-8')
-    return t
-def log_fatal(*args):
-    lib.logg(LOG_FATAL, _log_encode(*args))
-def log_error(*args):
-    lib.logg(LOG_ERROR, _log_encode(*args))
-def log_warning(*args):
-    lib.logg(LOG_WARNING, _log_encode(*args))
-def log_info(*args):
-    lib.logg(LOG_INFO, _log_encode(*args))
-def log_debug(*args):
-    lib.logg(LOG_DEBUG, _log_encode(*args))
-def log_verbose(*args):
-    lib.logg(LOG_VERBOSE, _log_encode(*args))
-
-def ptr2int(ptr):
-    return int(ffi.cast("uintptr_t", ptr))
 
 class IRULEMENT(object):
     x, y, w, h = None, None, None, None
@@ -144,7 +145,7 @@ class IRULE(object):
                         log_error("    InterfaceRule element name '{}' ignored.".format(elname))
                         continue
                     setattr(self, elname, IRULEMENT(elt))
-                    log_info("    InterfaceRule element {}".format(elname))
+                    #log_info("    InterfaceRule element {}".format(elname))
             elif pname in self._prohibited:
                 setattr(self, pname, val)
 
@@ -156,16 +157,14 @@ class INTERFACE_RULES(object):
         if irul_pod is None:
             log_error("get_interface_rules returned '{}': can't parse".format(irul_str))
             return
-        print(dir(irul_pod))
-        print(repr(irul_pod))
         for catname, cat in irul_pod.items():
             if catname.startswith('_'):
                 log_error("Ignoring interface rule '{}'".format(catname))
                 continue
-            log_info("IRULE {}".format(catname))
+            #log_info("IRULE {}".format(catname))
             setattr(self, catname, IRULE(catname, cat))
 
-        log_info("INTERFACE_RULES id {:x}".format(id(self)))
+        #log_info("INTERFACE_RULES id {:x}".format(id(self)))
         # TBD: resolve parent references in rules, which seems to be not necessary, since
         # we call setInterface anyways.
 
@@ -175,7 +174,7 @@ def mods_loaded():
     global IRUL
     log_info("api.py::mods_loaded")
     IRUL = INTERFACE_RULES()
-    log_info("IRUL id {:x}".format(id(IRUL)))
+    #log_info("IRUL id {:x}".format(id(IRUL)))
 
 class State(object):
     """ Base class for UI states aka windows, a wrapper for state_t from adapter.cpp"""
@@ -194,7 +193,7 @@ class State(object):
         self._cbuf = []
         self._surfcache = {}
         self.input = lib.st_get_input_state(self._st)
-        log_info("IRUL id {:x}".format(id(IRUL)))
+        #log_info("IRUL id {:x}".format(id(IRUL)))
         self.IR = getattr(IRUL, ui_category)
 
     @property
@@ -273,7 +272,6 @@ class State(object):
         """ does the actual blits to the underlying surface """
         # first, clear the surface to be transparent.
         lib.st_clear(self.ptr)
-        pprint.pprint(self._cbuf)
         # execute commands
         for cmd in self._cbuf:
             opcode = cmd[0]

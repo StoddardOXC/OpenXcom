@@ -111,7 +111,6 @@ void logg(int level, const char *message) {
 Game *GAME = NULL;
 void set_game_ptr(void *g) {
 	GAME = reinterpret_cast<Game *>(g);
-	Log(LOG_INFO)<<"PyPy: set_game_ptr(" << g << ")";
 }
 //}
 //{ The most important error message

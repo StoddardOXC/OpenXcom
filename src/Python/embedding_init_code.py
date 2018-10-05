@@ -27,7 +27,6 @@ LOG_WARNING = 2
 LOG_INFO    = 3
 LOG_DEBUG   = 4
 LOG_VERBOSE = 5
-
 def _log_encode(*args):
     t = ''.join(str(a) for a in args)
     t = t.encode('utf-8')
@@ -277,14 +276,14 @@ def pypy_spawn_state(name):
     newstate = state_types[name]()
     state_id = ptr2int(newstate.ptr)
     state_instances[state_id] = newstate
-    log_info("pypy_spawn_state({}): returning {} for {}".format(name, newstate.ptr, newstate))
+    #log_info("pypy_spawn_state({}): returning {} for {}".format(name, newstate.ptr, newstate))
     return newstate.ptr
 
 @ffi.def_extern(onerror = log_exception)
 def pypy_forget_state(state_ptr):
     state_id = ptr2int(state_ptr)
     del state_instances[state_id]
-    log_info("pypy_forget_state({}) done.".format(state_ptr))
+    #log_info("pypy_forget_state({}) done.".format(state_ptr))
 
 @ffi.def_extern(onerror = log_exception)
 def pypy_state_input(state_ptr):
@@ -372,7 +371,7 @@ def pypy_game_abandoned():
 
 @ffi.def_extern(onerror = log_exception)
 def pypy_time_5sec():
-    log_info("pypy_time_5sec()")
+    log_debug("pypy_time_5sec()")
     Hooks.time_5sec()
 
 @ffi.def_extern(onerror = log_exception)
