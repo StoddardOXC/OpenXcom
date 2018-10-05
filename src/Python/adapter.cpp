@@ -166,9 +166,9 @@ struct _state_t : public State {
 
 	void set_mb_state(int button, bool pressed) {
 		if (pressed) {
-			_st.buttons |= 1<<button;
+			_st.buttons |= 1<<(button - 1);
 		} else {
-			_st.buttons &= ~(1<<button);
+			_st.buttons &= ~(1<<(button -1));
 		}
 	}
 	// converts coords, also checks if it's in our box.
@@ -211,14 +211,14 @@ struct _state_t : public State {
 			case SDL_MOUSEBUTTONUP:
 				if(set_mouse_posn(ev->button.x, ev->button.y)) {
 					set_mb_state(ev->button.button, false);
-					Log(LOG_INFO) << "SDL_MOUSEBUTTONUP" << ((int)(ev->button.button));
+					Log(LOG_INFO) << "SDL_MOUSEBUTTONUP: " << ((int)(ev->button.button));
 					pass_on = true;
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if(set_mouse_posn(ev->button.x, ev->button.y)) {
 					set_mb_state(ev->button.button, true);
-					Log(LOG_INFO) << "SDL_MOUSEBUTTONDOWN" << ((int)(ev->button.button));
+					Log(LOG_INFO) << "SDL_MOUSEBUTTONDOWN: " << ((int)(ev->button.button));
 					pass_on = true;
 				}
 				break;
