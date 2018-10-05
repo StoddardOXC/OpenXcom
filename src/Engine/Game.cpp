@@ -246,15 +246,11 @@ struct EngineTimings {
 	}
 	void set_text_stuff(Game *game) { // handle dos/mod transition.
 		// determine current state
-		bool dos;
-		if ((!_dos && Options::reload) || (game == NULL)) { // first frame of the reload process or the constructor
-			dos = true;
-		} else { // have we started up / reloaded yet?
-			if (game->getMod() != NULL) {
-				dos = false;
-			} else {
-				dos = true;
-			}
+		bool dos = true;
+		if (game != NULL) { // we're past the constructor
+			dos = game->getMod() == NULL;
+		} else {
+			dos = true; // we're called from the constructor. Inital value of _dos is false to force setup in this call.
 		}
 		// detect state change
 		if (_dos && !dos) { // we've got a mod loaded - use its font&lang.
