@@ -47,6 +47,8 @@ void pop_state(state_t *state);
 void st_clear(state_t *state);
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);
 void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc);
+uintptr_t st_clone_surface(state_t *state, uintptr_t surf);
+void st_invert_surface(state_t *state, uintptr_t surf, int32_t invert_mid);
 uintptr_t st_intern_sub(state_t *state, const char *name, int32_t idx);
 uintptr_t st_intern_surface(state_t *state, const char *name);
 uintptr_t st_intern_text(state_t *state, int32_t w, int32_t h, const char *text, int32_t halign, int32_t valign, int32_t wrap,

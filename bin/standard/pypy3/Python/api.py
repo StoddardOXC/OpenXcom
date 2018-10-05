@@ -192,6 +192,7 @@ class State(object):
         self._ran_this_frame = False
         self._frame_count = 0
         self._cbuf = []
+        self._surfcache = {}
         self.input = lib.st_get_input_state(self._st)
         log_info("IRUL id {:x}".format(id(IRUL)))
         self.IR = getattr(IRUL, ui_category)
@@ -245,13 +246,13 @@ class State(object):
 
     # opcodes for the buffer
     FILL = 1        # (cmd (x,y,w,h), color
-    BLIT = 2        # (cmd (x,y,w,h), interned surface_handle)
+    BLIT = 2        # (cmd (x,y,w,h), interned surface_handle, invert_mid)
     SOUND = 3  # (cmd name)  one of BUTTON_PRESS; WINDOW_POPUP_{012}
 
     # rendering command submission
-    def blit(self, dst, srcrect, handle, index=0):
+    def blit(self, dst, srcrect, handle):
         """ blit sprite (sub) image """
-        self._cbuf.append((self.BLIT, dst, srcrect, handle, index))
+        self._cbuf.append((self.BLIT, dst, srcrect, handle))
 
     def fill(self, rect, color):
         self._cbuf.append((self.FILL, rect, color))
@@ -292,6 +293,12 @@ class State(object):
                 lib.st_cue_sound(self.ptr, cmd[1].encode('utf-8'))
             else:
                 pass
+
+    def clone_surface(self, handle):
+        return lib.st_clone_surface(self.ptr, handle)
+
+    def invert_surface(self, handle, inverting_mid):
+        lib.st_invert_surface(self.ptr, handle, inverting_mid)
 
 class ImmUIState(State):
     """ basic support for an immediate-mode ui """
@@ -361,21 +368,20 @@ class ImmUIState(State):
         if fill is not None:
             self.fill((x+4, y+4, w-8, h-81), fill)
 
-    def das_button(self, rect, color, inverted, contrast = False, geoscapeButton = True):
+    def drawbutton(self, rect, color, inverted, contrast = False, geoscapeButton = True):
         # see TextButton::draw() and Surface::invert(Uint8 mid)
         mul = 2 if contrast else 1
         _color = color
         color = _color + 1 * mul
+        if geoscapeButton:
+            inverting_mid = _color + 2 * mul
+        else:
+            inverting_mid = _color + 3 * mul
 
         if inverted:
-            if geoscapeButton:
-                inverting_mid = _color + 2 * mul
-            else:
-                inverting_mid = _color + 3 * mul
             def inverted(pixel):
                 return pixel + 2 * (inverting_mid - pixel)
         else:
-            inverted_mid = None
             def inverted(pixel):
                 return pixel
 
@@ -400,6 +406,7 @@ class ImmUIState(State):
                     self.fill((0, 0, 1, 1), inverted(_color))
                     self.fill((1, 1, 1, 1), inverted(_color))
         self.fill((x,y,w,h),inverted(color))
+        return inverting_mid
 
     def text_button(self, rect, text, color, pressed):
         """ your plain text button """
@@ -432,9 +439,15 @@ class ImmUIState(State):
             pass
 
         # render
-        self.das_button(rect, color, pressed)
+        inverting_mid = self.drawbutton(rect, color, pressed)
         x,y,w,h = rect
-        textsurf = self.get_text(w-10, h-10, text, 1, 1, False, color, 0, True)
+        if this not in self._surfcache:
+            textsurf = self.get_text(w-10, h-10, text, 1, 1, False, color, 0, True)
+            ts_inverted  = self.clone_surface(textsurf)
+            self.invert_surface(ts_inverted, inverting_mid)
+            self._surfcache[this] = (textsurf, ts_inverted)
+
+        textsurf = self._surfcache[this][1] if pressed else self._surfcache[this][0]
         self.blit((x+5, y+5), (0,0,0,0), textsurf)
         # render done.
         # check if we've been clickedd

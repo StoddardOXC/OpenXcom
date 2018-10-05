@@ -309,6 +309,16 @@ void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_
 	src->getCrop()->h = src_h;
 	src->blit(state->_surface);
 }
+uintptr_t st_clone_surface(state_t *state, uintptr_t surf) {
+	Surface *src = reinterpret_cast<Surface *>(surf);
+	Surface *clone = new Surface(*src);
+	state->intern_surface(clone);
+	return reinterpret_cast<uintptr_t>(clone);
+}
+void st_invert_surface(state_t *state, uintptr_t surf, int32_t invert_mid) {
+	Surface *src = reinterpret_cast<Surface *>(surf);
+	src->invert(invert_mid);
+}
 uintptr_t st_intern_surface(state_t *state, const char *name) {
 	auto src = state->get_game()->getMod()->getSurface(name);
 	if (src == NULL) {
