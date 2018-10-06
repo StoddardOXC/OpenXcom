@@ -18,6 +18,7 @@
  */
 #include "AlienRace.h"
 #include "../Engine/RNG.h"
+#include "../Engine/Logger.h"
 
 namespace OpenXcom
 {
@@ -89,8 +90,18 @@ const std::string &AlienRace::getMember(int id) const
 {
 	if (!_membersRandom.empty())
 	{
+		if (id >= _membersRandom.size())
+		{
+			Log(LOG_WARNING)<<"Too high rank for random race member generation: "<<id<<" clamping to "<<_membersRandom.size();
+			id = _membersRandom.size() - 1;
+		}
 		int rng = RNG::generate(0, _membersRandom[id].size() - 1);
 		return _membersRandom[id][rng];
+	}
+	if (id < _members.size())
+	{
+		Log(LOG_WARNING)<<"Too high rank for race member generation: "<<id<<" placing higher member";
+		return _members.back();
 	}
 	return _members[id];
 }
