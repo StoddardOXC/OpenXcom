@@ -245,8 +245,6 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnInterceptClick, Options::keyGeoIntercept);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnUfoTrackerClick, Options::keyGeoUfoTracker);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnTechTreeViewerClick, Options::keyGeoTechTreeViewer);
-	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnEnterpriseResourceManagementClick, Options::keyEnterpriseResourceManagement);
-	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnExecutiveSummaryClick, Options::keyExecutiveSummary);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnSelectMusicTrackClick, Options::keySelectMusicTrack);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnGlobalResearchClick, Options::keyGeoGlobalResearch);
 	_btnIntercept->setGeoscapeButton(true);
@@ -446,6 +444,13 @@ void GeoscapeState::handle(Action *action)
 	if (_dogfights.size() == _minimizedDogfights)
 	{
 		State::handle(action);
+	}
+	if (action->getDetails()->type == SDL_KEYDOWN)
+	{
+		if (pypy_geoscape_keydown(action->getDetails()->key.keysym.sym, SDL_GetModState()) == 0)
+		{
+			return;
+		}
 	}
 
 	if (action->getDetails()->type == SDL_KEYDOWN)
@@ -2591,17 +2596,6 @@ void GeoscapeState::btnUfoTrackerClick(Action *)
 void GeoscapeState::btnTechTreeViewerClick(Action *)
 {
 	_game->pushState(new TechTreeViewerState());
-}
-
-void GeoscapeState::btnExecutiveSummaryClick(Action *)
-{
-	_game->pushState((State *)pypy_spawn_state("ExecutiveSummary"));
-}
-
-
-void GeoscapeState::btnEnterpriseResourceManagementClick(Action *)
-{
-	_game->pushState((State *)pypy_spawn_state("EnterpriseResourceManagement"));
 }
 
 /**

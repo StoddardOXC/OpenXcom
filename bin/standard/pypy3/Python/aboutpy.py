@@ -22,11 +22,20 @@
 #
 
 # this lists state objects the module exports
-__states__ = ['AboutPyPy']#, 'ExecutiveSummary', 'EnterpriseResourceManagement']
+__hooks__ = ['mainmenu_keydown']
+
+abpp = None
+
+def mainmenu_keydown(k, m):
+    global abpp
+    print(repr(k), repr(m))
+    if k == 113:
+        abpp = AboutPyPy() # well hell. how does it gets lost?
+        return 1
+    return 0
 
 # this gets base classes and stuff
 from api import *
-
 import sys, pprint
 
 class AboutPyPy(ImmUIState):

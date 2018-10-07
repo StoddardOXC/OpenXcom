@@ -132,6 +132,7 @@ void *state_not_found(const char *name) {
  * incidentally helds some stuff like strings for passing into python code
 */
 struct _state_t : public State {
+	void *_ffihandle;
 	Surface *_surface;
 	int32_t _w, _h, _x, _y;
 	double _xscale, _yscale;
@@ -144,7 +145,8 @@ struct _state_t : public State {
 	// input state
 	st_input_t _st;
 
-	_state_t(int32_t w, int32_t h, int32_t x, int32_t y, const std::string &id, const std::string &category, bool alterpal) {
+	_state_t(void *ffih, int32_t w, int32_t h, int32_t x, int32_t y, const std::string &id, const std::string &category, bool alterpal) {
+		_ffihandle = ffih;
 		_screen = false; // it's if it replaces the whole screen, so no.
 		_w = w; _h = h; _x = x; _y = y;
 		_xscale = 1.0; _yscale = 1.0;
@@ -238,7 +240,8 @@ struct _state_t : public State {
 				break;
 		}
 		if (pass_on) {
-			pypy_state_input(this);
+			pypy_call_method(_ffihandle, "_inner_handle");
+			//pypy_state_input(this);
 		}
 		// reset kbd data
 		_st.keysym = -1;
@@ -249,12 +252,13 @@ struct _state_t : public State {
 
 	/// Runs state functionality every cycle.
 	virtual void think() {
-		pypy_state_think(this);
+		pypy_call_method(_ffihandle, "_inner_think");
 	}
 
 	/// Blits the state to the screen.
 	virtual void blit() {
-		pypy_state_blit(this); // draw to the underlying surface
+		pypy_call_method(_ffihandle, "_inner_blit");
+		//pypy_state_blit(this); // draw to the underlying surface
 		State::blit(); // blit to the actual screen
 	}
 
@@ -292,10 +296,11 @@ struct _state_t : public State {
 	}
 };
 
-state_t *new_state(int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category, int32_t alterpal) {
-	return new state_t(w, h, x, y, ui_id, ui_category, alterpal);
+state_t *new_state(void *ffih, int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category, int32_t alterpal) {
+	return new state_t(ffih, w, h, x, y, ui_id, ui_category, alterpal);
 }
-void pop_state(state_t *state) { pypy_forget_state(state); GAME->popState(); /* that last one does delete */ }
+void push_state(state_t *state) { GAME->pushState(state); }
+void pop_state(state_t *state) { GAME->popState(state); } /* delete is done in the main loop */
 void st_clear(state_t *state) { state->_surface->clear(0); }
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color) { state->_surface->drawRect(x, y, w, h, color); }
 void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc) {

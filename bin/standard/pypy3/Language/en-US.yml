@@ -6,3 +6,5 @@ en-US:
   STR_RESET: "Reset"
   STR_CLEAR: "Clear"
   STR_FACEPALM: "Facepalm"
+  STR_PYPY: "Embedded Python"
+

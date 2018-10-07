@@ -187,7 +187,8 @@ class State(object):
             bg - background image name, like "BACK01.SCR"
          """
         log_info("State({}, {}, {}, {}, '{}', '{}')".format(w, h, x, y, ui_id, ui_category))
-        self._st = lib.new_state(w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'), alterpal)
+        ffih = ffi.new_handle(self)
+        self._st = lib.new_state(ffih, w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'), alterpal)
         self._ran_this_frame = False
         self._frame_count = 0
         self._cbuf = []
@@ -212,7 +213,7 @@ class State(object):
         """ this method to be overriden to run the actually useful code """
         pass
 
-    def _inner_input(self):
+    def _inner_handle(self):
         # if that's a subsequent run for this frame, drop the previous command buffer
         if self._ran_this_frame:
             self._cbuf = []
@@ -449,7 +450,7 @@ class ImmUIState(State):
             self._surfcache[this] = (textsurf, ts_inverted)
 
         textsurf = self._surfcache[this][1] if pressed else self._surfcache[this][0]
-        self.blit((x+5, y+5), (0,0,0,0), textsurf)
+        self.c_blit((x+5, y+5), (0,0,0,0), textsurf)
         # render done.
         # check if we've been clickedd
         if self.input.buttons == 0 and self.hot == this and self.active == this:

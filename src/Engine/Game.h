@@ -78,6 +78,8 @@ public:
 	void pushState(State *state);
 	/// Pops the last state from the state stack.
 	void popState();
+	/// Pops the last state from the state stack iff it's the state supplied
+	bool popState(State *state);
 	/// Gets the currently loaded language.
 	Language *getLanguage() const;
 	/// Loads a new language for the game.

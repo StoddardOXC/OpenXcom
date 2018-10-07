@@ -34,6 +34,7 @@
 #include "CrossPlatform.h"
 #include "FileMap.h"
 #include "Screen.h"
+#include "../Python/module.h"
 
 namespace OpenXcom
 {
@@ -1014,6 +1015,11 @@ void load(const std::string &filename)
 		{
 			return;
 		}
+		{
+			std::ifstream in(s);
+			std::string str((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+			pypy_set_options(str.c_str());
+		}
 		for (std::vector<OptionInfo>::iterator i = _info.begin(); i != _info.end(); ++i)
 		{
 			i->load(doc["options"]);
@@ -1118,6 +1124,12 @@ void save(const std::string &filename)
 		writeNode(doc, out);
 
 		sav << out.c_str() << std::endl;
+
+		auto pypy_options = pypy_get_options();
+		if (pypy_options != NULL)
+		{
+			sav << pypy_options << std::endl;
+		}
 	}
 	catch (YAML::Exception &e)
 	{

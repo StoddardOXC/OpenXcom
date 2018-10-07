@@ -23,6 +23,7 @@
 #include "../Mod/Mod.h"
 #include "../Engine/Language.h"
 #include "../Engine/Screen.h"
+#include "../Engine/Action.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
@@ -91,8 +92,6 @@ MainMenuState::MainMenuState()
 	_btnQuit->setText(tr("STR_QUIT"));
 	_btnQuit->onMouseClick((ActionHandler)&MainMenuState::btnQuitClick);
 
-	_btnQuit->onKeyboardPress((ActionHandler)&MainMenuState::aboutPythonClick, Options::keyToggleQuickSearch);
-
 	_txtTitle->setAlign(ALIGN_CENTER);
 	_txtTitle->setBig();
 	std::wostringstream title;
@@ -117,6 +116,20 @@ void MainMenuState::init()
 MainMenuState::~MainMenuState()
 {
 
+}
+/**
+ * capture keypresses for pypy.
+ */
+void MainMenuState::handle(Action *action)
+{
+	if (action->getDetails()->type == SDL_KEYDOWN)
+	{
+		if (pypy_mainmenu_keydown(action->getDetails()->key.keysym.sym, SDL_GetModState()) == 0)
+		{
+			return;
+		}
+	}
+	State::handle(action);
 }
 
 /**
@@ -164,13 +177,6 @@ void MainMenuState::btnQuitClick(Action *)
 {
 	_game->quit();
 }
-
-void MainMenuState::aboutPythonClick(Action *)
-{
-	auto aboutpy = pypy_spawn_state("AboutPyPy");
-	_game->pushState((State *)aboutpy);
-}
-
 
 /**
  * Updates the scale.

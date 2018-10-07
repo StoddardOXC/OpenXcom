@@ -55,74 +55,105 @@ GAME = None
 state_types = {}
 state_instances = {}
 
+
+
+# load_options hook is called right after importing stuff is completed.
+# mods_loaded hook is called after that, i think..
+# damn, need to sort out and document all that.
+#
+
 # default hooks:
 import ruamel.yaml
 class _DefaultHookNamespace(object):
     @staticmethod
     def mods_loaded():
-        pass
+        print("defhooks: mods_loaded")
     @staticmethod
     def game_abandoned():
-        pass
+        print("defhooks: game_abandoned")
     @staticmethod
     def game_loaded(pod): # pod = Plain Old Data: something deserealized from yaml.
-        pass
+        print("defhooks: game_loaded {!r}".format(pod))
     @staticmethod
     def saving_game():
-        pass
+        print("defhooks: saving_game")
     @staticmethod
     def game_saved():
-        pass
+        print("defhooks: game_saved")
+    @staticmethod
+    def set_options(pod): # pod = options desearialized from yaml
+        print("defhooks: set_options {!r}".format(pod))
+    @staticmethod
+    def get_options():
+        print("defhooks: get_options")
 
     @staticmethod
     def time_5sec():
-        pass
+        print("defhooks: ")
     @staticmethod
     def time_10min():
-        pass
+        print("defhooks: ")
     @staticmethod
     def time_30min():
-        pass
+        print("defhooks: ")
     @staticmethod
     def time_1hour():
-        pass
+        print("defhooks: ")
     @staticmethod
     def time_1day():
-        pass
+        print("defhooks: ")
     @staticmethod
     def time_1mon():
-        pass
+        print("defhooks: ")
 
     @staticmethod
+    def mainmenu_keydown(k, m):
+        print("defhooks: mainmenu_keydown")
+        return 1
+    @staticmethod
+    def geoscape_keydown(k, m):
+        print("defhooks: geoscape_keydown")
+        return 1
+    @staticmethod
     def battle_ended():
+        print("defhooks: battle_ended")
         return 1
     @staticmethod
     def craft_shot_down(craft):
+        print("defhooks: craft_shot_down")
         return 1
     @staticmethod
     def craft_at_target(target):
+        print("defhooks: ")
         return 1
     @staticmethod
     def alienbase_clicked(base, button, kmod):
+        print("defhooks: ")
         return 1
     @staticmethod
     def base_clicked(base, button, kmod):
+        print("defhooks: ")
         return 1
     @staticmethod
     def ufo_clicked(ufo, button, kmod):
+        print("defhooks: ufo_clicked")
         return 1
     @staticmethod
     def craft_clicked(craft, button, kmod):
+        print("defhooks: craft_clicked")
         return 1
 
     @staticmethod
     def transfer_done(transfer):
+        print("defhooks: transfer_done")
         return 1
     @staticmethod
     def research_done(research):
+        print("defhooks: research_done")
         return 1
     @staticmethod
     def manufacture_done(manufacture):
+        print("defhooks: manufacture_done")
         return 1
 
 class Hooks(object):
@@ -206,8 +237,8 @@ def pypy_initialize(game):
 #
 #
 # Since OXCE's loadFile function has zero idea about the mod root path and I'd rather not
-# change that, or save pythonDir in the Mod object,
-# first the Mod::loadAll() calls this to set the currently loading mods' root
+# change that, or save pythonDir in the Mod object,  first the Mod::loadAll() calls this
+# to set the currently loading mods' root
 #
 _current_modpath = None
 @ffi.def_extern(onerror = log_exception)
@@ -241,9 +272,60 @@ def pypy_hook_up(python_dir):
     log_info("PyPy states defined:")
     for stname in states_got:
         log_info("    ", stname)
+
     log_info("PyPy hooks set:")
     for hkname in hooks_got:
         log_info("    ", hkname)
+
+    Hooks.set_options(options_pod)
+
+options_pod = None # dict or OrderedDict of pypy-specific options.
+# keeps'em alive between initial option load and the actual py module imports (see above)
+options_bytes = b"" # pin for the data returned to oxce
+# called before saving options to disk.
+# parameter: non-oxce options as yaml.
+# expected rv -yaml in bytes as in what to actually save.
+@ffi.def_extern(onerror = log_exception)
+def pypy_get_options():
+    global options_pod, options_bytes
+    log_info("pypy_get_options")
+    options_pod = Hooks.get_options()
+    if type(options_pod) is not dict:
+        log_error("Hooks.get_options() returned not dict: {!r}".format(options_pod))
+        return ffi.NULL
+    yaml = YAML()
+    yaml.default_flow_style = False
+    options_bytes = yaml.dump({ "pypy": options_pod })
+    log_info("pypy_get_options returnning\n{}".format(options_bytes.decode("utf-8")))
+    #print("pypy_get_options returnning\n{}".format(options_bytes.decode("utf-8")))
+    return options_bytes
+
+# called after loading options from disk
+# or resetting them . yaml_opts = all options as an utf8z
+# hook gets called with the relevant const dict/OrderedDict, tag is pypy in options.cfg.
+@ffi.def_extern(onerror = log_exception)
+def pypy_set_options(yaml_opts):
+    global options_pod
+    options_pod = {}
+    if yaml_opts == ffi.NULL:
+        # well, log this somehow TODO
+        return
+    yaml_opts = ffi.string(yaml_opts)
+    log_info("pypy_load_options(): got\n{}".format(yaml_opts.decode("utf-8")))
+    yaml= YAML()
+    try:
+        all_options = yaml.load(yaml_opts)
+    except Exception as e:
+        estr = "pypy_load_options(): got yaml parse exception: {}".format(e)
+        print(estr) # this can happen before logging is functional TODO FIXME
+        log_error(estr)
+    else:
+        try:
+            options_pod = all_options['pypy']
+        except Exception as e:
+            log_info("no pypy options loaded {!r} ".format(e))
+            print("no pypy options loaded {!r} ".format(e))
+    Hooks.set_options(options_pod)
 
 #
 # What happens is that this constructs a pypy state object by class name.
@@ -256,6 +338,40 @@ def pypy_hook_up(python_dir):
 # in a dict used to dispatch events coming up from the oxce engine
 # such as input events and blit requests.
 #
+# The current scheme is that an event comes in via state_t's overrides for
+# State::handle(), State::blit() and State::think(), which call pypy_ equivalents,
+# which call python methods of a python State this state_t is associated with.
+#
+# For pypy_ functions to know what object's methods to call this has to keep
+# some sort of mapping between state_t * ptr and the python object to call upon.
+#
+# Currently the python object is created in pypy_spawn_state and that's how we get
+# a reference to it. A method to pass py object ref from C code might be there
+# but I'm currently too lazy to discover it.
+#
+# okay. so the api.py State constructor calls a ffi.new_handle(self)
+# passes that to lib.new_state() which stores it.
+#
+# state_t::handle/blit/think do call pypy_call_method(sthandle, methodname)
+#
+# pypy_call_method(sthandle, methodname) does
+#  getattr(ffi.from_hanlde(sthandle), methodname)()
+#
+# given that handle/blit/think do not have any arguments this should work.
+#
+#
+# So the overall philosophy is that events are supplied to the hooks defined
+# in the imported python code. The state_t is just a fat hook inserted into
+# the game's state stack.
+#
+#
+#
+# This is what pypy_spawn_state() is for. It also does GAME->push_state() via the lib.
+#
+#
+#
+#
+#
 # A game frame is processed as follows:
 #
 # - all input events are converted to Action-s and fed to the topmost State only.
@@ -263,54 +379,61 @@ def pypy_hook_up(python_dir):
 # - all States' blit() method is called.
 #
 #
-@ffi.def_extern(onerror = log_exception)
-def pypy_spawn_state(name):
-    global state_types, state_instances
-    name = ffi.string(name).decode('utf-8')
-    try:
-        stclass = state_types[name]
-    except KeyError:
-        log_error("pypy_spawn_state({}): state class not found".format(name))
-        # TODO: return the error as a state so as not to crash.
-        return lib.state_not_found(name.encode("utf-8"));
-    newstate = state_types[name]()
-    state_id = ptr2int(newstate.ptr)
-    state_instances[state_id] = newstate
-    #log_info("pypy_spawn_state({}): returning {} for {}".format(name, newstate.ptr, newstate))
-    return newstate.ptr
+#@ffi.def_extern(onerror = log_exception)
+#def pypy_spawn_state(name):
+    #global state_types, state_instances
+    #name = ffi.string(name).decode('utf-8')
+    #try:
+        #stclass = state_types[name]
+    #except KeyError:
+        #log_error("pypy_spawn_state({}): state class not found".format(name))
+        ## TODO: return the error as a state so as not to crash.
+        #return lib.state_not_found(name.encode("utf-8"));
+    #newstate = state_types[name]()
+    #state_id = ptr2int(newstate.ptr)
+    #state_instances[state_id] = newstate
+    ##log_info("pypy_spawn_state({}): returning {} for {}".format(name, newstate.ptr, newstate))
+    #lib.push_state(newstate.ptr)
+    #return newstate.ptr
+
+## lib.pop_state() calls this, then calls GAME->popState() where delete (*state_ptr) is done.
+## this just removes the state_id and ref to its instance from the map.
+#@ffi.def_extern(onerror = log_exception)
+#def pypy_forget_state(state_ptr):
+    #state_id = ptr2int(state_ptr)
+    #del state_instances[state_id]
+    ##log_info("pypy_forget_state({}) done.".format(state_ptr))
 
 @ffi.def_extern(onerror = log_exception)
-def pypy_forget_state(state_ptr):
-    state_id = ptr2int(state_ptr)
-    del state_instances[state_id]
-    #log_info("pypy_forget_state({}) done.".format(state_ptr))
+def pypy_call_method(ffihandle, methodname):
+    getattr(ffi.from_handle(ffihandle), methodname)()
 
-@ffi.def_extern(onerror = log_exception)
-def pypy_state_input(state_ptr):
-    global state_types, state_instances
-    state_id = ptr2int(state_ptr)
-    if state_id in state_instances:
-        state_instances[state_id]._inner_input()
-    else:
-        log_error("pypy_state_input() : state {:x} not registered".format(state_id))
+#@ffi.def_extern(onerror = log_exception)
+#def pypy_state_input(state_ptr):
+    #global state_types, state_instances
+    #state_id = ptr2int(state_ptr)
+    #if state_id in state_instances:
+        #state_instances[state_id]._inner_input()
+    #else:
+        #log_error("pypy_state_input() : state {:x} not registered".format(state_id))
 
-@ffi.def_extern(onerror = log_exception)
-def pypy_state_blit(state_ptr):
-    global state_types, state_instances
-    state_id = ptr2int(state_ptr)
-    if state_id in state_instances:
-        state_instances[state_id]._inner_blit()
-    else:
-        log_error("pypy_state_blit() : state {:x} not registered".format(state_id))
+#@ffi.def_extern(onerror = log_exception)
+#def pypy_state_blit(state_ptr):
+    #global state_types, state_instances
+    #state_id = ptr2int(state_ptr)
+    #if state_id in state_instances:
+        #state_instances[state_id]._inner_blit()
+    #else:
+        #log_error("pypy_state_blit() : state {:x} not registered".format(state_id))
 
-@ffi.def_extern(onerror = log_exception)
-def pypy_state_think(state_ptr):
-    global state_types, state_instances
-    state_id = ptr2int(state_ptr)
-    if state_id in state_instances:
-        state_instances[state_id]._inner_think()
-    else:
-        log_error("pypy_handle_action() : state {:x} not registered".format(state_id))
+#@ffi.def_extern(onerror = log_exception)
+#def pypy_state_think(state_ptr):
+    #global state_types, state_instances
+    #state_id = ptr2int(state_ptr)
+    #if state_id in state_instances:
+        #state_instances[state_id]._inner_think()
+    #else:
+        #log_error("pypy_state_think() : state {:x} not registered".format(state_id))
 
 @ffi.def_extern(onerror = log_exception)
 def pypy_mods_loaded():
@@ -335,7 +458,7 @@ def pypy_game_loaded(buffer, bufsize):
     except Exception as e:
         log_error("pypy_game_loaded(): failure deserializing - ignoring: {!r}".format(yaml_str))
         pod = None
-        raise
+
     Hooks.game_loaded(pod)
 
 pypydata_pin = None
@@ -403,6 +526,16 @@ def pypy_time_1mon():
 def pypy_battle_ended():
     log_info("pypy_battle_ended()")
     return Hooks.battle_ended()
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_mainmenu_keydown(sym, mods):
+    log_debug("pypy_mainmenu_keydown() : {:x}|{:x}".format(sym, mods))
+    return Hooks.mainmenu_keydown(sym, mods)
+
+@ffi.def_extern(onerror = log_exception)
+def pypy_geoscape_keydown(sym, mods):
+    log_debug("pypy_geoscape_keydown() : {:x}|{:x}".format(sym, mods))
+    return Hooks.geoscape_keydown(sym, mods)
 
 @ffi.def_extern(onerror = log_exception)
 def pypy_craft_clicked(craft, button, kmod):

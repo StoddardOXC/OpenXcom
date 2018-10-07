@@ -618,6 +618,21 @@ void Game::popState()
 }
 
 /**
+ * Pops the last state from the top of the stack unless it doesn't match
+ * the supplied one.
+ */
+bool Game::popState(State *state)
+{
+	if (_states.back() != state)
+	{
+		Log(LOG_ERROR)<<"popState(): not popping wrong state";
+		return false;
+	}
+	popState();
+	return true;
+}
+
+/**
  * Returns the language currently in use by the game.
  * @return Pointer to the language.
  */

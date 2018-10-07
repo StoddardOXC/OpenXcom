@@ -48,6 +48,8 @@ public:
 	MainMenuState();
 	/// Cleans up the Main Menu state.
 	~MainMenuState();
+	/// Intercepts keypresses for pyp
+	void handle(Action *action);
 	/// Handler for clicking the New Game button.
 	void btnNewGameClick(Action *action);
 	/// Handler for clicking the New Battle button.
