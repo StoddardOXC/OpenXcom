@@ -43,8 +43,8 @@ typedef struct _state_input_state_t {
 
 void *state_not_found(const char *name);
 state_t *new_state(void *ffih, int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category, int32_t alterpal);
-void push_state(state_t *state);
-void pop_state(state_t *state);
+void st_push(state_t *state);
+void st_pop(state_t *state);
 void st_clear(state_t *state);
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);
 void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc);

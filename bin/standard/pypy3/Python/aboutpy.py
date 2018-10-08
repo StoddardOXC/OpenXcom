@@ -24,13 +24,10 @@
 # this lists state objects the module exports
 __hooks__ = ['mainmenu_keydown']
 
-abpp = None
-
 def mainmenu_keydown(k, m):
-    global abpp
     print(repr(k), repr(m))
     if k == 113:
-        abpp = AboutPyPy() # well hell. how does it gets lost?
+        Game.push_state(AboutPyPy())
         return 1
     return 0
 
@@ -58,7 +55,6 @@ class AboutPyPy(ImmUIState):
         btnOkClicked = self.text_button(self.IR.button.rect, self.tr("STR_FACEPALM"), self.IR.button.color, False)
         if btnOkClicked:
             self.pop()
-        #print("btn: {} hot: {} active: {} input {}".format(rv, self.hot, self.active, self.input.buttons));
         self.winborder(self.IR.border.rect, self.IR.border.color, self.IR.border.color2)
 
 class _ExecutiveSummary(State):

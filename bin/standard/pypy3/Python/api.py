@@ -187,8 +187,8 @@ class State(object):
             bg - background image name, like "BACK01.SCR"
          """
         log_info("State({}, {}, {}, {}, '{}', '{}')".format(w, h, x, y, ui_id, ui_category))
-        ffih = ffi.new_handle(self)
-        self._st = lib.new_state(ffih, w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'), alterpal)
+        self.ffih = ffi.new_handle(self)
+        self._st = lib.new_state(self.ffih, w, h, x, y, ui_id.encode('utf-8'), ui_category.encode('utf-8'), alterpal)
         self._ran_this_frame = False
         self._frame_count = 0
         self._cbuf = []
@@ -207,7 +207,7 @@ class State(object):
 
     def pop(self):
         """ pop itself. after this the c++ object is deleted.  """
-        lib.pop_state(self._st)
+        Game.pop_state(self)
 
     def run(self):
         """ this method to be overriden to run the actually useful code """
@@ -450,7 +450,7 @@ class ImmUIState(State):
             self._surfcache[this] = (textsurf, ts_inverted)
 
         textsurf = self._surfcache[this][1] if pressed else self._surfcache[this][0]
-        self.c_blit((x+5, y+5), (0,0,0,0), textsurf)
+        self.blit((x+5, y+5), (0,0,0,0), textsurf)
         # render done.
         # check if we've been clickedd
         if self.input.buttons == 0 and self.hot == this and self.active == this:
@@ -472,7 +472,8 @@ BOX_NAMES = { # TODO: those should be translation keys
     -8: "Up a shit creek without a paddle",
 }
 
-class Game(object): # just a namespace.
+class Game(object): # just a namespace. plus keeps active states alive
+    ACTIVE_STATES = set()
     @staticmethod
     def tr(state, cstring): # csting mub
         if type(cstring) is bytes:
@@ -482,6 +483,16 @@ class Game(object): # just a namespace.
         else:
             print(repr(cstring))
             raise Hell
+
+    @classmethod
+    def push_state(klass, state):
+        klass.ACTIVE_STATES.add(state)
+        lib.st_push(state._st)
+
+    @classmethod
+    def pop_state(klass, state):
+        lib.st_pop(state._st)
+        klass.ACTIVE_STATES.remove(state)
 
     @staticmethod
     def get_bases(state):

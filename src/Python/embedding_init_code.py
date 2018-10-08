@@ -406,7 +406,10 @@ def pypy_set_options(yaml_opts):
 
 @ffi.def_extern(onerror = log_exception)
 def pypy_call_method(ffihandle, methodname):
-    getattr(ffi.from_handle(ffihandle), methodname)()
+    meth = ffi.string(methodname).decode('utf-8')
+    pyobj = ffi.from_handle(ffihandle)
+    #print("pypy_call_method({!r}, {}".format(ffihandle, meth))
+    getattr(pyobj, meth)()
 
 #@ffi.def_extern(onerror = log_exception)
 #def pypy_state_input(state_ptr):

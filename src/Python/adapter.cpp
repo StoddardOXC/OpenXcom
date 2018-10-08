@@ -299,8 +299,8 @@ struct _state_t : public State {
 state_t *new_state(void *ffih, int32_t w, int32_t h, int32_t x, int32_t y, const char *ui_id, const char *ui_category, int32_t alterpal) {
 	return new state_t(ffih, w, h, x, y, ui_id, ui_category, alterpal);
 }
-void push_state(state_t *state) { GAME->pushState(state); }
-void pop_state(state_t *state) { GAME->popState(state); } /* delete is done in the main loop */
+void st_push(state_t *state) { GAME->pushState(state); }
+void st_pop(state_t *state) { GAME->popState(state); } /* delete is done in the main loop */
 void st_clear(state_t *state) { state->_surface->clear(0); }
 void st_fill(state_t *state, int32_t x, int32_t y, int32_t w, int32_t h, int32_t color) { state->_surface->drawRect(x, y, w, h, color); }
 void st_blit(state_t *state, int32_t dst_x, int32_t dst_y, int32_t src_x, int32_t src_y, int32_t src_w, int32_t src_h, uintptr_t upsrc) {
