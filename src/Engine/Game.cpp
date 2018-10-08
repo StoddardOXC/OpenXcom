@@ -43,6 +43,7 @@
 #include "CrossPlatform.h"
 #include "FileMap.h"
 #include "../Menu/TestState.h"
+#include "../Menu/StartState.h"
 #include <algorithm>
 
 #include "../Python/module.h"
@@ -220,7 +221,8 @@ public:
 };
 
 struct EngineTimings {
-	const int _w = 96, _w_dos = 160;
+	const int TEXT_COLOR = 0xf6;
+	const int _w = 96, _w_dos = 168;
 	const int _h = 48, _h_dos = 96;
 	Text _text;
 	Font *_font;
@@ -250,7 +252,7 @@ struct EngineTimings {
 		// determine current state
 		bool dos = true;
 		if (game != NULL) { // we're past the constructor
-			dos = game->getMod() == NULL;
+			dos = StartState::loading != LOADING_SUCCESSFUL;
 		} else {
 			dos = true; // we're called from the constructor. Inital value of _dos is false to force setup in this call.
 		}
@@ -259,9 +261,12 @@ struct EngineTimings {
 			auto mod_font = game->getMod()->getFont("FONT_SMALL", false);
 			auto mod_lang = game->getLanguage();
 			_text.initText(mod_font, mod_font, mod_lang);
-			_text.setPalette(mod_font->getPalette());
-			_text.setColor(0xf6);
+			_text.setColor(TEXT_COLOR);
 			_text.setSmall();
+			_text.setVisible(true);
+			_text.setHidden(false);
+			_text.setAlign(ALIGN_LEFT);
+			_text.setVerticalAlign(ALIGN_TOP);
 			_dos = dos;
 		}
 		if (!_dos && dos) { // we're either starting-up or restarting
@@ -269,6 +274,10 @@ struct EngineTimings {
 			_text.setPalette(_font->getPalette(), 0, 2);
 			_text.setColor(0);
 			_text.setSmall();
+			_text.setVisible(true);
+			_text.setHidden(false);
+			_text.setAlign(ALIGN_LEFT);
+			_text.setVerticalAlign(ALIGN_TOP);
 			_dos = dos;
 		}
 	}
@@ -276,13 +285,8 @@ struct EngineTimings {
 		_text.setX(w- (_dos ? _w_dos : _w  - 1));
 		_text.setY(0);
 	}
-	void blit(Surface *s, const int limit) {
+	void blit(Surface *s, const int limit, SDL_Color *palette) {
 		position(s->getWidth(), s->getHeight());
-		_text.setPalette(s->getPalette()); // hgmm...
-		_text.setVisible(true);
-		_text.setHidden(false);
-		_text.setAlign(ALIGN_LEFT);
-		_text.setVerticalAlign(ALIGN_TOP);
 		std::ostringstream actual_text;
 		int ipg = round(_input.get());
 		int lgg = round(_logic.get());
@@ -292,6 +296,7 @@ struct EngineTimings {
 		int fps = round(1000.0/_frame.get());
 		actual_text<<"input:  "<<ipg<<" ms\nlogic:  "<<lgg<<" ms\nblit:  "<<blg<<" ms\nidle:  " <<idg<<" ms\nframe:  "<<frm<<"/"<<limit<<" ms\n";
 		actual_text<<"\"fps\"   "<<fps;
+		_text.setPalette(palette);
 		_text.setText(_wsconverter.from_bytes(actual_text.str().c_str()));
 		_text.draw();
 		_text.blit(s);
@@ -476,7 +481,7 @@ void Game::run()
 		if (Options::fpsCounter)
 		{
 			engineTimings.set_text_stuff(this);
-			engineTimings.blit(screenSurface, frameNominalDuration);
+			engineTimings.blit(screenSurface, frameNominalDuration, _states.back()->getPalette());
 		}
 		_cursor->blit(screenSurface);
 		_screen->flip();
