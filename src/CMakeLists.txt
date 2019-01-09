@@ -387,6 +387,7 @@ if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_BUILD_TYPE}" STREQUA
   add_definitions ( -D_DEBUG )
 endif ()
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+  add_definitions( -femit-struct-debug-reduced  )
   if ( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR ENABLE_WARNING )
     # Enable more GCC warnings if requested or we are doing a Debug build.
     add_definitions ( -Wall -Wextra
