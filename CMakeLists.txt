@@ -73,7 +73,7 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
    set ( SDLIMAGE_LIBRARY SDL_image )
    set ( YAMLCPP_LIBRARY yaml-cpp )
    set ( YAMLCPP_LIBRARY_DEBUG yaml-cppd )
-elseif (CMAKE_HOST_UNIX)
+elseif (CMAKE_HOST_UNIX AND NOT APPLE)
   set(ENV{PKG_CONFIG_PATH} "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/")
 
   set(CMAKE_C_FLAGS "-fno-omit-frame-pointer -f")
