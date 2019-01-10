@@ -386,8 +386,11 @@ set ( data_install_dir bin )
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )
   add_definitions ( -D_DEBUG )
 endif ()
-if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+  # attempt to limit the executable size
   add_definitions( -femit-struct-debug-reduced  )
+endif ()
+if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
   if ( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR ENABLE_WARNING )
     # Enable more GCC warnings if requested or we are doing a Debug build.
     add_definitions ( -Wall -Wextra
