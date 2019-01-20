@@ -324,7 +324,6 @@ void lowerCase(std::string &s)
 	CharLowerW(&ws[0]);
 	s = convWcToMb(ws);
 #else
-	char *result = (char *)alloca(s.size() * 2);
 	UnicodeString us(s.c_str());
 	us.toLower();
 	s.clear();
