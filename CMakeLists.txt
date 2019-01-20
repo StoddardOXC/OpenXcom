@@ -76,6 +76,14 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
 else ( )
   find_package ( SDL2 COMPONENTS mixer gfx image)
   find_package ( Yaml_cpp 0.5.0)
+
+  if ( NOT WIN32 )
+    pkg_check_modules(PKG_ICU_UC REQUIRED icu-uc)
+    pkg_check_modules(PKG_ICU_I18N REQUIRED icu-i18n)
+    set ( ICU_LIBRARIES ${PKG_ICU_UC_LIBRARIES} ${PKG_ICU_I18N_LIBRARIES} )
+    include_directories( ${PKG_ICU_UC_INCLUDE_DIRS} )
+  endif ()
+
   set ( YAMLCPP_LIBRARY_DEBUG ${YAMLCPP_LIBRARY} )
 
   if ( NOT SDL_FOUND )

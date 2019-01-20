@@ -18,9 +18,6 @@
  */
 #include "Unicode.h"
 #include <sstream>
-#include <locale>
-#include <stdexcept>
-#include <algorithm>
 #include "Logger.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -30,10 +27,12 @@
 #include <windows.h>
 #include <shlwapi.h>
 #else
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <unicode/utypes.h>
+#include <unicode/ucol.h>
+#include <unicode/ustring.h>
+#include <unicode/ucnv.h>
+#include <unicode/locid.h>
+#include <unicode/stsearch.h>
 #endif
 
 namespace OpenXcom
@@ -41,49 +40,15 @@ namespace OpenXcom
 namespace Unicode
 {
 
-std::locale utf8;
-
 /**
- * Store a UTF-8 locale to use when dealing with character conversions.
- * Windows doesn't have a UTF-8 locale so we just use its APIs directly.
+ * Set default converter to UTF-8 if using libicu.
+ * On Windows we just use APIs directly.
  */
-void getUtf8Locale()
+void init()
 {
-	std::string loc;
 #ifndef _WIN32
-	// Find any UTF-8 locale
-	FILE *fp = popen("locale -a", "r");
-	if (fp != NULL)
-	{
-		char buf[50];
-		while (fgets(buf, sizeof(buf), fp) != NULL)
-		{
-			if (strstr(buf, ".utf8") != NULL ||
-				strstr(buf, ".UTF-8") != NULL)
-			{
-				// Trim newline
-				size_t end = strlen(buf) - 1;
-				if (buf[end] == '\n')
-					buf[end] = '\0';
-
-				loc = buf;
-				break;
-			}
-		}
-		pclose(fp);
-	}
+	ucnv_setDefaultName("UTF-8");
 #endif
-	// Try a UTF-8 locale (or default if none was found)
-	try
-	{
-		Log(LOG_INFO) << "Attempted locale: " << loc.c_str();
-		utf8 = std::locale(loc.c_str());
-	}
-	catch (const std::runtime_error &)
-	{
-		// Well we're stuck with the C locale, hope for the best
-	}
-	Log(LOG_INFO) << "Detected locale: " << utf8.name();
 }
 
 /**
@@ -166,96 +131,39 @@ std::string convUtf32ToUtf8(const UString &src)
 	return out;
 }
 
+#ifdef _WIN32
 /**
- * Takes a wide-character string and converts it to a
- * multibyte 8-bit string in a given encoding.
+ * Takes a wide-character string and converts it to an UTF-8 string.
  * Used for Win32 APIs.
  * @param src Wide-character string.
- * @param cp Codepage of the destination string.
- * @return Multibyte string.
+ * @return UTF-8 string.
  */
-std::string convWcToMb(const std::wstring &src, unsigned int cp)
+static std::string convWcToMb(const std::wstring &src)
 {
 	if (src.empty())
 		return std::string();
-#ifdef _WIN32
-	int size = WideCharToMultiByte(cp, 0, &src[0], (int)src.size(), NULL, 0, NULL, NULL);
+	int size = WideCharToMultiByte(CP_UTF8, 0, &src[0], (int)src.size(), NULL, 0, NULL, NULL);
 	std::string str(size, 0);
-	WideCharToMultiByte(cp, 0, &src[0], (int)src.size(), &str[0], size, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, &src[0], (int)src.size(), &str[0], size, NULL, NULL);
 	return str;
-#elif defined(__CYGWIN__)
-	(void)cp;
-	assert(sizeof(wchar_t) == sizeof(Uint16));
-	UString ustr(src.size(), 0);
-    std::transform(src.begin(), src.end(), ustr.begin(),
-		[](wchar_t c) -> UCode
-		{
-			//TODO: droping surrogates, do proper implemetation when someone will need that range
-			if (c <= 0xD7FF || c >= 0xE000)
-			{
-				return c;
-			}
-			else
-			{
-				return '?';
-			}
-		}
-	);
-	return convUtf32ToUtf8(ustr);
-#else
-	(void)cp;
-	assert(sizeof(wchar_t) == sizeof(UCode));
-	const UString *ustr = reinterpret_cast<const UString*>(&src);
-	return convUtf32ToUtf8(*ustr);
-#endif
 }
 
 /**
- * Takes a multibyte 8-bit string in a given encoding
- * and converts it to a wide-character string.
+ * Takes an UTF-8 string and converts it to a wide-character string.
  * Used for Win32 APIs.
- * @param src Multibyte string.
- * @param cp Codepage of the source string.
+ * @param src UTF-8 string.
  * @return Wide-character string.
  */
-std::wstring convMbToWc(const std::string &src, unsigned int cp)
+static std::wstring convMbToWc(const std::string &src)
 {
 	if (src.empty())
 		return std::wstring();
-#ifdef _WIN32
-	int size = MultiByteToWideChar(cp, 0, &src[0], (int)src.size(), NULL, 0);
+	int size = MultiByteToWideChar(CP_UTF8, 0, &src[0], (int)src.size(), NULL, 0);
 	std::wstring wstr(size, 0);
-	MultiByteToWideChar(cp, 0, &src[0], (int)src.size(), &wstr[0], size);
+	MultiByteToWideChar(CP_UTF8, 0, &src[0], (int)src.size(), &wstr[0], size);
 	return wstr;
-#elif defined(__CYGWIN__)
-	(void)cp;
-	assert(sizeof(wchar_t) == sizeof(Uint16));
-	const UString ustr = convUtf8ToUtf32(src);
-
-	std::wstring wstr(ustr.size(), 0);
-    std::transform(ustr.begin(), ustr.end(), wstr.begin(),
-		[](UCode c) -> wchar_t
-		{
-			//TODO: droping surrogates, do proper implemetation when someone will need that range
-			if (c <= 0xD7FF || (c >= 0xE000 && c <= 0xFFFF))
-			{
-				return c;
-			}
-			else
-			{
-				return '?';
-			}
-		}
-	);
-	return wstr;
-#else
-	(void)cp;
-	assert(sizeof(wchar_t) == sizeof(UCode));
-	UString ustr = convUtf8ToUtf32(src);
-	const std::wstring *wstr = reinterpret_cast<const std::wstring*>(&ustr);
-	return *wstr;
-#endif
 }
+#endif
 
 /**
  * Checks if UTF-8 string is well-formed.
@@ -321,8 +229,8 @@ bool naturalCompare(const std::string &a, const std::string &b)
 	WinStrCmp pWinStrCmp = (WinStrCmp)GetProcAddress(GetModuleHandleA("shlwapi.dll"), "StrCmpLogicalW");
 	if (pWinStrCmp)
 	{
-		std::wstring wa = convMbToWc(a, CP_UTF8);
-		std::wstring wb = convMbToWc(b, CP_UTF8);
+		std::wstring wa = convMbToWc(a);
+		std::wstring wb = convMbToWc(b);
 		return (pWinStrCmp(wa.c_str(), wb.c_str()) < 0);
 	}
 	else
@@ -342,11 +250,16 @@ bool naturalCompare(const std::string &a, const std::string &b)
 bool caseCompare(const std::string &a, const std::string &b)
 {
 #ifdef _WIN32
-	std::wstring wa = convMbToWc(a, CP_UTF8);
-	std::wstring wb = convMbToWc(b, CP_UTF8);
+	std::wstring wa = convMbToWc(a);
+	std::wstring wb = convMbToWc(b);
 	return (StrCmpIW(wa.c_str(), wb.c_str()) < 0);
 #else
-	return (std::use_facet< std::collate<char> >(utf8).compare(&a[0], &a[a.size()], &b[0], &b[b.size()]) < 0);
+	UnicodeString ua(a.c_str());
+	UnicodeString ub(b.c_str());
+	// TODO: consider normalization
+	ua.foldCase();
+	ub.foldCase();
+	return ua == ub;
 #endif
 }
 
@@ -359,15 +272,20 @@ bool caseCompare(const std::string &a, const std::string &b)
 bool caseFind(const std::string &haystack, const std::string &needle)
 {
 #ifdef _WIN32
-	std::wstring wa = convMbToWc(haystack, CP_UTF8);
-	std::wstring wb = convMbToWc(needle, CP_UTF8);
+	std::wstring wa = convMbToWc(haystack);
+	std::wstring wb = convMbToWc(needle);
 	return (StrStrIW(wa.c_str(), wb.c_str()) != NULL);
 #else
-	std::wstring wa = convMbToWc(haystack, 0);
-	std::wstring wb = convMbToWc(needle, 0);
-	std::use_facet< std::ctype<wchar_t> >(utf8).toupper(&wa[0], &wb[wb.size()]);
-	std::use_facet< std::ctype<wchar_t> >(utf8).toupper(&wb[0], &wb[wb.size()]);
-	return (wa.find(wb) != std::wstring::npos);
+	UErrorCode errorCode;
+	UnicodeString uhaystack(haystack.c_str());
+	UnicodeString uneedle(needle.c_str());
+	uhaystack.foldCase();
+	uneedle.foldCase();
+	// TODO: consider normalization and setting current language
+	// those can influence collation.
+	UErrorCode error = U_ZERO_ERROR;
+	StringSearch iter(uneedle, uhaystack, Locale::getUS(), NULL, error);
+	return iter.first(error) != USEARCH_DONE;
 #endif
 }
 
@@ -381,13 +299,14 @@ void upperCase(std::string &s)
 	if (s.empty())
 		return;
 #ifdef _WIN32
-	std::wstring ws = convMbToWc(s, CP_UTF8);
+	std::wstring ws = convMbToWc(s);
 	CharUpperW(&ws[0]);
-	s = convWcToMb(ws, CP_UTF8);
+	s = convWcToMb(ws);
 #else
-	std::wstring ws = convMbToWc(s, 0);
-	std::use_facet< std::ctype<wchar_t> >(utf8).toupper(&ws[0], &ws[ws.size()]);
-	s = convWcToMb(ws, 0);
+	UnicodeString us(s.c_str());
+	us.toUpper();
+	s.clear();
+	us.toUTF8String(s);
 #endif
 }
 
@@ -401,13 +320,15 @@ void lowerCase(std::string &s)
 	if (s.empty())
 		return;
 #ifdef _WIN32
-	std::wstring ws = convMbToWc(s, CP_UTF8);
+	std::wstring ws = convMbToWc(s);
 	CharLowerW(&ws[0]);
-	s = convWcToMb(ws, CP_UTF8);
+	s = convWcToMb(ws);
 #else
-	std::wstring ws = convMbToWc(s, 0);
-	std::use_facet< std::ctype<wchar_t> >(utf8).tolower(&ws[0], &ws[ws.size()]);
-	s = convWcToMb(ws, 0);
+	char *result = (char *)alloca(s.size() * 2);
+	UnicodeString us(s.c_str());
+	us.toLower();
+	s.clear();
+	us.toUTF8String(s);
 #endif
 }
 

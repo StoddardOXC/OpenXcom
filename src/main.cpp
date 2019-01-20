@@ -22,6 +22,7 @@
 #include "Engine/Exception.h"
 #include "Engine/Logger.h"
 #include "Engine/CrossPlatform.h"
+#include "Engine/Unicode.h"
 #include "Engine/Game.h"
 #include "Engine/Options.h"
 #include "Menu/StartState.h"
@@ -106,7 +107,7 @@ int main(int argc, char *argv[])
 	std::set_terminate(exceptionLogger);
 #endif
 #endif
-
+	Unicode::init();
 	CrossPlatform::getErrorDialog();
 	CrossPlatform::processArgs(argc, argv);
 	if (!Options::init())
