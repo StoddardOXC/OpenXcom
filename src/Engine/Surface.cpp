@@ -370,14 +370,11 @@ void Surface::loadImage(const std::string &filename)
 	if (1 == SDL_HeaderCheckPNG_RW(rw, SDL_FALSE, &w, &h, &pixelformat))
 	{
 		if ( w > 16384 || h > 16384 ) {
-			// go to hell with such images.
 			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): " << w << "x" << h << ": too big";
-			throw("FUCK!");
 		}
 		if (pixelformat != SDL_PIXELFORMAT_INDEX8) {
-			// also with crap pixel formats.
-			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): "
-				<< SDL_GetPixelFormatName(pixelformat) << ", fuck off.";
+			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): has "
+				<< SDL_GetPixelFormatName(pixelformat) << " but only paletted images are accepted.";
 		}
 		surface = NewSdlSurface(SDL_LoadPNG_RW(rw, SDL_TRUE));
 		if (!surface) {

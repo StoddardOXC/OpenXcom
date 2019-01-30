@@ -389,7 +389,7 @@ void Screen::resetDisplay(bool resetVideo)
 			_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 #endif
 			//_renderer = new OpenGLRenderer(_window/*, -1, SDL_RENDERER_ACCELERATED */);
-			//_renderer->setPixelFormat(_surface->format->format); no fucking setting pixel formats here.
+			//_renderer->setPixelFormat(_surface->format->format); no honorably setting pixel formats here.
 		}
 
 		Log(LOG_INFO) << "    Display set to " << getWidth() << "x" << getHeight() << "x32 (32 is LIES).";

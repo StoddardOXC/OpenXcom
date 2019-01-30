@@ -121,27 +121,27 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 			<< " dst pf: " << SDL_GetPixelFormatName(_surface->format->format)
 			<< " BM: " << (int) dstBM;
 
-		throw Exception("fuck.");
+		throw Exception(SDL_GetError());
 	}
 	// _surface must be the same size as _texture at all times
 	// hence the NULL for the rect
 	if (SDL_UpdateTexture(_texture, NULL, _surface->pixels, _surface->pitch)) {
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_UpdateTexture(): " << SDL_GetError();
-		throw Exception("fuck.");
+		throw Exception(SDL_GetError());
 	}
 
 	// flip starts here.
-	// fucking cursor should be rendercopied too. fuck.
+	// the most honorable cursor should be rendercopied too.
 
 	SDL_SetRenderDrawColor(_renderer, fc%255, fc%255, fc%255, 255);
 	if (SDL_RenderClear(_renderer)) {
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderClear(): " << SDL_GetError();
-		throw Exception("fuck.");
+		throw Exception(SDL_GetError());
 	}
 	// rendercopy does the scaling
 	if (SDL_RenderCopy(_renderer, _texture, NULL, &_dstRect)) {
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderCopy(): " << SDL_GetError();
-		throw Exception("fuck.");
+		throw Exception(SDL_GetError());
 	}
 	SDL_RenderPresent(_renderer);
 }

@@ -26,6 +26,7 @@ namespace OpenXcom
 {
 // Following code is copy-pasted with minor adjustments from the OpenXcom's OpenGL.cpp file
 
+#if 0
 bool OpenGLRenderer::checkErrors = true;
 
 std::string strGLError(GLenum glErr)
@@ -100,10 +101,13 @@ Uint32 (APIENTRYP glXGetCurrentDrawable)() = 0;
 void (APIENTRYP glXSwapIntervalEXT)(void *display, Uint32 GLXDrawable, int interval);
 
 Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
-
+#endif
 
 void OpenGLRenderer::resize(unsigned width, unsigned height)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::set_shader(): to be  reimplemented.";
+#if 0
+
     if(gltexture == 0) glGenTextures(1, &gltexture);
 	glErrorCheck();
 
@@ -119,78 +123,96 @@ void OpenGLRenderer::resize(unsigned width, unsigned height)
       width, height, /* border = */ 0, /* format = */ GL_BGRA,
       iformat, buffer);
 	glErrorCheck();
-
+#endif
 }
 
 bool OpenGLRenderer::lock(uint32_t *&data, unsigned &pitch)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::set_shader(): to be  reimplemented.";
+	return false;
+#if 0
     pitch = iwidth * ibpp;
     return (data = buffer);
+#endif
 }
 
 void OpenGLRenderer::clear() {
+	Log(LOG_FATAL) << "OpenGLRenderer::set_shader(): to be  reimplemented.";
+#if 0
     //memset(buffer, 0, iwidth * iheight * ibpp);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
 	glErrorCheck();
+#endif
 }
 
  void OpenGLRenderer::set_shader(const char *source_yaml_filename) {
-    if(!shader_support) return;
+	Log(LOG_FATAL) << "OpenGLRenderer::set_shader(): to be  reimplemented.";
+#if 0
+	if(!shader_support) return;
 
-    if(fragmentshader) {
-      glDetachShader(glprogram, fragmentshader);
-      glDeleteShader(fragmentshader);
-      fragmentshader = 0;
-    }
+	if(fragmentshader) {
+		glDetachShader(glprogram, fragmentshader);
+		glDeleteShader(fragmentshader);
+		fragmentshader = 0;
+	}
 
-    if(vertexshader) {
-      glDetachShader(glprogram, vertexshader);
-      glDeleteShader(vertexshader);
-      vertexshader = 0;
-    }
+	if(vertexshader) {
+		glDetachShader(glprogram, vertexshader);
+		glDeleteShader(vertexshader);
+		vertexshader = 0;
+	}
 
-    if(source_yaml_filename && strlen(source_yaml_filename)) {
-   	try {
-      YAML::Node document = YAML::LoadFile(source_yaml_filename);
+	if(source_yaml_filename && strlen(source_yaml_filename)) {
+		try {
+			YAML::Node document = YAML::LoadFile(source_yaml_filename);
 
-      bool is_glsl;
-	  std::string language = document["language"].as<std::string>();
-	  is_glsl = (language == "GLSL");
+			bool is_glsl;
+			std::string language = document["language"].as<std::string>();
+			is_glsl = (language == "GLSL");
 
 
-      linear = document["linear"].as<bool>(false); // some shaders want texture linear interpolation and some don't
-      std::string fragment_source = document["fragment"].as<std::string>("");
-	  std::string vertex_source = document["vertex"].as<std::string>("");
+			linear = document["linear"].as<bool>(false); // some shaders want texture linear interpolation and some don't
+			std::string fragment_source = document["fragment"].as<std::string>("");
+			std::string vertex_source = document["vertex"].as<std::string>("");
 
-      if(is_glsl) {
-        if(fragment_source != "") set_fragment_shader(fragment_source.c_str());
-        if(vertex_source != "") set_vertex_shader(vertex_source.c_str());
-      }
-	  }
-	  catch (YAML::Exception &e) {
-	    Log(LOG_ERROR) << source_yaml_filename << ": " << e.what();
-	  }
-    }
-    glLinkProgram(glprogram);
-  }
+			if(is_glsl) {
+				if(fragment_source != "") set_fragment_shader(fragment_source.c_str());
+				if(vertex_source != "") set_vertex_shader(vertex_source.c_str());
+			}
+		}
+		catch (YAML::Exception &e) {
+			Log(LOG_ERROR) << source_yaml_filename << ": " << e.what();
+		}
+	}
+	glLinkProgram(glprogram);
+#endif
+}
 
  void OpenGLRenderer::set_fragment_shader(const char *source) {
+	Log(LOG_FATAL) << "OpenGLRenderer::set_fragment_shader(): to be  reimplemented.";
+#if 0
     fragmentshader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentshader, 1, &source, 0);
     glCompileShader(fragmentshader);
     glAttachShader(glprogram, fragmentshader);
-  }
+#endif
+}
 
  void OpenGLRenderer::set_vertex_shader(const char *source) {
+	Log(LOG_FATAL) << "OpenGLRenderer::set_vertex_shader(): to be  reimplemented.";
+#if 0
     vertexshader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexshader, 1, &source, 0);
     glCompileShader(vertexshader);
     glAttachShader(glprogram, vertexshader);
-  }
+#endif
+}
 
  void OpenGLRenderer::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight) {
+	Log(LOG_FATAL) << "OpenGLRenderer::refresh(): to be  reimplemented.";
+#if 0
     while (glGetError() != GL_NO_ERROR) {}; // clear possible error from who knows where
 	clear();
     if(shader_support && (fragmentshader || vertexshader)) {
@@ -260,13 +282,16 @@ void OpenGLRenderer::clear() {
     glFlush();
 	glErrorCheck();
 
-    if(shader_support) {
-      glUseProgram(0);
-    }
-  }
+	if(shader_support) {
+		glUseProgram(0);
+	}
+#endif
+}
 
  void OpenGLRenderer::init(int width, int height)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::init(): to be reimplemented.";
+#if 0
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -309,9 +334,12 @@ void OpenGLRenderer::clear() {
 
     //create surface texture
     //resize(width, height);
+#endif
 }
 
 void OpenGLRenderer::term() {
+	Log(LOG_FATAL) << "OpenGLRenderer::term(): to be reimplemented.";
+#if 0
     if(gltexture) {
       glDeleteTextures(1, &gltexture);
       gltexture = 0;
@@ -324,7 +352,8 @@ void OpenGLRenderer::term() {
     }
 
     //delete buffer_surface;
-  }
+#endif
+}
 
 
 
@@ -334,26 +363,35 @@ OpenGLRenderer::OpenGLRenderer(SDL_Window *window): _window(window), _resizeRequ
 			iformat(GL_UNSIGNED_INT_8_8_8_8_REV), // this didn't seem to be set anywhere before...
 			ibpp(32)                              // ...nor this
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::OpenGLRenderer(): to be reimplemented.";
+#if 0
 	glContext = SDL_GL_CreateContext(_window);
 	init(0, 0);
 	//setShader(FileMap::getFilePath(Options::useOpenGLShader).c_str());
 	setVSync(Options::vSyncForOpenGL);
 	checkErrors = Options::checkOpenGLErrors;
+#endif
 }
 
 
 OpenGLRenderer::~OpenGLRenderer(void)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::~OpenGLRenderer(): to be reimplemented.";
+#if 0
 	term();
 	SDL_GL_DeleteContext(glContext);
+#endif
 }
 
 void OpenGLRenderer::setPixelFormat(Uint32 format)
 {
 	// This should not be called, right?
+	Log(LOG_FATAL) << "OpenGLRenderer::setPixelFormat(): This should not be called, right.";
 }
 void OpenGLRenderer::setInternalRect(SDL_Rect *srcRect)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::setInternalRect(): not implemented.";
+#if 0
 	_srcRect.x = srcRect->x;
 	_srcRect.y = srcRect->y;
 	_srcRect.w = srcRect->w;
@@ -365,19 +403,24 @@ void OpenGLRenderer::setInternalRect(SDL_Rect *srcRect)
 	//setShader(FileMap::getFilePath(Options::useOpenGLShader).c_str());
 	setVSync(Options::vSyncForOpenGL);
 	checkErrors = Options::checkOpenGLErrors;
-
+#endif
 }
 
 void OpenGLRenderer::setOutputRect(SDL_Rect *dstRect)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::setOutputRect(): not implemented.";
+#if 0
 	_dstRect.x = dstRect->x;
 	_dstRect.y = dstRect->y;
 	_dstRect.w = dstRect->w;
 	_dstRect.h = dstRect->h;
+#endif
 }
 
 void OpenGLRenderer::flip(SDL_Surface *srcSurface)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::flip(): not implemented.";
+#if 0
 	bufSurface = srcSurface;
 	buffer = (uint32_t*) srcSurface->pixels;
 	if (_resizeRequested)
@@ -386,15 +429,21 @@ void OpenGLRenderer::flip(SDL_Surface *srcSurface)
 	}
 	refresh(linear, _srcRect.w, _srcRect.h, _dstRect.w, _dstRect.h);
 	SDL_GL_SwapWindow(_window);
+#endif
 }
 
 void OpenGLRenderer::setShader(std::string shaderPath)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::setShader(): not implemented.";
+#if 0
 	set_shader(shaderPath.c_str());
+#endif
 }
 
 void OpenGLRenderer::setVSync(bool sync)
 {
+	Log(LOG_FATAL) << "OpenGLRenderer::setVSync(): not implemented.";
+#if 0
 	const int interval = sync ? 1 : 0;
 	if (glXGetCurrentDisplay && glXGetCurrentDrawable && glXSwapIntervalEXT)
 	{
@@ -411,30 +460,14 @@ void OpenGLRenderer::setVSync(bool sync)
 		wglSwapIntervalEXT(interval);
 		// Log(LOG_INFO) << "Made an attempt to set vsync via WGL.";
 	}
-
+#endif
 }
 
 void OpenGLRenderer::screenshot(const std::string &filename) const
 {
-#if 0 // fuck off
-	int width, height;
-	SDL_GetWindowSize(_window, &width, &height);
-	unsigned char *pixels = new unsigned char[width * height * 3];
-	GLenum format = GL_RGB;
-	for (int y = 0; y < height + 2 * _dstRect.y; ++y)
-	{
-		glReadPixels(0, height - (y + 1), width, 1, format, GL_UNSIGNED_BYTE, (pixels) + y * width * 3);
-	}
-	glErrorCheck();
-	unsigned error = lodepng::encode(filename, (const unsigned char*)pixels, width, height, LCT_RGB);
-	if (error)
-	{
-		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
-	}
-	delete[] pixels;
-	//assert(0 && "Not yet!");
-#endif
+	Log(LOG_FATAL) << "OpenGLRenderer::screenshot(): not implemented.";
 }
+
 
 
 }
