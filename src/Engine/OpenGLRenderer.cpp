@@ -12,6 +12,7 @@
 
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <SDL_pnglite.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 
@@ -20,7 +21,6 @@
 #include "Options.h"
 #include "CrossPlatform.h"
 #include "FileMap.h"
-#include "../lodepng.h"
 
 namespace OpenXcom
 {
@@ -191,7 +191,7 @@ void OpenGLRenderer::clear() {
   }
 
  void OpenGLRenderer::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight) {
-    while (glGetError() != GL_NO_ERROR); // clear possible error from who knows where
+    while (glGetError() != GL_NO_ERROR) {}; // clear possible error from who knows where
 	clear();
     if(shader_support && (fragmentshader || vertexshader)) {
       glUseProgram(glprogram);
@@ -328,11 +328,11 @@ void OpenGLRenderer::term() {
 
 
 
-OpenGLRenderer::OpenGLRenderer(SDL_Window *window): _window(window), gltexture(0), glprogram(0), fragmentshader(0), linear(false), vertexshader(0),
-                     buffer(NULL), iwidth(0), iheight(0),
-                     iformat(GL_UNSIGNED_INT_8_8_8_8_REV), // this didn't seem to be set anywhere before...
-                     ibpp(32),                              // ...nor this
-					 _resizeRequested(false)
+OpenGLRenderer::OpenGLRenderer(SDL_Window *window): _window(window), _resizeRequested(false),
+			gltexture(0), glprogram(0), fragmentshader(0), linear(false), vertexshader(0),
+			buffer(NULL), iwidth(0), iheight(0),
+			iformat(GL_UNSIGNED_INT_8_8_8_8_REV), // this didn't seem to be set anywhere before...
+			ibpp(32)                              // ...nor this
 {
 	glContext = SDL_GL_CreateContext(_window);
 	init(0, 0);
@@ -416,6 +416,7 @@ void OpenGLRenderer::setVSync(bool sync)
 
 void OpenGLRenderer::screenshot(const std::string &filename) const
 {
+#if 0 // fuck off
 	int width, height;
 	SDL_GetWindowSize(_window, &width, &height);
 	unsigned char *pixels = new unsigned char[width * height * 3];
@@ -432,6 +433,7 @@ void OpenGLRenderer::screenshot(const std::string &filename) const
 	}
 	delete[] pixels;
 	//assert(0 && "Not yet!");
+#endif
 }
 
 

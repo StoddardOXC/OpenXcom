@@ -82,7 +82,6 @@
 #include <StorageDefs.h>
 #endif
 #include "FileMap.h"
-#include "SDL2Helpers.h"
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -354,7 +353,7 @@ std::vector<std::string> findUserFolders()
 	return list;
 #endif
 
-	
+
 #ifdef _WIN32
 	std::unordered_set<std::string> seen;
 	wchar_t pathW[MAX_PATH+1];
@@ -1304,7 +1303,7 @@ int getPointerState(int *x, int *y)
                                 if (x) {
                                         *x = finger->x * Options::displayWidth;
                                 }
-                                
+
                                 if (y) {
                                         *y = finger->y * Options::displayHeight;
                                 }
@@ -1603,8 +1602,23 @@ void setLogFileName(const std::string& name) {
 }
 void log(int level, const std::ostringstream& baremsgstream) {
 	std::ostringstream msgstream;
+#ifdef __linux__
+	char rss[32];
+	{
+		int unused, rss_pages = 0;
+		FILE *fp = fopen("/proc/self/statm", "r");
+		if (fp) {
+			fscanf(fp, "%d %d", &unused, &rss_pages);
+			fclose(fp);
+		}
+		sprintf(rss, "RSS=%04d ", rss_pages >> 8);
+	}
+#endif
 	msgstream << "[" << CrossPlatform::now() << "]" << "\t"
 			  << "[" << Logger::toString(level) << "]" << "\t"
+#ifdef __linux__
+			  << rss
+#endif
 			  << baremsgstream.str() << std::endl;
 	auto msg = msgstream.str();
 
@@ -1636,6 +1650,10 @@ void log(int level, const std::ostringstream& baremsgstream) {
 	// retain the current message if write fails.
 	if (failed || !logToFile(logFileName, msg)) {
 		logBuffer.push_back(std::make_pair(level, msg));
+	}
+
+	if (level == LOG_FATAL) {
+		throw(Exception(msg));
 	}
 }
 

@@ -21,7 +21,6 @@
 #include "Sound.h"
 #include "Exception.h"
 #include "Logger.h"
-#include "SDL2Helpers.h"
 
 namespace OpenXcom
 {

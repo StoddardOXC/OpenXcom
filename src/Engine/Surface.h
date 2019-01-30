@@ -71,7 +71,7 @@ public:
 	{
 		auto tempBuffer = Surface::NewAlignedBuffer(32, width, height);
 		auto tempSurface = Surface::NewSdlSurface(tempBuffer, 32, width, height);
-		return std::make_pair(std::move(tempBuffer), std::move(tempSurface));
+		return std::pair<UniqueBufferPtr, UniqueSurfacePtr>(std::move(tempBuffer), std::move(tempSurface));
 	}
 
 	/// Create buffer and surface.
@@ -79,7 +79,7 @@ public:
 	{
 		auto tempBuffer = Surface::NewAlignedBuffer(8, width, height);
 		auto tempSurface = Surface::NewSdlSurface(tempBuffer, 8, width, height);
-		return std::make_pair(std::move(tempBuffer), std::move(tempSurface));
+		return std::pair<UniqueBufferPtr, UniqueSurfacePtr>(std::move(tempBuffer), std::move(tempSurface));
 	}
 
 	/// Zero whole surface.
@@ -131,6 +131,8 @@ public:
 	void loadBdy(const std::string &filename);
 	/// Loads a general image file.
 	void loadImage(const std::string &filename);
+	/// Saves as PNG
+	void savePNG(const std::string &filename);
 	/// Clears the surface's contents eith a specified colour.
 	void clear();
 	/// Offsets the surface's colors by a set amount.

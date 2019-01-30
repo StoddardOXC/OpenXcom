@@ -1,5 +1,4 @@
 set ( root_src
-  lodepng.cpp
   main.cpp
   ../libs/miniz/miniz.c
 )
@@ -520,7 +519,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES FreeBSD OR ${CMAKE_SYSTEM_NAME} MATCHES NetBSD 
   set ( system_libs -lexecinfo )
 endif ()
 
-target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_LIBRARIES} debug ${YAMLCPP_LIBRARY_DEBUG} optimized ${YAMLCPP_LIBRARY} )
+#target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_LIBRARIES} ${PKG_YAMLCPP_LIBRARIES} )
+target_link_libraries ( openxcom ${system_libs} ${PKG_SDLIMAGE_LIBRARIES} ${PKG_SDLMIXER_LIBRARIES} ${PKG_SDLGFX_LIBRARIES} ${PKG_SDLPNGLITE_STATIC_LIBRARIES} ${PKG_SDL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${PKG_YAMLCPP_LIBRARIES} ${PKG_ZLIB_LIBRARIES} ${WIN32_LIBS} )
 
 # Pack libraries into bundle and link executable appropriately
 if ( APPLE AND CREATE_BUNDLE )

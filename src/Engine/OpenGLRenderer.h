@@ -17,7 +17,7 @@ namespace OpenXcom
 
 class Surface;
 
-#ifndef __APPLE__
+#ifndef __APPLE__  // FIXME: this is already defined in SDL.
 extern PFNGLCREATEPROGRAMPROC glCreateProgram;
 extern PFNGLUSEPROGRAMPROC glUseProgram;
 extern PFNGLCREATESHADERPROC glCreateShader;
@@ -91,7 +91,7 @@ public:
 
 	OpenGLRenderer(SDL_Window *window);
 	~OpenGLRenderer(void);
-	/// Sets the surface's pixel format
+	/// Sets the expected surfaces' pixel format
 	void setPixelFormat(Uint32 format);
 	/// Sets the size of the expected SDL_Surface.
 	void setInternalRect(SDL_Rect *srcRect);

@@ -121,7 +121,6 @@
 #include <SDL_video.h>
 #include <yaml-cpp/yaml.h>
 #include "./dirent.h"
-#include "./lodepng.h"
 
 // uncomment to check memory leaks in VS
 //#ifndef DBG_NEW

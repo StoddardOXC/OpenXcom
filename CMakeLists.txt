@@ -8,7 +8,6 @@ include(GNUInstallDirs)
 # For yaml-cpp
 set (CMAKE_CXX_STANDARD 11)
 
-
 option ( DEV_BUILD "Development Build. Disable this for release builds" ON )
 option ( DUMP_CORE "Disables exception and segfault handling." OFF )
 option ( BUILD_PACKAGE "Prepares build for creation of a package with CPack" ON )
@@ -72,6 +71,30 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
    set ( SDLIMAGE_LIBRARY SDL_image )
    set ( YAMLCPP_LIBRARY yaml-cpp )
    set ( YAMLCPP_LIBRARY_DEBUG yaml-cppd )
+elseif (CMAKE_HOST_UNIX AND NOT APPLE)
+  set(ENV{PKG_CONFIG_PATH} "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/")
+
+  set(CMAKE_C_FLAGS "-fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS_DEBUG "-ggdb3")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -ggdb3")
+  set(CMAKE_C_FLAGS_RELEASE "-O3 -ggdb3")
+
+  include(FindPkgConfig)
+  pkg_check_modules(PKG_SDL REQUIRED sdl2)
+  pkg_check_modules(PKG_ZLIB REQUIRED zlib)
+  pkg_check_modules(PKG_SDLIMAGE REQUIRED SDL2_image)
+  pkg_check_modules(PKG_SDLPNGLITE REQUIRED sdl_pnglite)
+  pkg_check_modules(PKG_SDLGFX REQUIRED SDL_gfx3)
+  pkg_check_modules(PKG_SDLMIXER REQUIRED SDL2_mixer)
+  pkg_check_modules(PKG_YAMLCPP REQUIRED yaml-cpp)
+
+  include_directories(${PKG_SDL_INCLUDE_DIRS} ${PKG_ZLIB_INCLUDE_DIRS} ${PKG_SDLIMAGE_INCLUDE_DIRS})
+  include_directories(${PKG_SDLGFX_INCLUDE_DIRS} ${PKG_SDLMIXER_INCLUDE_DIRS} ${PKG_YAMLCPP_INCLUDE_DIRS})
+  include_directories(${PKG_SDLPNGLITE_STATIC_INCLUDE_DIRS})
+  link_directories(${PKG_SDL_LIBRARY_DIRS} ${PKG_ZLIB_LIBRARY_DIRS} ${PKG_SDLIMAGE_LIBRARY_DIRS})
+  link_directories(${PKG_SDLGFX_LIBRARY_DIRS} ${PKG_SDLMIXER_LIBRARY_DIRS} ${PKG_YAMLCPP_LIBRARY_DIRS})
+  link_directories(${PKG_SDLPNGLITE_STATIC_LIBRARY_DIRS})
+
 else ( )
   find_package ( SDL2 REQUIRED mixer image )
   find_package ( SDL_gfx REQUIRED )

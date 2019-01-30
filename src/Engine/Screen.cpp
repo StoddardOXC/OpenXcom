@@ -16,14 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Screen.h"
+
 #include <algorithm>
 #include <sstream>
 #include <cmath>
 #include <iomanip>
 #include <cassert>
 #include <climits>
-#include "../lodepng.h"
+#include <SDL.h>
+#include <SDL_pnglite.h>
+#include "Screen.h"
 #include "Exception.h"
 #include "Surface.h"
 #include "Logger.h"
@@ -33,8 +35,6 @@
 #include "FileMap.h"
 #include "Zoom.h"
 #include "Timer.h"
-#include <SDL.h>
-#include <algorithm>
 #include "Renderer.h"
 #include "SDLRenderer.h"
 #include "OpenGLRenderer.h"
@@ -132,7 +132,6 @@ Screen::~Screen()
  */
 SDL_Surface *Screen::getSurface()
 {
-	_pushPalette = true;
 	return _surface.get();
 }
 
@@ -186,6 +185,10 @@ void Screen::handle(Action *action)
  */
 void Screen::flip()
 {
+	if (_pushPalette) {
+		SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
+		_pushPalette = false;
+	}
 	_renderer->flip(_surface.get());
 }
 
@@ -194,11 +197,7 @@ void Screen::flip()
  */
 void Screen::clear()
 {
-	Surface::CleanSdlSurface(_surface.get());
-
-#if 0
-	Surface::CleanSdlSurface(_screen);
-#endif
+	SDL_FillRect(_surface.get(), NULL, 0);
 }
 
 /**
@@ -210,6 +209,7 @@ void Screen::clear()
  */
 void Screen::setPalette(const SDL_Color* colors, int firstcolor, int ncolors, bool immediately)
 {
+	// TODO FIXME: why ever not always defer setting the palette to just before blit?
 	if (_numColors && (_numColors != ncolors) && (_firstColor != firstcolor))
 	{
 		// an initial palette setup has not been committed to the screen yet
@@ -224,42 +224,17 @@ void Screen::setPalette(const SDL_Color* colors, int firstcolor, int ncolors, bo
 		_numColors = ncolors;
 		_firstColor = firstcolor;
 	}
-
-	SDL_SetPaletteColors(_surface->format->palette, colors, firstcolor, ncolors);
-
-#if 0
-	// defer actual update of screen until SDL_Flip()
-	if (immediately && _screen->format->BitsPerPixel == 8 && SDL_SetColors(_screen, const_cast<SDL_Color *>(colors), firstcolor, ncolors) == 0)
-	{
-		Log(LOG_DEBUG) << "Display palette doesn't match requested palette";
-	}
-#endif
-
-	// Sanity check
-	/*
-	SDL_Color *newcolors = _screen->format->palette->colors;
-	for (int i = firstcolor, j = 0; i < firstcolor + ncolors; i++, j++)
-	{
-		Log(LOG_DEBUG) << (int)newcolors[i].r << " - " << (int)newcolors[i].g << " - " << (int)newcolors[i].b;
-		Log(LOG_DEBUG) << (int)colors[j].r << " + " << (int)colors[j].g << " + " << (int)colors[j].b;
-		if (newcolors[i].r != colors[j].r ||
-			newcolors[i].g != colors[j].g ||
-			newcolors[i].b != colors[j].b)
-		{
-			Log(LOG_ERROR) << "Display palette doesn't match requested palette";
-			break;
-		}
-	}
-	*/
+	_pushPalette = true;
+	//SDL_SetPaletteColors(_surface->format->palette, colors, firstcolor, ncolors);
 }
 
 /**
  * Returns the screen's 8bpp palette.
  * @return Pointer to the palette's colors.
  */
-SDL_Color *Screen::getPalette() const
+const SDL_Color *Screen::getPalette() const
 {
-	return (SDL_Color*)deferredPalette;
+	return deferredPalette;
 }
 
 /**
@@ -306,26 +281,18 @@ void Screen::resetDisplay(bool resetVideo)
 			switchRenderer = true;
 		}
 	}
-#ifdef __linux__
-	Uint32 oldFlags = _flags;
-#endif
 	makeVideoFlags();
-	// A kludge to make video resolution changing work
-	resetVideo = ( (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight) ) || resetVideo;
 
+	Log(LOG_INFO) << "resetDisplay( resetVideo="<<(resetVideo? "true":"false")<<")";
 	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
-	if (!_surface || (_surface->format->BitsPerPixel != _bpp ||
-		_surface->w != _baseWidth ||
-		_surface->h != _baseHeight)) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
-	{
-		std::tie(_buffer, _surface) = Surface::NewPair32Bit(_baseWidth, _baseHeight);
-	}
-	SDL_SetColorKey(_surface.get(), 0, 0); // turn off color key!
+	std::tie(_buffer, _surface) = Surface::NewPair8Bit(_baseWidth, _baseHeight);
+	SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
+	SDL_SetColorKey(_surface.get(), 0, 0); // turn off color key! FIXME: probably not needed.
 
-	if (resetVideo /*|| _screen->format->BitsPerPixel != _bpp */)
+	if (resetVideo)
 	{
-		/* FIXME: leak? */
+		/* FIXME: leak? */  // what leak?
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
 		/* Attempt to set scaling */
 		if (Options::useNearestScaler)
@@ -379,10 +346,7 @@ void Screen::resetDisplay(bool resetVideo)
 					winY = SDL_WINDOWPOS_UNDEFINED;
 				}
 			}
-			_window = SDL_CreateWindow("OpenXcom",
-						   winX,
-						   winY,
-						   width, height, _flags);
+			_window = SDL_CreateWindow("OpenXcom", winX, winY, width, height, _flags);
 			/* In case something went horribly wrong */
 			if (_window == NULL)
 			{
@@ -393,8 +357,10 @@ void Screen::resetDisplay(bool resetVideo)
 		}
 		else
 		{
+#if 0 // FIXME? doesn't seem to be needed at all
 #ifndef __ANDROID__
 			SDL_SetWindowSize(_window, width, height);
+#endif
 #endif
 			SDL_SetWindowBordered(_window, Options::borderless? SDL_FALSE : SDL_TRUE);
 			SDL_SetWindowFullscreen(_window, Options::fullscreen? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
@@ -409,7 +375,8 @@ void Screen::resetDisplay(bool resetVideo)
 
 		if (!_renderer)
 		{
-#ifndef __NO_OPENGL
+//#ifndef __NO_OPENGL // okay, we don't have an OpenGL renderer yet.
+#if 0
 			if (Options::useOpenGL)
 			{
 				_renderer = new OpenGLRenderer(_window);
@@ -422,14 +389,10 @@ void Screen::resetDisplay(bool resetVideo)
 			_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 #endif
 			//_renderer = new OpenGLRenderer(_window/*, -1, SDL_RENDERER_ACCELERATED */);
-			_renderer->setPixelFormat(_surface->format->format);
+			//_renderer->setPixelFormat(_surface->format->format); no fucking setting pixel formats here.
 		}
-		SDL_Rect baseRect;
-		baseRect.x = baseRect.y = 0;
-		baseRect.w = _baseWidth;
-		baseRect.h = _baseHeight;
-		_renderer->setInternalRect(&baseRect);
-		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
+
+		Log(LOG_INFO) << "    Display set to " << getWidth() << "x" << getHeight() << "x32 (32 is LIES).";
 
 		/* Save new baseWidth and baseHeight */
 		_prevWidth = _baseWidth;
@@ -439,13 +402,14 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		clear();
 	}
+
 	assert (_window != 0 && _renderer != 0);
 
 	Options::displayWidth = getWidth();
 	Options::displayHeight = getHeight();
 	_scaleX = getWidth() / (double)_baseWidth;
 	_scaleY = getHeight() / (double)_baseHeight;
-	Log(LOG_INFO) << "Pre-bar scales: _scaleX = " << _scaleX << ", _scaleY = " << _scaleY;
+	Log(LOG_INFO) << "    Pre-bar scales: _scaleX = " << _scaleX << ", _scaleY = " << _scaleY;
 
 	double pixelRatioY = 1.0;
 	if (Options::nonSquarePixelRatio && !Options::allowResize)
@@ -529,8 +493,14 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
 	}
-	Log(LOG_INFO) << "Scale (post-bar): scaleX = " << _scaleX << ", scaleY = " << _scaleY;
-	Log(LOG_INFO) << "Black bars: top: " << _topBlackBand << ", left: " << _leftBlackBand;
+	Log(LOG_INFO) << "    Scale (post-bar): scaleX = " << _scaleX << ", scaleY = " << _scaleY;
+	Log(LOG_INFO) << "    Black bars: top: " << _topBlackBand << ", left: " << _leftBlackBand;
+
+	SDL_Rect baseRect;
+	baseRect.x = baseRect.y = 0;
+	baseRect.w = _baseWidth;
+	baseRect.h = _baseHeight;
+	_renderer->setInternalRect(&baseRect);
 	SDL_Rect outRect;
 	outRect.x = _leftBlackBand;
 	outRect.y = _topBlackBand;
@@ -588,40 +558,7 @@ int Screen::getCursorLeftBlackBand() const
 void Screen::screenshot(const std::string &filename) const
 {
 	_renderer->screenshot(filename);
-//	assert (0 && "FIXME: no time for screenshots");
-#if 0
-	SDL_Surface *screenshot = SDL_CreateRGBSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
-	SDL_Surface *screenshot = SDL_AllocSurface(0, getWidth() - getWidth()%4, getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
-
-	if (useOpenGL())
-	{
-#ifndef __NO_OPENGL
-		GLenum format = GL_RGB;
-
-		for (int y = 0; y < getHeight(); ++y)
-		{
-			glReadPixels(0, getHeight()-(y+1), getWidth() - getWidth()%4, 1, format, GL_UNSIGNED_BYTE, ((Uint8*)screenshot->pixels) + y*screenshot->pitch);
-		}
-		glErrorCheck();
-#endif
-	}
-	else
-	{
-		SDL_BlitSurface(_screen, 0, screenshot, 0);
-	}
-    std::vector<unsigned char> out;
-	unsigned error = lodepng::encode(out, (const unsigned char *)(screenshot->pixels), getWidth() - getWidth()%4, getHeight(), LCT_RGB);
-	if (error)
-	{
-		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
-	}
-
-	SDL_FreeSurface(screenshot);
-
-	CrossPlatform::writeFile(filename, out);
-#endif
 }
-
 
 /**
  * Check whether a 32bpp scaler has been selected.

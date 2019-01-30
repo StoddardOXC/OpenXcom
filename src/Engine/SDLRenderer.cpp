@@ -1,16 +1,18 @@
 
 
 
-#include "SDLRenderer.h"
 #include <assert.h>
+#include <SDL.h>
+#include <SDL_pnglite.h>
+#include "SDLRenderer.h"
 #include "Exception.h"
 #include "Logger.h"
-#include "../lodepng.h"
+
 
 namespace OpenXcom
 {
 
-SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _texture(NULL), _renderer(NULL), _format(SDL_PIXELFORMAT_ARGB8888)
+SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _renderer(NULL), _texture(NULL), _format(SDL_PIXELFORMAT_ARGB8888), _surface(0)
 {
 	listSDLRendererDrivers();
 	_renderer = SDL_CreateRenderer(window, -1, flags);
@@ -36,52 +38,37 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 	SDL_GetRendererInfo(_renderer, &info);
 	Log(LOG_INFO) << "[SDLRenderer] Created new SDLRenderer, using " << info.name;
 	Log(LOG_INFO) << "[SDLRenderer] Current scaler is " << _scaleHint;
-}
-
-void SDLRenderer::setPixelFormat(Uint32 format)
-{
-	_format = format;
-	Log(LOG_INFO) << "[SDLRenderer] Texture pixel format set to " << SDL_GetPixelFormatName(_format);
+	for (Uint32 j = 0; j < info.num_texture_formats; ++j) {
+		Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
+	}
+	_format = info.texture_formats[0];
 }
 
 void SDLRenderer::setInternalRect(SDL_Rect *srcRect)
 {
 	// Internal rectangle should not have any X or Y offset.
 	assert(srcRect->x == 0 && srcRect->y == 0);
-	if (!_texture)
-	{
-		_texture = SDL_CreateTexture(_renderer,
-						_format,
-						SDL_TEXTUREACCESS_STREAMING,
-						srcRect->w,
-						srcRect->h);
-	}
-	else
-	{
-		int w, h, access;
-		Uint32 format;
-		const char *scaleHint = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
-		SDL_QueryTexture(_texture, &format, &access, &w, &h);
-		Log(LOG_INFO) << "[SDLRenderer] Old scale hint: " << _scaleHint << ", new scale hint: " << scaleHint;
-		if ( (w != srcRect->w) || (h != srcRect->h)
-			|| (_scaleHint != scaleHint) )
-		{
-			SDL_DestroyTexture(_texture);
-			_texture = SDL_CreateTexture(_renderer,
-							format,
-							access,
-							srcRect->w,
-							srcRect->h);
-			_scaleHint = scaleHint;
-		}
-	}
-	if (_texture == NULL)
-	{
+
+	if (_texture) { SDL_DestroyTexture(_texture); }
+	if (_surface) { SDL_FreeSurface(_surface); }
+
+	_texture = SDL_CreateTexture(_renderer, _format,
+					SDL_TEXTUREACCESS_STREAMING,
+					srcRect->w, srcRect->h);
+	int bpp;
+	Uint32 r, g, b, a;
+	SDL_PixelFormatEnumToMasks(_format, &bpp, &r, &g, &b, &a);
+	_surface = SDL_CreateRGBSurfaceWithFormat(0, srcRect->w, srcRect->h, bpp, _format);
+	SDL_SetSurfaceBlendMode(_surface, SDL_BLENDMODE_NONE);
+
+	if (_texture == NULL || _surface == NULL) {
 		throw Exception(SDL_GetError());
 	}
+
 	_srcRect.w = srcRect->w;
 	_srcRect.h = srcRect->h;
-	Log(LOG_INFO) << "[SDLRenderer] Texture resolution set to " << _srcRect.w << "x" << _srcRect.h;
+	Log(LOG_INFO) << "[SDLRenderer] setInternalRect(): Texture is now "
+		<< _srcRect.w << "x" << _srcRect.h << " " << SDL_GetPixelFormatName(_format);
 }
 
 void SDLRenderer::setOutputRect(SDL_Rect *dstRect)
@@ -90,8 +77,8 @@ void SDLRenderer::setOutputRect(SDL_Rect *dstRect)
 	_dstRect.y = dstRect->y;
 	_dstRect.w = dstRect->w;
 	_dstRect.h = dstRect->h;
-	Log(LOG_INFO) << "[SDLRenderer] Output resolution: " << _dstRect.w << "x" << _dstRect.h;
-	Log(LOG_INFO) << "[SDLRenderer] Offset: " << _dstRect.x << "x" << _dstRect.y;
+	Log(LOG_INFO) << "[SDLRenderer] setOutputRect(): Output "
+		<< _dstRect.w << "x" << _dstRect.h << " at " << _dstRect.x << "x" << _dstRect.y;
 }
 
 
@@ -103,11 +90,60 @@ SDLRenderer::~SDLRenderer(void)
 
 void SDLRenderer::flip(SDL_Surface *srcSurface)
 {
-	SDL_UpdateTexture(_texture, &_srcRect, srcSurface->pixels,
-			srcSurface->pitch);
-	SDL_RenderClear(_renderer);
-	SDL_RenderCopy(_renderer, _texture, &_srcRect, &_dstRect);
-	SDL_RenderPresent(_renderer); //TODO: check error?
+	static size_t fc = 0;
+
+	if (fc % 60 == 0) {
+		Log(LOG_INFO)<<" frame "<<fc;
+		char fname[256];
+		sprintf(fname, "frame%04zd.png", fc);
+		SDL_SavePNG(srcSurface, fname);
+	}
+	fc += 1;
+
+
+	// okay, srcSurface may be ARGB32 or INDEXED8
+	// and also may or may not be the size of dstRect.
+#if 0
+	Log(LOG_INFO) << "[SDLRenderer] src: "<<srcSurface->w<<"x"<<srcSurface->h<<" "
+		<< SDL_GetPixelFormatName(srcSurface->format->format)
+		<< " dst: "<<_surface->w<<"x"<<_surface->h<<" srcR: "<<_srcRect.w <<"x"<< _srcRect.h
+		<< " dstR: "<<_dstRect.w <<"x"<<_dstRect.h;
+#endif
+
+	//SDL_SetSurfaceBlendMode(srcSurface, SDL_BLENDMODE_NONE);
+	if (SDL_BlitSurface(srcSurface, NULL, _surface, NULL)) {
+		SDL_BlendMode srcBM, dstBM;
+		SDL_GetSurfaceBlendMode(srcSurface, &srcBM);
+		SDL_GetSurfaceBlendMode(_surface, &dstBM);
+		Log(LOG_ERROR)<< "[SDLRenderer] SDL_BlitSurface(): " << SDL_GetError();
+		Log(LOG_ERROR) << " src pf: " << SDL_GetPixelFormatName(srcSurface->format->format)
+			<< " BM: " << srcBM
+			<< " dst pf: " << SDL_GetPixelFormatName(_surface->format->format)
+			<< " BM: " << (int) dstBM;
+
+		throw Exception("fuck.");
+	}
+	// _surface must be the same size as _texture at all times
+	// hence the NULL for the rect
+	if (SDL_UpdateTexture(_texture, NULL, _surface->pixels, _surface->pitch)) {
+		Log(LOG_ERROR)<< "[SDLRenderer] SDL_UpdateTexture(): " << SDL_GetError();
+		throw Exception("fuck.");
+	}
+
+	// flip starts here.
+	// fucking cursor should be rendercopied too. fuck.
+
+	SDL_SetRenderDrawColor(_renderer, fc%255, fc%255, fc%255, 255);
+	if (SDL_RenderClear(_renderer)) {
+		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderClear(): " << SDL_GetError();
+		throw Exception("fuck.");
+	}
+	// rendercopy does the scaling
+	if (SDL_RenderCopy(_renderer, _texture, NULL, &_dstRect)) {
+		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderCopy(): " << SDL_GetError();
+		throw Exception("fuck.");
+	}
+	SDL_RenderPresent(_renderer);
 }
 
 void SDLRenderer::listSDLRendererDrivers()
@@ -130,22 +166,10 @@ void SDLRenderer::listSDLRendererDrivers()
 
 void SDLRenderer::screenshot(const std::string &filename) const
 {
-	int width, height;
-	SDL_GetWindowSize(_window, &width, &height);
-	unsigned char *pixels = new unsigned char[width * height * 4];
-	unsigned error = SDL_RenderReadPixels(_renderer, NULL, SDL_PIXELFORMAT_ABGR8888, (void*)pixels, width * 4);
-	if (error)
-	{
-		Log(LOG_ERROR) << "Acquiring pixels failed while trying to save screenshot: " << SDL_GetError();
-		delete[] pixels;
-		return;
+	// do it on the next flip maybe. and what to save? render stuff obviously.
+	if (SDL_SavePNG(_surface, filename.c_str())) {
+		throw(SDL_GetError());
 	}
-	error = lodepng::encode(filename, (const unsigned char*) pixels, width, height, LCT_RGBA);
-	if (error)
-	{
-		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
-	}
-	delete[] pixels;
 }
 
 }
