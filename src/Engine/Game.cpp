@@ -152,9 +152,7 @@ void Game::run()
 	enum ApplicationState { RUNNING = 0, SLOWED = 1, PAUSED = 2 } runningState = RUNNING;
 	static const ApplicationState kbFocusRun[4] = { RUNNING, RUNNING, SLOWED, PAUSED };
 	static const ApplicationState stateRun[4] = { SLOWED, PAUSED, PAUSED, PAUSED };
-	// this will avoid processing SDL's resize event on startup, workaround for the heap allocation error it causes.
-	bool startupEvent = Options::allowResize;
-	
+
 	int numTouchDevices = SDL_GetNumTouchDevices();
 	if (!numTouchDevices)
 	{
@@ -165,7 +163,7 @@ void Game::run()
 		SDL_EventState(SDL_FINGERMOTION, SDL_IGNORE);
 		SDL_EventState(SDL_MULTIGESTURE, SDL_IGNORE);
 		// FIXME: Adjust scaling so that there's no need for these lines.
-	} 
+	}
 	std::vector<SDL_TouchID> touchDevices;
 	for(int i = 0; i < numTouchDevices; ++i)
 	{
@@ -175,7 +173,7 @@ void Game::run()
 	bool isTouched = false;
 	SDL_Event reservedMUpEvent;
 	Log(LOG_INFO) << "SDL reports this number of touch devices present: " << SDL_GetNumTouchDevices();
-	
+
 	while (!_quit)
 	{
 		Uint32 timeFrameStarted = SDL_GetTicks();
@@ -205,7 +203,7 @@ void Game::run()
 			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 			_states.back()->handle(&action);
 		}
-		
+
 		// This is a hack to check if we've missed the fingerUp event.
 		// Sometimes the fingerUp event doesn't get sent, which causes all sorts of
 		// fun things, like stuck buttons and whatnot. This code tries to check if
@@ -279,9 +277,11 @@ void Game::run()
 				case SDL_FINGERDOWN:
 					// Begin tracking our finger.
 					hadFingerUp = false;
+					[[gnu::fallthrough]];
 				case SDL_FINGERUP:
 					// Okay, maybe we don't need to ask twice.
 					// We don't set hadFingerUp here because it's set down the path.
+					[[gnu::fallthrough]];
 				case SDL_FINGERMOTION:
 				{
 					// For now we're translating events from the first finger into mouse events.
@@ -371,6 +371,7 @@ void Game::run()
 						_states.back()->handle(&fakeAction);
 					}
 				}
+				[[gnu::fallthrough]];
 				case SDL_MULTIGESTURE:
 					if (Options::logTouch)
 					{
@@ -379,7 +380,7 @@ void Game::run()
 						Log(LOG_INFO) << " numFingers: " << _event.mgesture.numFingers << ", x: " << _event.mgesture.x << ", y: " << _event.mgesture.y;
 						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
 					}
-				
+
 #if 0
 				// SDL2 handles things differently, so this is basically commented out for historical purposes.
 				case SDL_ACTIVEEVENT:
@@ -417,8 +418,8 @@ void Game::run()
 							startupEvent = false;
 						}
 					}
-					break;
 #endif
+					break;
 				case SDL_WINDOWEVENT:
 					switch(_event.window.event)
 					{
@@ -458,6 +459,7 @@ void Game::run()
 						case SDL_WINDOWEVENT_RESTORED:
 							runningState = RUNNING;
 					}
+					break;
 				case SDL_MOUSEMOTION:
 					// With SDL2 we can have both events from a real mouse
 					// and events from a touch-emulated mouse.
@@ -471,6 +473,7 @@ void Game::run()
 						}
 						break;
 					}
+					[[gnu::fallthrough]];
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 					if (_event.button.which == SDL_TOUCH_MOUSEID)
@@ -481,6 +484,7 @@ void Game::run()
 						}
 						break;
 					}
+					[[gnu::fallthrough]];
 				case SDL_MOUSEWHEEL:
 					if (_event.wheel.which == SDL_TOUCH_MOUSEID)
 					{

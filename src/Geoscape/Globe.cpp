@@ -1857,7 +1857,7 @@ void Globe::mouseWheel(Action *action, State *state)
 		{
 			zoomOut();
 		}
-	} 
+	}
 }
 
 /**

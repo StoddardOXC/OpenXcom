@@ -52,7 +52,6 @@ public:
 	{
 		void operator()(SDL_Surface*);
 	};
-
 	static const int RMASK;
 	static const int GMASK;
 	static const int BMASK;

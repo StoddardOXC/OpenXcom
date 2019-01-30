@@ -107,8 +107,10 @@ void Screen::makeVideoFlags()
  * Initializes a new display screen for the game to render contents to.
  * The screen is set up based on the current options.
  */
-Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _window(NULL), _renderer(NULL), _texture(NULL)
-	, _prevWidth(0), _prevHeight(0)
+Screen::Screen() : _window(NULL), _renderer(NULL),
+	_baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0),
+	_numColors(0), _firstColor(0), _pushPalette(false),
+	_prevWidth(0), _prevHeight(0)
 {
 	resetDisplay();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));

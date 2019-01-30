@@ -80,7 +80,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	/* TODO: add current mode */
 	/* Get available fullscreen modes */
 	_res.resize(SDL_GetNumDisplayModes(0));
-	for (int i = 0; i < _res.size(); ++i)
+	for (size_t i = 0; i < _res.size(); ++i)
 		SDL_GetDisplayMode(0, i, &_res[i]);
 	_resCurrent = -1;
 	if (_res.size() != 0)
@@ -385,7 +385,7 @@ void OptionsVideoState::btnDisplayResolutionDownClick(Action *)
 {
 	if (_res.size() == 0)
 		return;
-	if (_resCurrent >= _res.size()-1)
+	if ( (size_t)(_resCurrent + 1) >= _res.size())
 	{
 		_resCurrent = 0;
 	}
@@ -406,7 +406,7 @@ void OptionsVideoState::updateDisplayResolution()
 	ssH << _res[_resCurrent].h;
 	_txtDisplayWidth->setText(ssW.str());
 	_txtDisplayHeight->setText(ssH.str());
-	
+
 	Options::newDisplayWidth = _res[_resCurrent].w;
 	Options::newDisplayHeight = _res[_resCurrent].h;
 }
@@ -624,7 +624,7 @@ void OptionsVideoState::handle(Action *action)
 	{
 		_btnLockMouse->setPressed(Options::captureMouse);
 	}
-	
+
 }
 
 /**

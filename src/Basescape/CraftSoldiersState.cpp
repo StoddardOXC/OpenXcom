@@ -521,8 +521,7 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 				moveSoldierUp(action, row);
 			}
 		}
-		else if (ev.wheel.y < 0 && 0 < numSoldiers &&
-			   	INT_MAX >= numSoldiers && row < (int)numSoldiers - 1)
+		else if (ev.wheel.y < 0 && 0 < numSoldiers && row + 1 < numSoldiers)
 		{
 			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
 				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())

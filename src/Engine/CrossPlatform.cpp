@@ -946,11 +946,11 @@ std::pair<std::string, std::string> timeToString(time_t time)
 		localDate[i] = cLocalDate[i];
 		localTime[i] = cLocalTime[i];
 	}*/
-	
+
 	aLocalDate << (1900 + timeinfo->tm_year);
 	aLocalDate << "-";
-	if (timeinfo->tm_mon < 9) 
-	{ 
+	if (timeinfo->tm_mon < 9)
+	{
 		aLocalDate << "0";
 	}
 	aLocalDate << timeinfo->tm_mon + 1;
@@ -960,7 +960,7 @@ std::pair<std::string, std::string> timeToString(time_t time)
 		aLocalDate << "0";
 	}
 	aLocalDate << timeinfo->tm_mday;
-	
+
 	if (timeinfo->tm_hour < 10)
 	{
 		aLocalTime << "0";
@@ -973,7 +973,7 @@ std::pair<std::string, std::string> timeToString(time_t time)
 	}
 	aLocalTime << timeinfo->tm_min;
 	return std::make_pair(aLocalDate.str(), aLocalTime.str());
-	
+
 #else
 	strftime(localDate, 25, "%Y-%m-%d", timeinfo);
 	strftime(localTime, 25, "%H:%M", timeinfo);
@@ -1259,7 +1259,7 @@ void setSystemUI()
 #endif
 
 // Get system version (for Androids)
-int getSystemVersion() 
+int getSystemVersion()
 {
 #ifdef __ANDROID__
 	static int version;

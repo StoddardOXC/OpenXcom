@@ -1336,7 +1336,6 @@ void Map::drawTerrain(Surface *surface)
 							{
 								// Treat aiming waypoints like cursor
 								BattleActionType currentBA = _save->getBattleGame()->getCurrentAction()->type;
-								BattleUnit *tileUnit = tile->getUnit();
 								if (currentBA != BA_LAUNCH)
 								{
 									if (unit && (unit->getVisible() || _save->getDebugMode()))

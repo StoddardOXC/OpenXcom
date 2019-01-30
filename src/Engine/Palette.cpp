@@ -98,7 +98,7 @@ void Palette::initBlack()
 /**
  * Loads the colors from an existing palette.
  */
-void Palette::copyFrom(Palette *srcPal)
+void Palette::copyFrom(const Palette *srcPal)
 {
 	for (int i = 0; i < srcPal->getColorCount(); i++)
 	{
@@ -123,7 +123,7 @@ SDL_Color *Palette::getColors(int offset) const
  * @param color Requested color in the palette.
  * @return Hexadecimal RGBA value.
  */
-Uint32 Palette::getRGBA(SDL_Color* pal, Uint8 color)
+Uint32 Palette::getRGBA(const SDL_Color* pal, Uint8 color)
 {
 	if (pal)
 	{
@@ -248,7 +248,7 @@ void Palette::setColors(SDL_Color* pal, int ncolors)
 		}
 	}
 	_colors[0].a = 0;
-	
+
 }
 
 void Palette::setColor(int index, int r, int g, int b)

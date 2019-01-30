@@ -78,8 +78,7 @@ StartState::StartState() : _anim(0)
 	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
 	_timer = new Timer(150);
 
-	/* Looks like SDL2 requires a three-color palette  */
-	SDL_Color bnw[3] = {{0}};
+	SDL_Color bnw[3];
 
 	bnw[0].a = 255;
 	bnw[1].a = 255;

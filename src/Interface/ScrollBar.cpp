@@ -188,7 +188,6 @@ void ScrollBar::blit(SDL_Surface *surface)
 void ScrollBar::mousePress(Action *action, State *state)
 {
 	InteractiveSurface::mousePress(action, state);
-	const SDL_Event &ev(*action->getDetails());
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
 		int cursorY = action->getAbsoluteYMouse() - getY();

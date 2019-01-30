@@ -68,7 +68,6 @@ void Camera::setScrollTimer(Timer *mouse, Timer *key)
  */
 void Camera::mousePress(Action *action, State *)
 {
-	const SDL_Event &ev(*action->getDetails());
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && Options::battleEdgeScroll == SCROLL_TRIGGER)
 	{
 		_scrollTrigger = true;

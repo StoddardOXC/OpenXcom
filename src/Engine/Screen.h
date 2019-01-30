@@ -56,9 +56,8 @@ private:
 	Surface::UniqueSurfacePtr _surface;
 	/// Sets the _flags and _bpp variables based on game options; needed in more than one place now
 	void makeVideoFlags();
-	SDL_Texture *_texture;
 	int _prevWidth, _prevHeight;
-	
+
 public:
 	static const int ORIGINAL_WIDTH;
 	static const int ORIGINAL_HEIGHT;
@@ -82,7 +81,7 @@ public:
 	/// Sets the screen's 8bpp palette.
 	void setPalette(const SDL_Color *colors, int firstcolor = 0, int ncolors = 256, bool immediately = false);
 	/// Gets the screen's 8bpp palette.
-	SDL_Color *getPalette() const;
+	const SDL_Color *getPalette() const;
 	/// Gets the screen's width.
 	int getWidth() const;
 	/// Gets the screen's height.
