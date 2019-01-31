@@ -206,7 +206,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 	{
 		fingerMotion(action, state);
 	}
-	else if (action->getDetails()->type == SDL_MULTIGESTURE) 
+	else if (action->getDetails()->type == SDL_MULTIGESTURE)
 	{
 		multiGesture(action, state);
 	}

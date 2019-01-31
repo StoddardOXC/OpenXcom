@@ -760,7 +760,7 @@ void SellState::lstItemsRightArrowClick(Action *action)
  */
 void SellState::lstItemsMousePress(Action *action)
 {
- 	_sel = _lstItems->getSelectedRow();
+	_sel = _lstItems->getSelectedRow();
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
@@ -811,7 +811,7 @@ void SellState::lstItemsMousePress(Action *action)
 
 void SellState::lstItemsMouseWheel(Action *action)
 {
- 	_sel = _lstItems->getSelectedRow();
+	_sel = _lstItems->getSelectedRow();
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
 	{
@@ -821,9 +821,9 @@ void SellState::lstItemsMouseWheel(Action *action)
 			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
 		{
 			changeByValue(Options::changeValueByMouseWheel,
-				   	ev.wheel.y > 0 ? 1 : -1);
+					ev.wheel.y > 0 ? 1 : -1);
 		}
-	} 
+	}
 }
 
 /**

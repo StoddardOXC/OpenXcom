@@ -31,7 +31,7 @@ public:
 	/// Sets the desired output rectangle.
 	virtual void setOutputRect(SDL_Rect *dstRect) = 0;
 	/// Blits the contents of the SDL_Surface to the screen.
-	virtual void flip(SDL_Surface *srcSurface) = 0; 
+	virtual void flip(SDL_Surface *srcSurface) = 0;
 	/// Saves a screenshot to filename.
 	virtual void screenshot(const std::string &filename) const = 0;
 	/// Returns the renderer type.

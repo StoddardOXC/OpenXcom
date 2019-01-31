@@ -181,11 +181,6 @@ void BaseNameState::btnCancelClick(Action *)
 	_globe->onMouseOver(0);
 	_game->popState();
 }
-
-
 #endif
 
-
 }
-
-

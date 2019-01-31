@@ -7,7 +7,7 @@
 
 #include "OptionsBaseState.h"
 
-namespace OpenXcom 
+namespace OpenXcom
 {
 
 class ComboBox;

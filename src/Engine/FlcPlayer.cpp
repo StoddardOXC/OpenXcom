@@ -157,8 +157,8 @@ bool FlcPlayer::init(const char *filename, void(*frameCallBack)(), Game *game, b
 	else // Otherwise create a new one
 	{
 		// Actually, create a surface the same size as the _realScreen
-		_mainScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, 
-			_realScreen->getSurface()->w, 
+		_mainScreen = SDL_CreateRGBSurface(SDL_SWSURFACE,
+			_realScreen->getSurface()->w,
 			_realScreen->getSurface()->h, 8, 0, 0, 0, 0);
 	}
 
@@ -284,7 +284,7 @@ bool FlcPlayer::isValidFrame(Uint8 *frameHeader, Uint32 &frameSize, Uint16 &fram
 	readU16(frameType, frameHeader + 4);
 
 	return (frameType == FRAME_TYPE || frameType == AUDIO_CHUNK || frameType == PREFIX_CHUNK);
-} 
+}
 
 void FlcPlayer::decodeAudio(int frames)
 {
@@ -319,7 +319,7 @@ void FlcPlayer::decodeAudio(int frames)
 				++audioFramesFound;
 
 				break;
-		}	
+		}
 	}
 }
 
@@ -631,7 +631,7 @@ void FlcPlayer::fliBRun()
 				pTmpDst += countData;
 				pixels += countData;
 			}
-			else 
+			else
 			{
 				if (countData < 0)
 				{
@@ -684,7 +684,7 @@ void FlcPlayer::fliLC()
 					*(pTmpDst++) = *(pSrc++);
 				}
 			}
-			else 
+			else
 			{
 				if (countData < 0)
 				{

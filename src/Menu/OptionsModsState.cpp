@@ -376,7 +376,6 @@ void OptionsModsState::moveModDown(Action *action, unsigned int row, bool max)
 
 void OptionsModsState::lstModsMousePress(Action *action)
 {
-	
 }
 
 void OptionsModsState::lstModsMouseWheel(Action *action)

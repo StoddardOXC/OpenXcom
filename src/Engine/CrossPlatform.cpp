@@ -354,7 +354,6 @@ std::vector<std::string> findUserFolders()
 	return list;
 #endif
 
-	
 #ifdef _WIN32
 	std::unordered_set<std::string> seen;
 	wchar_t pathW[MAX_PATH+1];
@@ -1286,35 +1285,34 @@ int getSystemVersion()
 // Get pointing device status (replaces SDL_GetMouseState)
 int getPointerState(int *x, int *y)
 {
-        unsigned int mouseState = SDL_GetMouseState(x, y);
-        if (mouseState)
-        {
-                return mouseState;
-        }
-        int numTouch = SDL_GetNumTouchDevices();
-        for (int i = 0; i < numTouch; i++)
-        {
-                SDL_TouchID touchDevice = SDL_GetTouchDevice(i);
-                if (SDL_GetNumTouchFingers(touchDevice))
-                {
-                        // Emulate mouse behavior
-                        if (x || y) {
-                                // WARNING: May be broken as hell.
-                                SDL_Finger *finger = SDL_GetTouchFinger(touchDevice, 0);
-                                if (x) {
-                                        *x = finger->x * Options::displayWidth;
-                                }
-                                
-                                if (y) {
-                                        *y = finger->y * Options::displayHeight;
-                                }
-                        }
-                        // TODO: Maybe use multiple fingers to simulate middle and right buttons?
-                        return SDL_BUTTON(SDL_BUTTON_LEFT);
-                }
-        }
-        // No mouse presses or touches detected.
-        return mouseState;
+	unsigned int mouseState = SDL_GetMouseState(x, y);
+	if (mouseState)
+	{
+		return mouseState;
+	}
+	int numTouch = SDL_GetNumTouchDevices();
+	for (int i = 0; i < numTouch; i++)
+	{
+		SDL_TouchID touchDevice = SDL_GetTouchDevice(i);
+		if (SDL_GetNumTouchFingers(touchDevice))
+		{
+			// Emulate mouse behavior
+			if (x || y) {
+				// WARNING: May be broken as hell.
+				SDL_Finger *finger = SDL_GetTouchFinger(touchDevice, 0);
+				if (x) {
+					*x = finger->x * Options::displayWidth;
+				}
+				if (y) {
+					*y = finger->y * Options::displayHeight;
+				}
+			}
+			// TODO: Maybe use multiple fingers to simulate middle and right buttons?
+			return SDL_BUTTON(SDL_BUTTON_LEFT);
+		}
+	}
+	// No mouse presses or touches detected.
+	return mouseState;
 }
 /**
  * Logs the stack back trace leading up to this function call.

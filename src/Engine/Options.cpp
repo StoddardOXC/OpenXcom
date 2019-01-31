@@ -173,8 +173,7 @@ void create()
 	// SDL2 scaler options
 	_info.push_back(OptionInfo("useNearestScaler", &useNearestScaler, false));
 	_info.push_back(OptionInfo("useLinearScaler", &useLinearScaler, true));
-	_info.push_back(OptionInfo("useAnisotropicScaler", &useAnisotropicScaler, false));	
-	
+	_info.push_back(OptionInfo("useAnisotropicScaler", &useAnisotropicScaler, false));
 
 	// advanced option
 	_info.push_back(OptionInfo("playIntro", &playIntro, true, "STR_PLAYINTRO", "STR_GENERAL"));
@@ -227,7 +226,7 @@ void create()
 
 #if defined(__MOBILE__) || defined (__PSEUDO_ANDROID__)
 	_info.push_back(OptionInfo("swipeToTurn", &swipeToTurn, true, "STR_SWIPE", "STR_BATTLESCAPE")); // These first two options are specific to Android;
-	_info.push_back(OptionInfo("holdToTurn", &holdToTurn, true, "STR_HOLD", "STR_BATTLESCAPE"));    // they're moved here from a separate menu. 
+	_info.push_back(OptionInfo("holdToTurn", &holdToTurn, true, "STR_HOLD", "STR_BATTLESCAPE"));    // they're moved here from a separate menu.
 #else
 	_info.push_back(OptionInfo("swipeToTurn", &swipeToTurn, false));
 	_info.push_back(OptionInfo("holdToTurn", &holdToTurn, false));

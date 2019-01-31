@@ -1846,7 +1846,7 @@ void Globe::mouseRelease(Action *action, State *state)
  */
 void Globe::mouseWheel(Action *action, State *state)
 {
- 	SDL_Event *ev = action->getDetails();
+	SDL_Event *ev = action->getDetails();
 	if (ev->type == SDL_MOUSEWHEEL)
 	{
 		if (ev->wheel.y > 0)

@@ -215,7 +215,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	filterNames.push_back("Anisotropic (disabled)");
 	filterNames.push_back("xBRZ");
 	_filters.push_back("");
-    _filters.push_back("");
+	_filters.push_back("");
 	_filters.push_back("");
 	_filters.push_back("");
 

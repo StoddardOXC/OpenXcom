@@ -38,9 +38,9 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnLogTouchEvents = new ToggleTextButton(104, 16, 94, 76);
 	_btnFakeEvents = new ToggleTextButton(104, 16, 94, 94);
 	_btnForceGLMode = new ToggleTextButton(104, 16, 94, 112);
-        
-    _txtMouseMode = new Text(104, 9, 206, 66);
-    _cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
+
+	_txtMouseMode = new Text(104, 9, 206, 66);
+	_cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
 
 	_btnShowCursor = new ToggleTextButton(104, 16, 206, 94);
 
@@ -60,14 +60,14 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	add(_btnLogTouchEvents, "button", "systemMenu");
 	add(_btnFakeEvents, "button", "systemMenu");
 	add(_btnForceGLMode, "button", "systemMenu");
-        
-    add(_txtMouseMode, "text", "systemMenu");
+
+	add(_txtMouseMode, "text", "systemMenu");
 
 	add(_btnShowCursor, "button", "systemMenu");
 
 	// Combobox should be added last, because it will be overlapped by other elements otherwise
 	add(_cbxSystemUI, "button", "systemMenu");
-    add(_cbxMouseMode, "button", "systemMenu");
+	add(_cbxMouseMode, "button", "systemMenu");
 
 	centerAllSurfaces();
 
@@ -132,13 +132,13 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	{
 		sysUI.push_back("STR_IMMERSIVE");
 	}
-	
+
 	std::vector<std::string> mouseMode;
-    mouseMode.push_back("STR_MOUSE_BASIC");
-    if (sysVersion >= 14)
-    {
+	mouseMode.push_back("STR_MOUSE_BASIC");
+	if (sysVersion >= 14)
+	{
 		mouseMode.push_back("STR_MOUSE_EXTENDED");
-    }
+	}
 
 	_cbxSystemUI->setOptions(sysUI, true);
 	_cbxSystemUI->setSelected((int)Options::systemUI);
@@ -146,15 +146,15 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_cbxSystemUI->setTooltip("STR_SYSTEM_UI_DESC");
 	_cbxSystemUI->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_cbxSystemUI->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
-        
-    _txtMouseMode->setText(tr("STR_MOUSE_MODE"));
 
-    _cbxMouseMode->setOptions(mouseMode, true);
-    _cbxMouseMode->setSelected((int)Options::mouseMode);
-    _cbxMouseMode->onChange((ActionHandler)&OptionsSystemState::cbxMouseModeChange);
-    _cbxMouseMode->setTooltip("STR_MOUSE_MODE_DESC");
-    _cbxMouseMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
-    _cbxMouseMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
+	_txtMouseMode->setText(tr("STR_MOUSE_MODE"));
+
+	_cbxMouseMode->setOptions(mouseMode, true);
+	_cbxMouseMode->setSelected((int)Options::mouseMode);
+	_cbxMouseMode->onChange((ActionHandler)&OptionsSystemState::cbxMouseModeChange);
+	_cbxMouseMode->setTooltip("STR_MOUSE_MODE_DESC");
+	_cbxMouseMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
+	_cbxMouseMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
 	_txtReconfigureDirs->setText(tr("STR_RECONFIGURE_DIRS"));
 
@@ -166,7 +166,7 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 
 	// This option requires restart, so it's disabled in-game.
 	_txtReconfigureDirs->setVisible(_origin == OPT_MENU);
-	_btnReconfigureDirs->setVisible(_origin == OPT_MENU);	
+	_btnReconfigureDirs->setVisible(_origin == OPT_MENU);
 }
 
 
