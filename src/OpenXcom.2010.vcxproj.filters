@@ -1033,9 +1033,6 @@
     <ClCompile Include="Engine\SDLRenderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\UIBuilder.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="Menu\OptionsSystemState.cpp">
       <Filter>Menu</Filter>
     </ClCompile>
@@ -2148,9 +2145,6 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Engine\SDLRenderer.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\UIBuilder.h">
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Menu\OptionsSystemState.h">

@@ -377,7 +377,6 @@
     <ClCompile Include="Engine\Surface.cpp" />
     <ClCompile Include="Engine\SurfaceSet.cpp" />
     <ClCompile Include="Engine\Timer.cpp" />
-    <ClCompile Include="Engine\UIBuilder.cpp" />
     <ClCompile Include="Engine\Unicode.cpp" />
     <ClCompile Include="Engine\Zoom.cpp" />
     <ClCompile Include="Geoscape\AlienBaseState.cpp" />
@@ -754,7 +753,6 @@
     <ClInclude Include="Engine\Surface.h" />
     <ClInclude Include="Engine\SurfaceSet.h" />
     <ClInclude Include="Engine\Timer.h" />
-    <ClInclude Include="Engine\UIBuilder.h" />
     <ClInclude Include="Engine\Unicode.h" />
     <ClInclude Include="Engine\Zoom.h" />
     <ClInclude Include="fmath.h" />
