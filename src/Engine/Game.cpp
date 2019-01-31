@@ -77,17 +77,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 		initAudio();
 	}
 
-	// trap the mouse inside the window
-	//SDL_WM_GrabInput(Options::captureMouse);
-
-	// Set the window icon
-	//CrossPlatform::setWindowIcon(103, "openxcom.png");
-
-	// Set the window caption
-	/* SDL_WM_SetCaption(title.c_str(), 0); FIXME */
-
 	// Set up unicode
-	//SDL_EnableUNICODE(1); // doesn't exist in SDL 2.0
 	Unicode::getUtf8Locale();
 
 	// Create display
