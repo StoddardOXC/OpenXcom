@@ -37,7 +37,7 @@
 #include <algorithm>
 #include "Renderer.h"
 #include "SDLRenderer.h"
-#include "OpenGLRenderer.h"
+//#include "OpenGLRenderer.h"
 
 namespace OpenXcom
 {

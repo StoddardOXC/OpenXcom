@@ -1024,9 +1024,6 @@
     <ClCompile Include="Geoscape\NewPossibleFacilityState.cpp">
       <Filter>Geoscape</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\OpenGLRenderer.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Renderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -2137,9 +2134,6 @@
     </ClInclude>
     <ClInclude Include="Geoscape\NewPossibleFacilityState.h">
       <Filter>Geoscape</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\OpenGLRenderer.h">
-      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Renderer.h">
       <Filter>Engine</Filter>
