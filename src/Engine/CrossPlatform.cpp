@@ -1296,7 +1296,7 @@ void setSystemUI()
 
 #ifdef __ANDROID__
 	// This loads up new paths for the game and restarts. Called from Java.
-	void Java_org_libsdl_openxcom_OpenXcom_nativeSetPaths(JNIEnv* env, jclass cls, jstring gamePath, jstring savePath, jstring confPath)
+	void Java_org_openxcom_extended_OpenXcom_nativeSetPaths(JNIEnv* env, jclass cls, jstring gamePath, jstring savePath, jstring confPath)
 	{
 		Log(LOG_INFO) << "Re-setting paths...";
 		const char *gamePathString = env->GetStringUTFChars(gamePath, 0);
@@ -1701,8 +1701,23 @@ void setLogFileName(const std::string& name) {
 }
 void log(int level, const std::ostringstream& baremsgstream) {
 	std::ostringstream msgstream;
+#ifdef __linux__
+	char rss[32];
+	{
+		int unused, rss_pages = 0;
+		FILE *fp = fopen("/proc/self/statm", "r");
+		if (fp) {
+			fscanf(fp, "%d %d", &unused, &rss_pages);
+			fclose(fp);
+		}
+		sprintf(rss, "RSS=%04d ", rss_pages >> 8);
+	}
+#endif
 	msgstream << "[" << CrossPlatform::now() << "]" << "\t"
 			  << "[" << Logger::toString(level) << "]" << "\t"
+#ifdef __linux__
+			  << rss
+#endif
 			  << baremsgstream.str() << std::endl;
 	auto msg = msgstream.str();
 
@@ -1734,6 +1749,10 @@ void log(int level, const std::ostringstream& baremsgstream) {
 	// retain the current message if write fails.
 	if (failed || !logToFile(logFileName, msg)) {
 		logBuffer.push_back(std::make_pair(level, msg));
+	}
+
+	if (level == LOG_FATAL) {
+		throw(Exception(msg));
 	}
 }
 

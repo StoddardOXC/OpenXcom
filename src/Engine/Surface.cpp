@@ -16,21 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Surface.h"
-#include "ShaderDraw.h"
 #include <vector>
 #include <algorithm>
-#include <SDL_gfxPrimitives.h>
-#include <SDL_image.h>
+#include <stdlib.h>
 #include <SDL_endian.h>
-#include "../lodepng.h"
+#include <SDL_image.h>
+#include <SDL_pnglite.h>
+#include <SDL_gfxPrimitives.h>
 #include "Palette.h"
 #include "Exception.h"
 #include "Logger.h"
+#include "Surface.h"
+#include "ShaderDraw.h"
 #include "ShaderMove.h"
 #include "Unicode.h"
-#include <stdlib.h>
-#include "SDL2Helpers.h"
 #include "FileMap.h"
 #ifdef _WIN32
 #include <malloc.h>
@@ -176,12 +175,12 @@ Surface::UniqueSurfacePtr Surface::NewSdlSurface(const Surface::UniqueBufferPtr&
 	if (bpp == 32)
 		surface = SDL_CreateRGBSurfaceFrom(buffer.get(), width, height, 32, GetPitch(32, width), Surface::RMASK, Surface::GMASK, Surface::BMASK, Surface::AMASK);
 	else
-		surface = SDL_CreateRGBSurfaceFrom(buffer.get(), width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
+		surface = SDL_CreateRGBSurfaceWithFormatFrom(buffer.get(), width, height, bpp, GetPitch(bpp, width), SDL_PIXELFORMAT_INDEX8);
 	if (!surface)
 	{
 		throw Exception(SDL_GetError());
 	}
-
+	SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_NONE);
 	return NewSdlSurface(surface);
 }
 
@@ -190,19 +189,7 @@ Surface::UniqueSurfacePtr Surface::NewSdlSurface(const Surface::UniqueBufferPtr&
  */
 void Surface::CleanSdlSurface(SDL_Surface* surface)
 {
-	if (surface->flags & SDL_SWSURFACE)
-	{
-		memset(surface->pixels, 0, surface->h * surface->pitch);
-	}
-	else
-	{
-		SDL_Rect c;
-		c.x = 0;
-		c.y = 0;
-		c.w = surface->w;
-		c.h = surface->h;
-		SDL_FillRect(surface, &c, 0);
-	}
+	SDL_FillRect(surface, NULL, 0);
 }
 /**
  * Default deleter for alignment buffer
@@ -228,8 +215,6 @@ void Surface::UniqueSurfaceDeleter::operator ()(SDL_Surface* surf)
 {
 	SDL_FreeSurface(surf);
 }
-
-
 
 /**
  * Default empty surface.
@@ -378,90 +363,56 @@ void Surface::loadImage(const std::string &filename)
 	auto rw = FileMap::getRWops(filename);
 	if (!rw) { return; } // relevant message gets logged in FileMap.
 
-	// Try loading with LodePNG first
-	if (CrossPlatform::compareExt(filename, "png"))
+	UniqueSurfacePtr surface;
+
+	// Try loading with SDL_pnglite first
+	int w, h, pixelformat;
+	if (1 == SDL_HeaderCheckPNG_RW(rw, SDL_FALSE, &w, &h, &pixelformat))
 	{
-		size_t size;
-		void *data = SDL_LoadFile_RW(rw, &size, SDL_FALSE);
-		if ((data != NULL) && (size > 8 + 12 + 12)) // minimal PNG file size: header and two empty chunks
-		{
-			std::vector<unsigned char> png;
-			png.resize(size);
-			memcpy(&png[0], data, size);
-
-			std::vector<unsigned char> image;
-			unsigned width, height;
-			lodepng::State state;
-			state.decoder.color_convert = 0;
-			unsigned error = lodepng::decode(image, width, height, state, png);
-			if (!error)
-			{
-				LodePNGColorMode *color = &state.info_png.color;
-				unsigned bpp = lodepng_get_bpp(color);
-				if (bpp == 8)
-				{
-					*this = Surface(width, height, 0, 0);
-					setPalette((SDL_Color*)color->palette, 0, color->palettesize);
-
-					ShaderDrawFunc(
-						[](Uint8& dest, unsigned char& src)
-						{
-							dest = src;
-						},
-						ShaderSurface(this),
-						ShaderSurface(SurfaceRaw<unsigned char>(image, width, height))
-					);
-					int transparent = 0;
-					for (int c = 0; c < _surface->format->palette->ncolors; ++c)
-					{
-						SDL_Color *palColor = _surface->format->palette->colors + c;
-						if (palColor->a == 0)
-						{
-							transparent = c;
-							break;
-						}
-					}
-					FixTransparent(_surface, transparent);
-					if (transparent != 0)
-					{
-						Log(LOG_WARNING) << "Image " << filename << " (from lodepng) has incorrect transparent color index " << transparent << " (instead of 0).";
-					}
-				}
-			} else {
-				Log(LOG_ERROR) << "Image " << filename << " lodepng failed:" << lodepng_error_text(error);
-			}
+		if ( w > 16384 || h > 16384 ) {
+			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): " << w << "x" << h << ": too big";
 		}
-		if (data) { SDL_free(data); }
+		if (pixelformat != SDL_PIXELFORMAT_INDEX8) {
+			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): has "
+				<< SDL_GetPixelFormatName(pixelformat) << " but only paletted images are accepted.";
+		}
+		surface = NewSdlSurface(SDL_LoadPNG_RW(rw, SDL_TRUE));
+		if (!surface) {
+			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): SDL_LoadPNG_RW():" << SDL_GetError();
+		}
 	}
-	if (_surface)
-	{
-		SDL_RWclose(rw);
-	}
-	else // Otherwise default to SDL_Image
-	{
-		SDL_RWseek(rw, RW_SEEK_SET, 0); // rewind in case .png was no PNG at all
-		auto surface = NewSdlSurface(IMG_Load_RW(rw, SDL_TRUE));
-		if (!surface)
-		{
+	// Fall through to SDL_image - it's not a PNG, maybe we can trust the other codecs.
+	if (!surface) {
+		surface = NewSdlSurface(IMG_Load_RW(rw, SDL_TRUE));
+		if (!surface) {
 			std::string err = filename + ":" + IMG_GetError();
-			throw Exception(err);
+			Log(LOG_FATAL) << err;
 		}
-		if (surface->format->BitsPerPixel != 8)
-		{
-			std::string err = filename + ": OpenXcom supports only 8bit images.";
-			throw Exception(err);
-		}
+	}
+	if (surface->format->BitsPerPixel != 8)
+	{
+		std::string err = filename + ": OpenXcom is supporting only 8bit graphic";
+		throw Exception(err);
+	}
+	*this = Surface(surface->w, surface->h, 0, 0);
+	setPalette(surface->format->palette->colors, 0, surface->format->palette->ncolors);
+	RawCopySurf(_surface, surface);
+	Uint32 colorkey;
+	SDL_GetColorKey(surface.get(), &colorkey);
+	FixTransparent(_surface, colorkey);
+	if (colorkey != 0)
+	{
+		Log(LOG_WARNING) << "Image " << filename << " have set incorrect transparent color index " << colorkey << " instead of 0";
+	}
+}
 
-		*this = Surface(surface->w, surface->h, 0, 0);
-		setPalette(surface->format->palette->colors, 0, surface->format->palette->ncolors);
-		RawCopySurf(_surface, surface);
-		Uint32 colorkey;
-		SDL_GetColorKey(surface.get(), &colorkey);
-		FixTransparent(_surface, colorkey);
-		if (colorkey != 0)
-		{
-			Log(LOG_WARNING) << "Image " << filename << " (from SDL) has incorrect transparent color index " << colorkey << " (instead of 0).";
-		}
+/**
+ * Saves the contents of the surface as a PNG
+ * @param filename where to save
+ */
+void Surface::savePNG(const std::string &filename) {
+	if (!SDL_SavePNG(_surface.get(), filename.c_str())) {
+		Log(LOG_ERROR) << "failed to write " << filename << ": " << SDL_GetError();
 	}
 }
 
@@ -827,7 +778,7 @@ void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
  */
 void Surface::drawPolygon(Sint16 *x, Sint16 *y, int n, Uint8 color)
 {
-	filledPolygonColor(_surface.get(), x, y, n, Palette::getRGBA(getPalette(), color));
+		filledPolygonColor(_surface.get(), x, y, n, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -934,7 +885,9 @@ void Surface::setHidden(bool hidden)
  */
 void Surface::lock()
 {
-	SDL_LockSurface(_surface.get());
+	if (SDL_MUSTLOCK(_surface.get())) {
+		SDL_LockSurface(_surface.get());
+	}
 }
 
 /**
@@ -944,7 +897,9 @@ void Surface::lock()
  */
 void Surface::unlock()
 {
-	SDL_UnlockSurface(_surface.get());
+	if (SDL_MUSTLOCK(_surface.get())) {
+		SDL_UnlockSurface(_surface.get());
+	}
 }
 
 /**

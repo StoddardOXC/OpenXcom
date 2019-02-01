@@ -22,7 +22,6 @@
 #include "Logger.h"
 #include "Unicode.h"
 #include "FileMap.h"
-#include "SDL2Helpers.h"
 #include "Adlib/adlplayer.h"
 #include "AdlibMusic.h"
 

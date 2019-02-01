@@ -1,6 +1,5 @@
 
 set ( root_src
-  lodepng.cpp
   main.cpp
   md5.cpp
 )

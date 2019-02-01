@@ -95,7 +95,6 @@ elseif(UNIX OR MINGW OR CYGWIN)
   if(IS_DIRECTORY ${DEPS_DIR})
      set(ENV{PKG_CONFIG_PATH} "${DEPS_DIR}/lib/pkgconfig/")
   endif()
-
   include(FindPkgConfig)
   pkg_check_modules(PKG_SDL REQUIRED sdl)
   pkg_check_modules(PKG_ZLIB REQUIRED zlib)

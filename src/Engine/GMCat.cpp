@@ -21,7 +21,6 @@
 #include <vector>
 #include "Music.h"
 #include "Logger.h"
-#include "SDL2Helpers.h"
 
 namespace OpenXcom
 {
