@@ -22,7 +22,6 @@
 #include "Options.h"
 #include "Logger.h"
 #include "Game.h"
-#include "SDL2Helpers.h"
 #include "FileMap.h"
 #include "Adlib/fmopl.h"
 #include "Adlib/adlplayer.h"

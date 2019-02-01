@@ -20,6 +20,7 @@
 #include <sstream>
 #include <iomanip>
 #include <SDL_gfxPrimitives.h>
+#include <SDL_pnglite.h>
 #include "Map.h"
 #include "Camera.h"
 #include "BattlescapeState.h"
@@ -39,7 +40,6 @@
 #include "MiniMapState.h"
 #include "BattlescapeGenerator.h"
 #include "BriefingState.h"
-#include "../lodepng.h"
 #include "../fmath.h"
 #include "../Geoscape/SelectMusicTrackState.h"
 #include "../Engine/Game.h"
@@ -2886,11 +2886,8 @@ void BattlescapeState::saveAIMap()
 	int w = _save->getMapSizeX();
 	int h = _save->getMapSizeY();
 
-	int expMax = 0;
-
-	SDL_Surface *img = SDL_CreateRGBSurface(0, w * 8, h * 8, 24, 0xff, 0xff00, 0xff0000, 0);
+	SDL_Surface *img = SDL_CreateRGBSurfaceWithFormat(0, w * 8, h * 8, 24, SDL_PIXELFORMAT_RGB24);
 	Log(LOG_INFO) << "unit = " << unit->getId();
-	memset(img->pixels, 0, img->pitch * img->h);
 
 	Position tilePos(unit->getPosition());
 	SDL_Rect r;
@@ -2987,16 +2984,13 @@ void BattlescapeState::saveAIMap()
 	}
 	while (CrossPlatform::fileExists(ss.str()));
 
-	std::vector<unsigned char> out;
-	unsigned error = lodepng::encode(out, (const unsigned char*)img->pixels, img->w, img->h, LCT_RGB);
+	auto error = SDL_SavePNG(img, ss.str().c_str());
 	if (error)
 	{
-		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
+		Log(LOG_ERROR) << "Saving to PNG failed: " << SDL_GetError();
 	}
-
 	SDL_FreeSurface(img);
 
-	CrossPlatform::writeFile(ss.str(), out);
 	Log(LOG_INFO) << "saveAIMap() completed in " << SDL_GetTicks() - start << "ms.";
 }
 
@@ -3116,13 +3110,13 @@ void BattlescapeState::saveVoxelView()
 	}
 	while (CrossPlatform::fileExists(ss.str()));
 
-	std::vector<unsigned char> out;
-	unsigned error = lodepng::encode(out, image, 512, 512, LCT_RGB);
+	auto img = SDL_CreateRGBSurfaceWithFormatFrom(image.data(), 512, 512, 24, 512 * 3, SDL_PIXELFORMAT_RGB24);
+	auto error = SDL_SavePNG(img, ss.str().c_str());
 	if (error)
 	{
-		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
+		Log(LOG_ERROR) << "Saving to PNG failed: " << SDL_GetError();
 	}
-	CrossPlatform::writeFile(ss.str(), out);
+	SDL_FreeSurface(img);
 	return;
 }
 
@@ -3186,13 +3180,12 @@ void BattlescapeState::saveVoxelMap()
 
 		ss.str("");
 		ss << Options::getMasterUserFolder() << "voxel" << std::setfill('0') << std::setw(2) << z << ".png";
-		std::vector<unsigned char> out;
-		unsigned error = lodepng::encode(out, image, _save->getMapSizeX()*16, _save->getMapSizeY()*16, LCT_RGB);
-		if (error)
-		{
-			Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
+		auto surface = SDL_CreateRGBSurfaceWithFormatFrom(image.data(),
+							_save->getMapSizeX()*16, _save->getMapSizeY()*16, 24,
+							_save->getMapSizeX() * 3, SDL_PIXELFORMAT_RGB24);
+		if (SDL_SavePNG(surface, ss.str().c_str())) {
+			Log(LOG_ERROR) << "BattlescapeState::saveVoxelMap(): Saving to PNG failed: " << SDL_GetError();
 		}
-		CrossPlatform::writeFile(ss.str(), out);
 	}
 	return;
 }

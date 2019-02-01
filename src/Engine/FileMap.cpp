@@ -76,77 +76,7 @@ SDL_RWops *SDL_RWFromMZ(mz_zip_archive *zip, mz_uint file_index) {
 	return rv;
 }
 
-/* helpers that are already present in SDL2 */
-#if !SDL_VERSION_ATLEAST(2,0,0)
-Uint8 SDL_ReadU8(SDL_RWops *src) {
-	Uint8 px = 0;
-	SDL_RWread(src, &px, 1, 1);
-	return px;
-}
-Sint64 SDL_RWsize(SDL_RWops *src) {
-	auto curpos = SDL_RWtell(src);
-	auto rv = SDL_RWseek(src, 0, RW_SEEK_END);
-	SDL_RWseek(src, curpos, RW_SEEK_SET);
-	return rv;
-}
-#endif
-#if !SDL_VERSION_ATLEAST(2,0,6)
-void *SDL_LoadFile_RW(SDL_RWops *src, size_t *datasize, int freesrc)
-{
-	const int FILE_CHUNK_SIZE = 1024;
-	Sint64 size;
-	Sint64 size_read, size_total;
-	void *data = NULL, *newdata;
-	if (!src) {
-		SDL_SetError("SDL_LoadFile_RW(): src==NULL");
-		return NULL;
-	}
-
-	size = SDL_RWsize(src);
-	if (size < 0) {
-		size = FILE_CHUNK_SIZE;
-	}
-	data = SDL_malloc((size_t)(size + 1));
-
-	size_total = 0;
-	for (;;) {
-		if ((((Sint64)size_total) + FILE_CHUNK_SIZE) > size) {
-			size = (size_total + FILE_CHUNK_SIZE);
-			newdata = SDL_realloc(data, (size_t)(size + 1));
-			if (!newdata) {
-				SDL_free(data);
-				data = NULL;
-				SDL_OutOfMemory();
-				goto done;
-			}
-		data = newdata;
-	}
-
-	size_read = SDL_RWread(src, (char *)data+size_total, 1, (size_t)(size-size_total));
-	if (size_read == 0) {
-			break;
-		}
-			if (size_read == -1) {
-				break;
-			}
-		size_total += size_read;
-	}
-
-	if (datasize) {
-		*datasize = size_total;
-	}
-	((char *)data)[size_total] = '\0';
-
-	done:
-	if (freesrc && src) {
-		SDL_RWclose(src);
-	}
-	return data;
-}
-#endif
-
 /* miniz to SDL_rwops helpers */
-
 static size_t mz_rwops_read_func(void *vops, mz_uint64 file_ofs, void *pBuf, size_t n) {
 	SDL_RWops *rwops = (SDL_RWops *)vops;
 	Sint64 size_seek = SDL_RWseek(rwops, file_ofs, SEEK_SET);

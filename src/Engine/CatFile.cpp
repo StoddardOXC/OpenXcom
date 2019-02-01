@@ -20,7 +20,6 @@
 #include "CatFile.h"
 #include "Logger.h"
 #include "FileMap.h"
-#include "SDL2Helpers.h"
 
 namespace OpenXcom
 {
