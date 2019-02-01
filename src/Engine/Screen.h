@@ -57,6 +57,7 @@ private:
 	/// Sets the _flags and _bpp variables based on game options; needed in more than one place now
 	void makeVideoFlags();
 	int _prevWidth, _prevHeight;
+	std::string _screenshotFilename;
 
 public:
 	static const int ORIGINAL_WIDTH;
@@ -97,7 +98,7 @@ public:
 	/// Gets the screen's left black forbidden to cursor band's width.
 	int getCursorLeftBlackBand() const;
 	/// Takes a screenshot.
-	void screenshot(const std::string &filename) const;
+	void screenshot(const std::string &filename);
 	/// Checks whether a 32bit scaler is requested and works for the selected resolution
 	static bool use32bitScaler();
 	/// Checks whether OpenGL output is requested
