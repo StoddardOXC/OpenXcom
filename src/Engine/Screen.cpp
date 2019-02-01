@@ -109,7 +109,7 @@ void Screen::makeVideoFlags()
 Screen::Screen() : _window(NULL), _renderer(NULL),
 	_baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0),
 	_numColors(0), _firstColor(0), _pushPalette(false),
-	_prevWidth(0), _prevHeight(0)
+	_prevWidth(0), _prevHeight(0), _screenshotFilename()
 {
 	resetDisplay();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
@@ -169,7 +169,14 @@ void Screen::handle(Action *action)
 			i++;
 		}
 		while (CrossPlatform::fileExists(ss.str()));
-		screenshot(ss.str());
+		if (action->getDetails()->key.keysym.mod) {
+			// modded (alt/shift/ctrl/etc) screenshot keypresses
+			// shoot the unscaled screen
+			screenshot(ss.str());
+		} else {
+			// unmodded shoot the window
+			_renderer->screenshot(ss.str());
+		}
 		return;
 	}
 }
@@ -187,6 +194,24 @@ void Screen::flip()
 	if (_pushPalette) {
 		SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
 		_pushPalette = false;
+	}
+
+#if DEBUG_SCREENSHOT_PERIOD
+	static size_t flipcounter = 0;
+	if (flipcounter % DEBUG_SCREENSHOT_PERIOD == 0) {
+		Log(LOG_INFO) << " frame " << flipcounter;
+		char fname[256];
+		sprintf(fname, "frame%04zd.png", flipcounter);
+		SDL_SavePNG(_surface.get(), fname);
+	}
+	flipcounter += 1;
+#endif
+
+	if (!_screenshotFilename.empty()) {
+		if (SDL_SavePNG(_surface.get(), _screenshotFilename.c_str())) {
+			Log(LOG_FATAL) << "Screen::screenshot('" << _screenshotFilename << "'):" << SDL_GetError();
+		}
+		_screenshotFilename.clear();
 	}
 	_renderer->flip(_surface.get());
 }
@@ -540,9 +565,9 @@ int Screen::getCursorLeftBlackBand() const
  * Saves a screenshot of the screen's contents.
  * @param filename Filename of the PNG file.
  */
-void Screen::screenshot(const std::string &filename) const
+void Screen::screenshot(const std::string &filename)
 {
-	_renderer->screenshot(filename);
+	_screenshotFilename = filename;
 }
 
 /**

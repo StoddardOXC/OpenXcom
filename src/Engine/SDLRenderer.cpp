@@ -12,7 +12,7 @@
 namespace OpenXcom
 {
 
-SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _renderer(NULL), _texture(NULL), _format(SDL_PIXELFORMAT_ARGB8888), _surface(0)
+SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _renderer(NULL), _texture(NULL), _format(SDL_PIXELFORMAT_ARGB8888), _surface(0), _screenshotFilename()
 {
 	listSDLRendererDrivers();
 	_renderer = SDL_CreateRenderer(window, -1, flags);
@@ -20,8 +20,7 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 	_dstRect.x = _dstRect.y = _dstRect.w = _dstRect.h = 0;
 	if (_renderer == NULL)
 	{
-		Log(LOG_ERROR) << "[SDLRenderer] Couldn't create renderer; error message: " << SDL_GetError();
-		throw Exception(SDL_GetError());
+		Log(LOG_FATAL) << "[SDLRenderer] Couldn't create renderer; error message: " << SDL_GetError();
 	}
 	Log(LOG_INFO) << "[SDLRenderer] Renderer created";
 	const char *scaleHint = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
@@ -42,6 +41,10 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 		Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
 	}
 	_format = info.texture_formats[0];
+	if (!SDL_PixelFormatEnumToMasks(_format, &_format_bpp, 0 ,0 ,0, 0)) {
+		Log(LOG_FATAL) << "[SDLRenderer] Couldn't get bpp for "
+		<< SDL_GetPixelFormatName(_format) << ": " << SDL_GetError();
+	}
 }
 
 void SDLRenderer::setInternalRect(SDL_Rect *srcRect)
@@ -90,19 +93,6 @@ SDLRenderer::~SDLRenderer(void)
 
 void SDLRenderer::flip(SDL_Surface *srcSurface)
 {
-	static size_t fc = 0;
-
-	if (fc % 60 == 0) {
-		Log(LOG_INFO)<<" frame "<<fc;
-		char fname[256];
-		sprintf(fname, "frame%04zd.png", fc);
-		SDL_SavePNG(srcSurface, fname);
-	}
-	fc += 1;
-
-
-	// okay, srcSurface may be ARGB32 or INDEXED8
-	// and also may or may not be the size of dstRect.
 #if 0
 	Log(LOG_INFO) << "[SDLRenderer] src: "<<srcSurface->w<<"x"<<srcSurface->h<<" "
 		<< SDL_GetPixelFormatName(srcSurface->format->format)
@@ -133,7 +123,7 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 	// flip starts here.
 	// the most honorable cursor should be rendercopied too.
 
-	SDL_SetRenderDrawColor(_renderer, fc%255, fc%255, fc%255, 255);
+	//SDL_SetRenderDrawColor(_renderer, fc%255, fc%255, fc%255, 255);
 	if (SDL_RenderClear(_renderer)) {
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderClear(): " << SDL_GetError();
 		throw Exception(SDL_GetError());
@@ -144,6 +134,7 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 		throw Exception(SDL_GetError());
 	}
 	SDL_RenderPresent(_renderer);
+	doScreenshot();
 }
 
 void SDLRenderer::listSDLRendererDrivers()
@@ -164,12 +155,38 @@ void SDLRenderer::listSDLRendererDrivers()
 	}
 }
 
-void SDLRenderer::screenshot(const std::string &filename) const
-{
-	// do it on the next flip maybe. and what to save? render stuff obviously.
-	if (SDL_SavePNG(_surface, filename.c_str())) {
-		throw(SDL_GetError());
+/**
+ * Sets a filename for the next screenshot.
+ * Actual screenshotting is done during the next flip().
+ *
+ * We are interested in two different images
+ *  - what was submitted to the flip()
+ *  - what actually got to the window
+ * The first one is rightfully done in Screen.
+ * (or hackily in the flip() method)
+ */
+void SDLRenderer::screenshot(const std::string &filename) {
+	_screenshotFilename = filename;
+}
+
+/**
+ * Does the actual screenshotting
+ */
+void SDLRenderer::doScreenshot() {
+	if (_screenshotFilename.empty()) { return; }
+
+	SDL_Rect vprect;
+	SDL_RenderGetViewport(_renderer, &vprect );
+	SDL_Surface *shot = SDL_CreateRGBSurfaceWithFormat(0, vprect.w, vprect.h, _format_bpp, _format);
+
+	if (SDL_RenderReadPixels(_renderer, &vprect, _format, shot->pixels, shot->pitch)) {
+		Log(LOG_FATAL) << "SDLRenderer::doScreenshot(): SDL_RenderReadPixels(): " << SDL_GetError();
 	}
+	if (SDL_SavePNG(shot, _screenshotFilename.c_str())) {
+		Log(LOG_FATAL) << "SDLRenderer::doScreenshot(): SDL_SavePNG('" << _screenshotFilename << "'): " << SDL_GetError();
+	}
+	SDL_FreeSurface(shot);
+	_screenshotFilename.clear();
 }
 
 }
