@@ -184,8 +184,8 @@ void Game::run()
 			ev.type = SDL_MOUSEMOTION;
 			ev.motion.x = x;
 			ev.motion.y = y;
-			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-			_states.back()->handle(&action);
+			auto action = _screen->makeAction(&ev);
+			_states.back()->handle(action.get());
 		}
 
 		// This is a hack to check if we've missed the fingerUp event.
@@ -209,10 +209,10 @@ void Game::run()
 					{
 						Log(LOG_INFO) << "Sending fake mouseButtonUp event; event details: x: " << reservedMUpEvent.button.x << ", y: " << reservedMUpEvent.button.y;
 					}
-					Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+					auto fakeAction = _screen->makeAction(&reservedMUpEvent);
 					// Screen and fpsCounter don't care for our mouse events.
-					_cursor->handle(&fakeAction);
-					_states.back()->handle(&fakeAction);
+					_cursor->handle(fakeAction.get());
+					_states.back()->handle(fakeAction.get());
 					hadFingerUp = true;
 				}
 			}
@@ -348,11 +348,11 @@ void Game::run()
 					{
 						// Preserve current event, we might need it.
 						reservedMUpEvent = fakeEvent;
-						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+						auto fakeAction = _screen->makeAction(&fakeEvent);
 						// Safely ignore _screen and _fpscounter
 						// Might want to update _cursor, though.
-						_cursor->handle(&fakeAction);
-						_states.back()->handle(&fakeAction);
+						_cursor->handle(fakeAction.get());
+						_states.back()->handle(fakeAction.get());
 					}
 				}
 				[[gnu::fallthrough]];
@@ -502,16 +502,16 @@ void Game::run()
 					// Go on, feed the event to others
 					FALLTHROUGH;
 				default:
-					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-					_screen->handle(&action);
-					_cursor->handle(&action);
-					_fpsCounter->handle(&action);
-					if (action.getDetails()->type == SDL_KEYDOWN)
+					auto action = _screen->makeAction(&_event);
+					_screen->handle(action.get());
+					_cursor->handle(action.get());
+					_fpsCounter->handle(action.get());
+					if (action->getDetails()->type == SDL_KEYDOWN)
 					{
 						// "ctrl-g" grab input
 						// (Since we're on Android, we're having no ctrl-g
 
-						if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
+						if (action->getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
 						{
 							Options::captureMouse = !Options::captureMouse;
 							SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
@@ -519,19 +519,19 @@ void Game::run()
 						}
 						else if (Options::debug)
 						{
-							if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
+							if (action->getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
 							{
 								pushState(new TestState);
 							}
 							// "ctrl-u" debug UI
-							else if (action.getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
+							else if (action->getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
 							{
 								Options::debugUi = !Options::debugUi;
 								_states.back()->redrawText();
 							}
 						}
 					}
-					_states.back()->handle(&action);
+					_states.back()->handle(action.get());
 					break;
 			}
 			if (!_init)
