@@ -88,11 +88,7 @@ public:
 	/// Gets the screen's height.
 	int getHeight() const;
 	/// Resets the screen display.
-	void resetDisplay(bool resetVideo = true, bool noShaders = false);
-	/// Gets the screen's top black forbidden to cursor band's height.
-	int getCursorTopBlackBand() const;
-	/// Gets the screen's left black forbidden to cursor band's width.
-	int getCursorLeftBlackBand() const;
+	void resetDisplay(bool resetVideo = true);
 	/// Takes a screenshot.
 	void screenshot(const std::string &filename);
 	/// Checks whether a 32bit scaler is requested and works for the selected resolution
