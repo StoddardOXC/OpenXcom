@@ -521,29 +521,6 @@ void Screen::resetDisplay(bool resetVideo, bool noShaders)
 }
 
 /**
- * Returns the screen's X scale.
- * @return Scale factor.
- */
-double Screen::getXScale() const
-{
-	return _scaleX;
-}
-
-/**
- * Returns the screen's Y scale.
- * @return Scale factor.
- */
-double Screen::getYScale() const
-{
-	return _scaleY;
-}
-
-double Screen::getScale() const
-{
-	return _scale;
-}
-
-/**
  * Returns the screen's top black forbidden to cursor band's height.
  * @return Height in pixel.
  */
@@ -703,5 +680,10 @@ void Screen::updateScale(int type, int &width, int &height, bool change)
 SDL_Window * Screen::getWindow() const
 {
 	return _window;
+}
+
+std::unique_ptr<Action> Screen::makeAction(SDL_Event *ev) const
+{
+	return std::unique_ptr<Action>(new Action(ev, _scaleX, _scaleY, _cursorTopBlackBand, _cursorLeftBlackBand));
 }
 }

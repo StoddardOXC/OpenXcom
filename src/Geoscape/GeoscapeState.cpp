@@ -2599,8 +2599,8 @@ void GeoscapeState::timerReset()
 {
 	SDL_Event ev;
 	ev.button.button = SDL_BUTTON_LEFT;
-	Action act(&ev, _game->getScreen()->getXScale(), _game->getScreen()->getYScale(), _game->getScreen()->getCursorTopBlackBand(), _game->getScreen()->getCursorLeftBlackBand());
-	_btn5Secs->mousePress(&act, this);
+	auto action = _game->getScreen()->makeAction(&ev);
+	_btn5Secs->mousePress(action.get(), this);
 }
 
 /**

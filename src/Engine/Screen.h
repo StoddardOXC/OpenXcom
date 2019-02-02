@@ -89,10 +89,6 @@ public:
 	int getHeight() const;
 	/// Resets the screen display.
 	void resetDisplay(bool resetVideo = true, bool noShaders = false);
-	/// Gets the screen's X scale.
-	double getXScale() const;
-	/// Gets the screen's Y scale.
-	double getYScale() const;
 	/// Gets the screen's top black forbidden to cursor band's height.
 	int getCursorTopBlackBand() const;
 	/// Gets the screen's left black forbidden to cursor band's width.
@@ -105,10 +101,11 @@ public:
 	static bool useOpenGL();
 	/// update the game scale as required.
 	static void updateScale(int type, int &width, int &height, bool change);
-	/// Get the scale for action() scaling (Android specific)
-	double getScale() const;
 	/// Get the pointer for our current window
 	SDL_Window *getWindow() const;
+	/// Make an Action
+	std::unique_ptr<Action> makeAction(SDL_Event *ev) const;
+
 };
 
 }
