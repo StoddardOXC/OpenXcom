@@ -393,7 +393,7 @@ void BaseInfoState::miniClick(Action *)
  */
 void BaseInfoState::handleKeyPress(Action *action)
 {
-	if (action->getDetails()->type == SDL_KEYDOWN)
+	if (action->getType() == SDL_KEYDOWN)
 	{
 		// SDL2 uses SDL_Keycode struct
 		SDL_Keycode baseKeys[] = {Options::keyBaseSelect1,
@@ -404,7 +404,7 @@ void BaseInfoState::handleKeyPress(Action *action)
 			                 Options::keyBaseSelect6,
 			                 Options::keyBaseSelect7,
 			                 Options::keyBaseSelect8};
-		int key = action->getDetails()->key.keysym.sym;
+		int key = action->getKeycode();
 		for (size_t i = 0; i < _game->getSavedGame()->getBases()->size(); ++i)
 		{
 			if (key == baseKeys[i])

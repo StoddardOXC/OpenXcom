@@ -79,7 +79,7 @@ void ListLoadState::btnOldClick(Action *)
 void ListLoadState::lstSavesPress(Action *action)
 {
 	ListGamesState::lstSavesPress(action);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		loadSave(_lstSaves->getSelectedRow());
 	}

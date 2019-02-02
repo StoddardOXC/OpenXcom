@@ -211,15 +211,15 @@ void AlienInventory::blit(SDL_Surface *surface)
  */
 void AlienInventory::mouseClick(Action *action, State *state)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_game->popState();
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		_game->popState();
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+	else if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 	{
 		if (_selUnit == 0)
 			return;

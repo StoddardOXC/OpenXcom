@@ -612,7 +612,7 @@ void TransferItemsState::btnCancelClick(Action *)
 void TransferItemsState::lstItemsLeftArrowPress(Action *action)
 {
 	_sel = _lstItems->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && !_timerInc->isRunning()) _timerInc->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT && !_timerInc->isRunning()) _timerInc->start();
 }
 
 /**
@@ -621,7 +621,7 @@ void TransferItemsState::lstItemsLeftArrowPress(Action *action)
  */
 void TransferItemsState::lstItemsLeftArrowRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerInc->stop();
 	}
@@ -634,8 +634,8 @@ void TransferItemsState::lstItemsLeftArrowRelease(Action *action)
  */
 void TransferItemsState::lstItemsLeftArrowClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) increaseByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT) increaseByValue(INT_MAX);
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		increaseByValue(1);
 		_timerInc->setInterval(250);
@@ -650,7 +650,7 @@ void TransferItemsState::lstItemsLeftArrowClick(Action *action)
 void TransferItemsState::lstItemsRightArrowPress(Action *action)
 {
 	_sel = _lstItems->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && !_timerDec->isRunning()) _timerDec->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT && !_timerDec->isRunning()) _timerDec->start();
 }
 
 /**
@@ -659,7 +659,7 @@ void TransferItemsState::lstItemsRightArrowPress(Action *action)
  */
 void TransferItemsState::lstItemsRightArrowRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerDec->stop();
 	}
@@ -672,8 +672,8 @@ void TransferItemsState::lstItemsRightArrowRelease(Action *action)
  */
 void TransferItemsState::lstItemsRightArrowClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) decreaseByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT) decreaseByValue(INT_MAX);
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		decreaseByValue(1);
 		_timerInc->setInterval(250);
@@ -697,21 +697,20 @@ void TransferItemsState::lstItemsMousePress(Action *action)
 void TransferItemsState::lstItemsMouseWheel(Action *action)
 {
 	_sel = _lstItems->getSelectedRow();
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
 		_timerInc->stop();
 		_timerDec->stop();
 		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
 		{
-			if (ev.wheel.y > 0)
+			if (action->getMouseWheelY() > 0)
 				increaseByValue(Options::changeValueByMouseWheel);
 			else
 				decreaseByValue(Options::changeValueByMouseWheel);
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
@@ -727,7 +726,7 @@ void TransferItemsState::lstItemsMouseWheel(Action *action)
 			}
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+	else if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 	{
 		if (getRow().type == TRANSFER_ITEM)
 		{

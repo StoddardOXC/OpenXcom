@@ -18,6 +18,8 @@
  */
 
 #include "Action.h"
+#include "CrossPlatform.h"
+#include "InteractiveSurface.h"
 
 namespace OpenXcom
 {
@@ -30,32 +32,28 @@ namespace OpenXcom
  * @param leftBlackBand Screen's left black band width.
  * @param ev Pointer to SDL_event.
  */
-Action::Action(SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand) : _ev(ev), _scaleX(scaleX), _scaleY(scaleY), _topBlackBand(topBlackBand), _leftBlackBand(leftBlackBand), _mouseX(-1), _mouseY(-1), _surfaceX(-1), _surfaceY(-1), _sender(0)
+Action::Action(SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand) : _ev(ev), _scaleX(scaleX), _scaleY(scaleY), _topBlackBand(topBlackBand), _leftBlackBand(leftBlackBand), _mouseX(-1), _mouseY(-1), _surfaceX(-1), _surfaceY(-1), _mouseMotionX(0), _mouseMotionY(0), _sender(0)
 {
+	if (ev->type == SDL_MOUSEBUTTONUP || ev->type == SDL_MOUSEBUTTONDOWN)
+	{
+		setMouseAction((ev->button.x - leftBlackBand) / scaleX, (ev->button.y - topBlackBand) / scaleY, 0, 0);
+	}
+	else if (ev->type == SDL_MOUSEWHEEL)
+	{
+		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
+		int mouseX, mouseY;
+		CrossPlatform::getPointerState(&mouseX, &mouseY);
+		setMouseAction((mouseX - leftBlackBand) / scaleX, (mouseY - topBlackBand) / scaleY, 0, 0);
+	}
+	else if ( ev->type == SDL_MOUSEMOTION )
+	{
+		setMouseAction((ev->motion.x - leftBlackBand) / scaleX, (ev->motion.y - topBlackBand) / scaleY, 0, 0);
+		setMouseMotion(ev->motion.xrel / scaleX, ev->motion.yrel / scaleY);
+	}
 }
 
 Action::~Action()
 {
-}
-
-/**
- * Returns the X scaling factor used by the screen
- * when this action was fired (used to correct mouse input).
- * @return Screen's X scaling factor.
- */
-double Action::getXScale() const
-{
-	return _scaleX;
-}
-
-/**
- * Returns the Y scaling factor used by the screen
- * when this action was fired (used to correct mouse input).
- * @return Screen's Y scaling factor.
- */
-double Action::getYScale() const
-{
-	return _scaleY;
 }
 
 /**
@@ -68,8 +66,8 @@ double Action::getYScale() const
  */
 void Action::setMouseAction(int mouseX, int mouseY, int surfaceX, int surfaceY)
 {
-	_mouseX = mouseX - _leftBlackBand;
-	_mouseY = mouseY - _topBlackBand;
+	_mouseX = mouseX * _scaleX - _leftBlackBand;
+	_mouseY = mouseY * _scaleY - _topBlackBand;
 	_surfaceX = surfaceX;
 	_surfaceY = surfaceY;
 }
@@ -97,47 +95,6 @@ bool  Action::isMouseRightClick() const
 {
 	return isMouseAction() && _ev->button.button == SDL_BUTTON_RIGHT;
 }
-/**
- * Returns the height in pixel of the
- * top black band if any.
- * @return Screen's top black band.
- */
-int Action::getTopBlackBand() const
-{
-	return _topBlackBand;
-}
-
-/**
- * Returns the width in pixel of the
- * left black band if any.
- * @return Screen's left black band.
- */
-int Action::getLeftBlackBand() const
-{
-	return _leftBlackBand;
-}
-
-/**
- * Returns the X position of the
- * mouse cursor relative to the game window,
- * or -1 if this isn't a mouse-related action.
- * @return Mouse's X position.
- */
-int Action::getXMouse() const
-{
-	return _mouseX;
-}
-
-/**
- * Returns the Y position of the
- * mouse cursor relative to the game window,
- * or -1 if this isn't a mouse-related action.
- * @return Mouse's Y position.
- */
-int Action::getYMouse() const
-{
-	return _mouseY;
-}
 
 /**
  * Returns the absolute X position of the
@@ -145,11 +102,11 @@ int Action::getYMouse() const
  * corrected for screen scaling.
  * @return Mouse's absolute X position.
  */
-double Action::getAbsoluteXMouse() const
+int Action::getAbsoluteXMouse() const
 {
 	if (_mouseX == -1)
 		return -1;
-	return _mouseX / _scaleX;
+	return floor(_mouseX / _scaleX);
 }
 
 /**
@@ -158,11 +115,11 @@ double Action::getAbsoluteXMouse() const
  * corrected for screen scaling.
  * @return Mouse's absolute X position.
  */
-double Action::getAbsoluteYMouse() const
+int Action::getAbsoluteYMouse() const
 {
 	if (_mouseY == -1)
 		return -1;
-	return _mouseY / _scaleY;
+	return floor(_mouseY / _scaleY);
 }
 
 /**
@@ -171,11 +128,11 @@ double Action::getAbsoluteYMouse() const
  * triggered the action, corrected for screen scaling.
  * @return Mouse's relative X position.
  */
-double Action::getRelativeXMouse() const
+int Action::getRelativeXMouse() const
 {
 	if (_mouseX == -1)
 		return -1;
-	return _mouseX - _surfaceX * _scaleX;
+	return floor(_mouseX / _scaleX - _surfaceX);
 }
 
 /**
@@ -184,11 +141,11 @@ double Action::getRelativeXMouse() const
  * triggered the action, corrected for screen scaling.
  * @return Mouse's relative X position.
  */
-double Action::getRelativeYMouse() const
+int Action::getRelativeYMouse() const
 {
 	if (_mouseY == -1)
 		return -1;
-	return _mouseY - _surfaceY * _scaleY;
+	return floor(_mouseY / _scaleY - _surfaceY);
 }
 
 /**
@@ -209,15 +166,107 @@ InteractiveSurface *Action::getSender() const
 void Action::setSender(InteractiveSurface *sender)
 {
 	_sender = sender;
+	_surfaceX = sender->getY();
+	_surfaceY = sender->getX();
 }
 
-/**
- * Returns the details about this action.
- * @return Pointer to SDL_event.
- */
-SDL_Event *Action::getDetails() const
+/// Gets the mouse's position delta x (relative motion), Screen coords.
+int Action::getXMouseMotion() const
 {
-	return _ev;
+	return _mouseMotionX;
+}
+/// Gets the mouse's position delta y (relative motion), Screen coords.
+int Action::getYMouseMotion() const
+{
+	return _mouseMotionY;
+}
+/// Sets the mouse motion
+void Action::setMouseMotion(int mx, int my)
+{
+	_mouseMotionX = mx;
+	_mouseMotionY = my;
+}
+
+/// Gets the action / event type
+Uint32 Action::getType() const
+{
+	return _ev->type;
+}
+/// Gets mouse button number if that's a click or release
+int Action::getMouseButton() const
+{
+	switch (_ev->type) {
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			return _ev->button.button;
+		case SDL_MOUSEMOTION:
+			return _ev->button.button;
+		default:
+			return 0;
+	}
+}
+/// Gets the key sym if that's a key press or release
+SDL_Keycode Action::getKeycode() const
+{
+	switch (_ev->type) {
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			return _ev->key.keysym.sym;
+		default:
+			return SDLK_UNKNOWN;
+	}
+}
+
+/// Gets the keys mods status
+Uint16 Action::getKeymods() const
+{
+	switch (_ev->type) {
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			return _ev->key.keysym.mod;
+		default:
+			return 0;
+	}
+}
+/// Gets the key sym if that's a key press or release
+SDL_Scancode Action::getScancode() const
+{
+	switch (_ev->type) {
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			return _ev->key.keysym.scancode;
+		default:
+			return SDL_SCANCODE_UNKNOWN;
+	}
+}
+const char *Action::getText() const
+{
+	return _ev->type == SDL_TEXTINPUT ? _ev->text.text : NULL;
+}
+/// Gets the wheel motion in y axis
+Sint32 Action::getMouseWheelY() const
+{
+	return _ev->type == SDL_MOUSEWHEEL ? _ev->wheel.y : 0;
+}
+
+/// SDL_MULTIGESTURE y
+float Action::getMultigestureY() const
+{
+	return _ev->type == SDL_MULTIGESTURE ? _ev->mgesture.y : 0.0;
+}
+/// SDL_MULTIGESTURE dDist
+float Action::getMultigestureDDist() const
+{
+	return _ev->type == SDL_MULTIGESTURE ? _ev->mgesture.dDist : 0.0;
+}
+
+void Action::setConsumed(void)
+{
+	_ev->type = SDL_FIRSTEVENT;
+}
+void Action::setMouseButton(int button)
+{
+	_ev->button.button = button;
 }
 
 }

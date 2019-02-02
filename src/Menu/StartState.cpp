@@ -232,7 +232,7 @@ void StartState::handle(Action *action)
 	State::handle(action);
 	if (loading == LOADING_DONE)
 	{
-		if (action->getDetails()->type == SDL_KEYDOWN)
+		if (action->getType() == SDL_KEYDOWN)
 		{
 			_game->quit();
 		}

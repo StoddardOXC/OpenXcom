@@ -1135,9 +1135,9 @@ void TextList::mouseWheel(Action *action, State *state)
 	{
 		allowScroll = (action->getAbsoluteXMouse() < _arrowsLeftEdge || action->getAbsoluteXMouse() > _arrowsRightEdge);
 	}
-	if (allowScroll && action->getDetails()->type == SDL_MOUSEWHEEL)
+	if (allowScroll && action->getType() == SDL_MOUSEWHEEL)
 	{
-		if (action->getDetails()->wheel.y > 0) scrollUp(false, true);
+		if (action->getMouseWheelY() > 0) scrollUp(false, true);
 		else scrollDown(false, true);
 	}
 	if (_selectable)
@@ -1193,7 +1193,7 @@ void TextList::mouseClick(Action *action, State *state)
 		if (_selRow < _rows.size())
 		{
 			InteractiveSurface::mouseClick(action, state);
-			if (_comboBox && action->getDetails()->button.button == SDL_BUTTON_LEFT)
+			if (_comboBox && action->getMouseButton() == SDL_BUTTON_LEFT)
 			{
 				_comboBox->setSelected(_selRow);
 				_comboBox->toggle();
@@ -1215,18 +1215,17 @@ void TextList::mouseOver(Action *action, State *state)
 {
 	if (_scrolling && _dragScrollable)
 	{
-		const int threshold = (_font->getHeight() + _font->getSpacing()) * action->getYScale();
-		const SDL_Event *ev = action->getDetails();
-		if (ev->type == SDL_MOUSEMOTION && ev->motion.state != 0)
+		const int threshold = _font->getHeight() + _font->getSpacing();
+		if (action->getType() == SDL_MOUSEMOTION && action->getMouseButton() != 0)
 		{
 			// Only accumulate delta while mouse button is pressed
-			_accumulatedDelta += action->getDetails()->motion.yrel;
+			_accumulatedDelta += action->getXMouseMotion();
 		}
 		if (std::abs(_accumulatedDelta) >= threshold)
 		{
-			_overThreshold = action->getDetails()->motion.state != 0;
+			_overThreshold = action->getMouseButton() != 0;
 		}
-		if (_overThreshold && action->getDetails()->motion.state)
+		if (_overThreshold && action->getMouseButton())
 		{
 			if (std::abs(_accumulatedDelta) >= threshold)
 			{
@@ -1239,7 +1238,7 @@ void TextList::mouseOver(Action *action, State *state)
 	if (_selectable)
 	{
 		int rowHeight = _font->getHeight() + _font->getSpacing(); //theoretical line height
-		_selRow = std::max(0, (int)(_scroll + (int)floor(action->getRelativeYMouse() / (rowHeight * action->getYScale()))));
+		_selRow = std::max(0, (int)(_scroll + (int)floor(action->getRelativeYMouse() / rowHeight)));
 		if (_selRow < _rows.size())
 		{
 			Text *selText = _texts[_rows[_selRow]].front();

@@ -143,8 +143,9 @@ BaseNameState::~BaseNameState()
  */
 void BaseNameState::edtNameChange(Action *action)
 {
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
+	_base->setName(_edtName->getText());
+	if (action->getKeycode() == SDLK_RETURN ||
+		action->getKeycode() == SDLK_KP_ENTER)
 	{
 		if (!_edtName->getText().empty())
 		{

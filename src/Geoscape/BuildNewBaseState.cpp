@@ -231,7 +231,7 @@ void BuildNewBaseState::globeClick(Action *action)
 	}
 
 	// Clicking on a polygon for a base location
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		if (_globe->insideLand(lon, lat))
 		{

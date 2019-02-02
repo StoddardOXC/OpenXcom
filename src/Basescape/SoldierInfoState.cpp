@@ -739,11 +739,11 @@ void SoldierInfoState::btnDiaryClick(Action *)
 void SoldierInfoState::btnFlagClick(Action *action)
 {
 	int temp = _soldier->getNationality();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		temp += 1;
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		temp += -1;
 	}

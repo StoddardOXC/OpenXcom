@@ -848,7 +848,7 @@ void BattlescapeState::mapOver(Action *action)
 	if (_swipeFromSoldier || _multiGestureProcess)
 		return;
 
-	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
+	if (_isMouseScrolling && action->getType() == SDL_MOUSEMOTION)
 	{
 		// The following is the workaround for a rare problem where sometimes
 		// the mouse-release event is missed for any reason.
@@ -868,19 +868,9 @@ void BattlescapeState::mapOver(Action *action)
 
 		_isMouseScrolled = true;
 
-#ifndef __MOBILE__
-		if (Options::touchEnabled == false)
-		{
-			// Set the mouse cursor back
-			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
-			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-		}
-#endif
-
 		// Check the threshold
-		_totalMouseMoveX += action->getDetails()->motion.xrel;
-		_totalMouseMoveY += action->getDetails()->motion.yrel;
+		_totalMouseMoveX += action->getXMouseMotion();
+		_totalMouseMoveY += action->getYMouseMotion();
 		if (!_mouseMovedOverThreshold)
 		{
 			_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
@@ -890,8 +880,8 @@ void BattlescapeState::mapOver(Action *action)
 		if (Options::battleDragScrollInvert)
 		{
 			_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
-			int scrollX = -(int)((double)_totalMouseMoveX / action->getXScale());
-			int scrollY = -(int)((double)_totalMouseMoveY / action->getYScale());
+			int scrollX = - _totalMouseMoveX;
+			int scrollY = - _totalMouseMoveY;
 			Position delta2 = _map->getCamera()->getMapOffset();
 			_map->getCamera()->scrollXY(scrollX, scrollY, true);
 			delta2 = _map->getCamera()->getMapOffset() - delta2;
@@ -899,14 +889,13 @@ void BattlescapeState::mapOver(Action *action)
 			// Keep the limits...
 			if (scrollX != delta2.x || scrollY != delta2.y)
 			{
-				_totalMouseMoveX = -(int) (delta2.x * action->getXScale());
-				_totalMouseMoveY = -(int) (delta2.y * action->getYScale());
+				_totalMouseMoveX = - delta2.x;
+				_totalMouseMoveY = - delta2.y;
 			}
 
 			if (Options::touchEnabled == false)
 			{
-				action->getDetails()->motion.x = _xBeforeMouseScrolling;
-				action->getDetails()->motion.y = _yBeforeMouseScrolling;
+				action->setMouseMotion(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 			}
 			_map->setCursorType(CT_NONE);
 		}
@@ -914,8 +903,8 @@ void BattlescapeState::mapOver(Action *action)
 		{
 			Position delta = _map->getCamera()->getMapOffset();
 			_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
-			int scrollX = (int)((double)_totalMouseMoveX / action->getXScale());
-			int scrollY = (int)((double)_totalMouseMoveY / action->getYScale());
+			int scrollX = _totalMouseMoveX;
+			int scrollY = _totalMouseMoveY;
 			Position delta2 = _map->getCamera()->getMapOffset();
 			_map->getCamera()->scrollXY(scrollX, scrollY, true);
 			delta2 = _map->getCamera()->getMapOffset() - delta2;
@@ -924,21 +913,18 @@ void BattlescapeState::mapOver(Action *action)
 			// Keep the limits...
 			if (scrollX != delta2.x || scrollY != delta2.y)
 			{
-				_totalMouseMoveX = (int) (delta2.x * action->getXScale());
-				_totalMouseMoveY = (int) (delta2.y * action->getYScale());
+				_totalMouseMoveX = delta2.x;
+				_totalMouseMoveY = delta2.y;
 			}
 
-			int barWidth = _game->getScreen()->getCursorLeftBlackBand();
-			int barHeight = _game->getScreen()->getCursorTopBlackBand();
-			int cursorX = _cursorPosition.x + Round(delta.x * action->getXScale());
-			int cursorY = _cursorPosition.y + Round(delta.y * action->getYScale());
-			_cursorPosition.x = Clamp(cursorX, barWidth, _game->getScreen()->getWidth() - barWidth - (int)(Round(action->getXScale())));
-			_cursorPosition.y = Clamp(cursorY, barHeight, _game->getScreen()->getHeight() - barHeight - (int)(Round(action->getYScale())));
+			int cursorX = _cursorPosition.x + delta.x;
+			int cursorY = _cursorPosition.y + delta.y;
+			_cursorPosition.x = Clamp(cursorX, 0, _map->getWidth());
+			_cursorPosition.y = Clamp(cursorY, 0, _map->getHeight());
 
 			if (Options::touchEnabled == false)
 			{
-				action->getDetails()->motion.x = _cursorPosition.x;
-				action->getDetails()->motion.y = _cursorPosition.y;
+				action->setMouseAction(_cursorPosition.x, _cursorPosition.y, _map->getX(), _map->getY());
 			}
 		}
 
@@ -956,7 +942,7 @@ void BattlescapeState::mapPress(Action *action)
 	// don't handle mouseclicks over the buttons (it overlaps with map surface)
 	if (_mouseOverIcons) return;
 
-	if (action->getDetails()->button.button == Options::battleDragScrollButton)
+	if (action->getMouseButton() == Options::battleDragScrollButton)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
@@ -964,8 +950,8 @@ void BattlescapeState::mapPress(Action *action)
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{
-			_cursorPosition.x = action->getDetails()->button.x;
-			_cursorPosition.y = action->getDetails()->button.y;
+			_cursorPosition.x = action->getAbsoluteXMouse();
+			_cursorPosition.y = action->getAbsoluteYMouse();
 			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
 			_cursorPosition.z = 1;
 		}
@@ -1073,7 +1059,7 @@ void BattlescapeState::mapClick(Action *action)
 	// (this part handles the release if it is missed and now an other button is used)
 	if (_isMouseScrolling)
 	{
-		if (action->getDetails()->button.button != Options::battleDragScrollButton
+		if (action->getMouseButton() != Options::battleDragScrollButton
 		&& (CrossPlatform::getPointerState(0,0)&SDL_BUTTON(Options::battleDragScrollButton)) == 0)
 		{   // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
@@ -1090,7 +1076,7 @@ void BattlescapeState::mapClick(Action *action)
 	if (_isMouseScrolling)
 	{
 		// While scrolling, other buttons are ineffective
-		if (action->getDetails()->button.button == Options::battleDragScrollButton)
+		if (action->getMouseButton() == Options::battleDragScrollButton)
 		{
 			_isMouseScrolling = false;
 			stopScrolling(action);
@@ -1109,7 +1095,7 @@ void BattlescapeState::mapClick(Action *action)
 	}
 
 	// right-click aborts walking state
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		if (_battleGame->cancelCurrentAction())
 		{
@@ -1136,15 +1122,15 @@ void BattlescapeState::mapClick(Action *action)
 
 	if (_save->getTile(pos) != 0) // don't allow to click into void
 	{
-		if ((action->getDetails()->button.button == SDL_BUTTON_RIGHT || (action->getDetails()->button.button == SDL_BUTTON_LEFT && (SDL_GetModState() & KMOD_ALT) != 0)) && playableUnitSelected())
+		if ((action->getMouseButton() == SDL_BUTTON_RIGHT || (action->getMouseButton() == SDL_BUTTON_LEFT && (action->getKeymods() & KMOD_ALT) != 0)) && playableUnitSelected())
 		{
 			_battleGame->secondaryAction(pos);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		else if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			_battleGame->primaryAction(pos);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+		else if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 		{
 			_battleGame->cancelCurrentAction();
 			BattleUnit *bu = _save->selectUnit(pos);
@@ -1198,14 +1184,14 @@ void BattlescapeState::multiGesture(Action *action)
 	{
 		_multiGestureProcess = true;
 		delta = 0;
-		prevPointY = action->getDetails()->mgesture.y;
+		prevPointY = action->getMultigestureY();
 #ifdef __MOBILE__
 		_longPressTimer->stop();
 #endif
 		return;
 	}
-	delta += action->getDetails()->mgesture.y - prevPointY;
-	prevPointY = action->getDetails()->mgesture.y;
+	delta += action->getMultigestureY() - prevPointY;
+	prevPointY = action->getMultigestureY();
 	if (std::abs(delta) > levelThreshold)
 	{
 		if (delta > 0)
@@ -1222,7 +1208,7 @@ void BattlescapeState::multiGesture(Action *action)
 
 void BattlescapeState::mapKey(Action *action)
 {
-	if (action->getDetails()->key.keysym.scancode == SDL_SCANCODE_AC_BACK)
+	if (action->getScancode() == SDL_SCANCODE_AC_BACK)
 	{
 		_battleGame->cancelCurrentAction();
 	}
@@ -1512,14 +1498,14 @@ void BattlescapeState::btnStatsClick(Action *action)
 	{
 		bool b = true;
 		if (SCROLL_TRIGGER == Options::battleEdgeScroll &&
-			SDL_MOUSEBUTTONUP == action->getDetails()->type && SDL_BUTTON_LEFT == action->getDetails()->button.button)
+			SDL_MOUSEBUTTONUP == action->getType() && SDL_BUTTON_LEFT == action->getMouseButton())
 		{
-			int posX = action->getXMouse();
-			int posY = action->getYMouse();
-			if ((posX < (Camera::SCROLL_BORDER * action->getXScale()) && posX > 0)
-				|| (posX > (_map->getWidth() - Camera::SCROLL_BORDER) * action->getXScale())
-				|| (posY < (Camera::SCROLL_BORDER * action->getYScale()) && posY > 0)
-				|| (posY > (_map->getHeight() - Camera::SCROLL_BORDER) * action->getYScale()))
+			int posX = action->getAbsoluteXMouse();
+			int posY = action->getAbsoluteYMouse();
+			if ((posX < Camera::SCROLL_BORDER && posX > 0)
+				|| (posX > _map->getWidth() - Camera::SCROLL_BORDER)
+				|| (posY < Camera::SCROLL_BORDER && posY > 0)
+				|| (posY > _map->getHeight() - Camera::SCROLL_BORDER))
 				// To avoid handling this event as a click
 				// on the stats button when the mouse is on the scroll-border
 				b = false;
@@ -1580,7 +1566,7 @@ void BattlescapeState::btnLeftHandItemClick(Action *action)
 				leftHandItem = 0;
 			}
 		}
-		bool middleClick = action->getDetails()->button.button == SDL_BUTTON_MIDDLE;
+		bool middleClick = action->getMouseButton() == SDL_BUTTON_MIDDLE;
 		handleItemClick(leftHandItem, middleClick);
 	}
 }
@@ -1627,7 +1613,7 @@ void BattlescapeState::btnRightHandItemClick(Action *action)
 				rightHandItem = 0;
 			}
 		}
-		bool middleClick = action->getDetails()->button.button == SDL_BUTTON_MIDDLE;
+		bool middleClick = action->getMouseButton() == SDL_BUTTON_MIDDLE;
 		handleItemClick(rightHandItem, middleClick);
 	}
 }
@@ -1693,7 +1679,7 @@ void BattlescapeState::btnToggleNightVisionAndPersonalLightsClick(Action* action
 		_save->getTileEngine()->togglePersonalLighting();
 	}
 
-	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	action->setConsumed();
 #ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
@@ -1706,7 +1692,7 @@ void BattlescapeState::btnToggleNightVisionAndPersonalLightsClick(Action* action
 void BattlescapeState::btnLaunchClick(Action *action)
 {
 	_battleGame->launchAction();
-	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	action->setConsumed();
 #ifdef __MOBILE__
 	// Seems we have an issue with a timer.
 	_longPressTimer->stop();
@@ -1720,7 +1706,7 @@ void BattlescapeState::btnLaunchClick(Action *action)
 void BattlescapeState::btnPsiClick(Action *action)
 {
 	_battleGame->psiButtonAction();
-	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	action->setConsumed();
 #ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
@@ -1753,10 +1739,10 @@ void BattlescapeState::btnSpecialClick(Action *action)
 		}
 
 		_map->draw();
-		bool middleClick = action->getDetails()->button.button == SDL_BUTTON_MIDDLE;
+		bool middleClick = action->getMouseButton() == SDL_BUTTON_MIDDLE;
 		handleItemClick(specialItem, middleClick);
 	}
-	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	action->setConsumed();
 #ifdef __MOBILE__
 	// Seems we have an issue with a timer.
 	_longPressTimer->stop();
@@ -2463,30 +2449,30 @@ inline void BattlescapeState::handle(Action *action)
 {
 	if (!_firstInit)
 	{
-		if (_game->getCursor()->getVisible() || ((action->getDetails()->type == SDL_MOUSEBUTTONDOWN || action->getDetails()->type == SDL_MOUSEBUTTONUP) && action->getDetails()->button.button == SDL_BUTTON_RIGHT))
+		if (_game->getCursor()->getVisible() || ((action->getType() == SDL_MOUSEBUTTONDOWN || action->getType() == SDL_MOUSEBUTTONUP) && action->getMouseButton() == SDL_BUTTON_RIGHT))
 		{
 			State::handle(action);
 
 			if (Options::touchEnabled == false && _isMouseScrolling && !Options::battleDragScrollInvert)
 			{
-				_map->setSelectorPosition((_cursorPosition.x - _game->getScreen()->getCursorLeftBlackBand()) / action->getXScale(), (_cursorPosition.y - _game->getScreen()->getCursorTopBlackBand()) / action->getYScale());
+				_map->setSelectorPosition(_cursorPosition.x, _cursorPosition.y);
 			}
 
-			if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
+			if (action->getType() == SDL_MOUSEBUTTONDOWN)
 			{
-				if (action->getDetails()->button.button == SDL_BUTTON_X1)
+				if (action->getMouseButton() == SDL_BUTTON_X1)
 				{
 					btnNextSoldierClick(action);
 				}
-				else if (action->getDetails()->button.button == SDL_BUTTON_X2)
+				else if (action->getMouseButton() == SDL_BUTTON_X2)
 				{
 					btnPrevSoldierClick(action);
 				}
 			}
 
-			if (action->getDetails()->type == SDL_KEYDOWN)
+			if (action->getType() == SDL_KEYDOWN)
 			{
-				SDL_Keycode key = action->getDetails()->key.keysym.sym;
+				SDL_Keycode key = action->getKeycode();
 				bool ctrlPressed = (SDL_GetModState() & KMOD_CTRL) != 0;
 				bool shiftPressed = (SDL_GetModState() & KMOD_SHIFT) != 0;
 				bool altPressed = (SDL_GetModState() & KMOD_ALT) != 0;
@@ -3609,7 +3595,7 @@ void BattlescapeState::stopScrolling(Action *action)
 	if (Options::battleDragScrollInvert)
 	{
 		/* FIXME: Mouse warping still doesn't work as intended */
-		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+		_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 		_battleGame->setupCursor();
 		if (_battleGame->getCurrentAction()->actor == 0 && (_save->getSide() == FACTION_PLAYER || _save->getDebugMode()))
@@ -3620,9 +3606,9 @@ void BattlescapeState::stopScrolling(Action *action)
 	else
 	{
 		/* FIXME: Mouse warping still doesn't work as intended */
-		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
-		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), 0, 0);
-		_map->setSelectorPosition(_cursorPosition.x / action->getXScale(), _cursorPosition.y / action->getYScale());
+		_game->warpMouse(_cursorPosition.x, _cursorPosition.y);
+		action->setMouseAction(_cursorPosition.x, _cursorPosition.y, _map->getX(), _map->getY());
+		_map->setSelectorPosition(_cursorPosition.x, _cursorPosition.y);
 	}
 #endif
 	// reset our "mouse position stored" flag
@@ -3639,7 +3625,7 @@ void BattlescapeState::autosave()
 
 void BattlescapeState::consumeEvent(Action *action)
 {
-	action->getDetails()->type = SDL_FIRSTEVENT;
+	action->setConsumed();
 }
 
 }

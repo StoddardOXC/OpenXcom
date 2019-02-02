@@ -667,17 +667,17 @@ void UnitInfoState::init()
 void UnitInfoState::handle(Action *action)
 {
 	State::handle(action);
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
+	if (action->getType() == SDL_MOUSEBUTTONDOWN)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		{
 			exitClick(action);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_X1)
+		else if (action->getMouseButton() == SDL_BUTTON_X1)
 		{
 			if (!_mindProbe) btnNextClick(action);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_X2)
+		else if (action->getMouseButton() == SDL_BUTTON_X2)
 		{
 			if (!_mindProbe) btnPrevClick(action);
 		}

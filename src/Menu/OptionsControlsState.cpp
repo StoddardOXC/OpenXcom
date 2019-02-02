@@ -201,7 +201,7 @@ OptionInfo *OptionsControlsState::getControl(size_t sel)
  */
 void OptionsControlsState::lstControlsClick(Action *action)
 {
-	if (action->getDetails()->button.button != SDL_BUTTON_LEFT && action->getDetails()->button.button != SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() != SDL_BUTTON_LEFT && action->getMouseButton() != SDL_BUTTON_RIGHT)
 	{
 		return;
 	}
@@ -223,12 +223,12 @@ void OptionsControlsState::lstControlsClick(Action *action)
 		return;
 	}
 
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_lstControls->setCellColor(_selected, 0, _colorSel);
 		_lstControls->setCellColor(_selected, 1, _colorSel);
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		_lstControls->setCellText(_selected, 1, "");
 		*_selKey->asKey() = SDLK_UNKNOWN;
@@ -245,7 +245,7 @@ void OptionsControlsState::lstControlsKeyPress(Action *action)
 {
 	if (_selected != -1)
 	{
-		SDL_Keycode key = action->getDetails()->key.keysym.sym;
+		SDL_Keycode key = action->getKeycode();
 		if (key != 0 &&
 			key != SDLK_LSHIFT && key != SDLK_LALT && key != SDLK_LCTRL &&
 			key != SDLK_RSHIFT && key != SDLK_RALT && key != SDLK_RCTRL)

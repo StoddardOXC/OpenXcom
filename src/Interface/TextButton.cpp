@@ -281,7 +281,7 @@ void TextButton::draw()
  */
 void TextButton::mousePress(Action *action, State *state)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && _group != 0)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT && _group != 0)
 	{
 		TextButton *old = *_group;
 		*_group = this;
@@ -290,7 +290,7 @@ void TextButton::mousePress(Action *action, State *state)
 		draw();
 	}
 
-	if (isButtonHandled(action->getDetails()->button.button))
+	if (isButtonHandled(action->getMouseButton()))
 	{
 		if (soundPress != 0 && _group == 0)
 		{
@@ -315,7 +315,7 @@ void TextButton::mousePress(Action *action, State *state)
  */
 void TextButton::mouseRelease(Action *action, State *state)
 {
-	if (isButtonHandled(action->getDetails()->button.button))
+	if (isButtonHandled(action->getMouseButton()))
 	{
 		draw();
 		//_redraw = true;

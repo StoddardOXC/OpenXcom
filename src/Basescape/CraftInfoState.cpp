@@ -453,8 +453,8 @@ void CraftInfoState::edtCraftChange(Action *action)
 	{
 		_craft->setName(_edtCraft->getText());
 	}
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
+	if (action->getKeycode() == SDLK_RETURN ||
+		action->getKeycode() == SDLK_KP_ENTER)
 	{
 		_edtCraft->setText(_craft->getName(_game->getLanguage()));
 	}

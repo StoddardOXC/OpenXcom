@@ -485,12 +485,12 @@ void Game::run()
 					_screen->handle(action.get());
 					_cursor->handle(action.get());
 					_fpsCounter->handle(action.get());
-					if (action->getDetails()->type == SDL_KEYDOWN)
+					if (action->getType() == SDL_KEYDOWN)
 					{
 						// "ctrl-g" grab input
 						// (Since we're on Android, we're having no ctrl-g
 
-						if (action->getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
+						if (action->getKeycode() == SDLK_g && (action->getKeymods() & KMOD_CTRL) != 0)
 						{
 							Options::captureMouse = !Options::captureMouse;
 							SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
@@ -498,12 +498,12 @@ void Game::run()
 						}
 						else if (Options::debug)
 						{
-							if (action->getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
+							if (action->getKeycode() == SDLK_t && (action->getKeymods() & KMOD_CTRL) != 0)
 							{
 								pushState(new TestState);
 							}
 							// "ctrl-u" debug UI
-							else if (action->getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
+							else if (action->getKeycode() == SDLK_u && (action->getKeymods() & KMOD_CTRL) != 0)
 							{
 								Options::debugUi = !Options::debugUi;
 								_states.back()->redrawText();
@@ -911,6 +911,16 @@ void Game::initAudio()
 		Log(LOG_INFO) << "SDL_mixer initialized successfully.";
 		setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	}
+}
+
+void Game::warpMouse(int x, int y)
+{
+	_screen->warpMouse(x, y);
+}
+
+void Game::warpMouseRelative(int dx, int dy)
+{
+	_screen->warpMouseRelative(dx, dy);
 }
 
 }

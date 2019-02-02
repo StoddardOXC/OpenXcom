@@ -93,7 +93,7 @@ void ListSaveState::updateList()
  */
 void ListSaveState::lstSavesPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT && _edtSave->isFocused())
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT && _edtSave->isFocused())
 	{
 		_edtSave->setText("");
 		_edtSave->setVisible(false);
@@ -101,7 +101,7 @@ void ListSaveState::lstSavesPress(Action *action)
 		_lstSaves->setScrolling(true);
 	}
 	ListGamesState::lstSavesPress(action);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_previousSelectedRow = _selectedRow;
 		_selectedRow = _lstSaves->getSelectedRow();
@@ -143,8 +143,8 @@ void ListSaveState::lstSavesPress(Action *action)
  */
 void ListSaveState::edtSaveKeyPress(Action *action)
 {
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
+	if (action->getKeycode() == SDLK_RETURN ||
+		action->getKeycode() == SDLK_KP_ENTER)
 	{
 		saveGame();
 	}

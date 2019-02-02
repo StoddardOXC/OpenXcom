@@ -1776,7 +1776,7 @@ void Globe::mouseOver(Action *action, State *state)
 	double lon, lat;
 	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
-	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
+	if (_isMouseScrolling && action->getType() == SDL_MOUSEMOTION)
 	{
 		// The following is the workaround for a rare problem where sometimes
 		// the mouse-release event is missed for any reason.
@@ -1805,46 +1805,37 @@ void Globe::mouseOver(Action *action, State *state)
 		}
 #endif
 		// Check the threshold
-		_totalMouseMoveX += action->getDetails()->motion.xrel;
-		_totalMouseMoveY += action->getDetails()->motion.yrel;
+		_totalMouseMoveX += action->getXMouseMotion();
+		_totalMouseMoveY += action->getYMouseMotion();
 
 		if (!_mouseMovedOverThreshold)
 			_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
 
 		// Scrolling
+		double newLon = - (double) _totalMouseMoveX * ROTATE_LONGITUDE / (_zoom + 1) / 2;
+		double newLat = - (double) _totalMouseMoveY * ROTATE_LATITUDE  / (_zoom + 1) / 2;
+
 		if (Options::geoDragScrollInvert)
 		{
-			double newLon = ((double)_totalMouseMoveX / action->getXScale()) * ROTATE_LONGITUDE/(_zoom+1)/2;
-			double newLat = ((double)_totalMouseMoveY / action->getYScale()) * ROTATE_LATITUDE/(_zoom+1)/2;
-			center(_lonBeforeMouseScrolling + newLon / (Options::geoScrollSpeed / 10), _latBeforeMouseScrolling + newLat / (Options::geoScrollSpeed / 10));
+			newLon = - newLon;
+			newLat = - newLat;
 		}
-		else
-		{
-			double newLon = -((double)_totalMouseMoveX / action->getXScale()) * ROTATE_LONGITUDE/(_zoom+1)/2;
-			double newLat = -((double)_totalMouseMoveY / action->getYScale()) * ROTATE_LATITUDE/(_zoom+1)/2;
-			center(_lonBeforeMouseScrolling + newLon / (Options::geoScrollSpeed / 10), _latBeforeMouseScrolling + newLat / (Options::geoScrollSpeed / 10));
-			/* double newLon = -action->getDetails()->motion.xrel * ROTATE_LONGITUDE/(_zoom+1)/2;
-			double newLat = -action->getDetails()->motion.yrel * ROTATE_LATITUDE/(_zoom+1)/2;
-			center(_cenLon + newLon / (Options::geoScrollSpeed / 10), _cenLat + newLat / (Options::geoScrollSpeed / 10));*/
-		}
+
+		center(_lonBeforeMouseScrolling + newLon / (Options::geoScrollSpeed / 10), _latBeforeMouseScrolling + newLat / (Options::geoScrollSpeed / 10));
 
 		if (Options::touchEnabled == false)
 		{
 			// We don't want to see the mouse-cursor jumping :)
 			action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
-			action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
 		}
 
 		_game->getCursor()->handle(action);
 	}
 
-	if (Options::touchEnabled == false &&
-		_isMouseScrolling &&
-		(action->getDetails()->motion.x != _xBeforeMouseScrolling ||
-		action->getDetails()->motion.y != _yBeforeMouseScrolling))
+	if (Options::touchEnabled == false && _isMouseScrolling &&
+		(action->getAbsoluteXMouse() != _xBeforeMouseScrolling || action->getAbsoluteYMouse() != _yBeforeMouseScrolling))
 	{
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
-		action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
 	}
 	// Check for errors
 	if (converted)
@@ -1863,13 +1854,13 @@ void Globe::mousePress(Action *action, State *state)
 	double lon, lat;
 	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
-	if (action->getDetails()->button.button == Options::geoDragScrollButton)
+	if (action->getMouseButton() == Options::geoDragScrollButton)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
 		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
-		_xBeforeMouseScrolling = action->getDetails()->button.x;
-		_yBeforeMouseScrolling = action->getDetails()->button.y;
+		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
+		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
 		_lonBeforeMouseScrolling = _cenLon;
 		_latBeforeMouseScrolling = _cenLat;
 		_totalMouseMoveX = 0; _totalMouseMoveY = 0;
@@ -1891,8 +1882,8 @@ void Globe::mousePress(Action *action, State *state)
 void Globe::mouseRelease(Action *action, State *state)
 {
 	double lon, lat;
-	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
-	if (action->getDetails()->button.button == Options::geoDragScrollButton)
+	bool converted = cartToPolar(action->getAbsoluteXMouse(), action->getAbsoluteYMouse(), &lon, &lat);
+	if (action->getMouseButton() == Options::geoDragScrollButton)
 	{
 		stopScrolling(action);
 	}
@@ -1910,10 +1901,9 @@ void Globe::mouseRelease(Action *action, State *state)
  */
 void Globe::mouseWheel(Action *action, State *state)
 {
-	SDL_Event *ev = action->getDetails();
-	if (ev->type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
-		if (ev->wheel.y > 0)
+		if (action->getMouseWheelY() > 0)
 		{
 			zoomIn();
 		}
@@ -1933,7 +1923,7 @@ void Globe::mouseWheel(Action *action, State *state)
 void Globe::mouseClick(Action *action, State *state)
 {
 	double lon, lat;
-	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar(action->getAbsoluteXMouse(), action->getAbsoluteYMouse(), &lon, &lat);
 
 	// The following is the workaround for a rare problem where sometimes
 	// the mouse-release event is missed for any reason.
@@ -1941,7 +1931,7 @@ void Globe::mouseClick(Action *action, State *state)
 	// (this part handles the release if it is missed and now an other button is used)
 	if (_isMouseScrolling)
 	{
-		if (action->getDetails()->button.button != Options::geoDragScrollButton
+		if (action->getMouseButton() != Options::geoDragScrollButton
 			&& 0 == (CrossPlatform::getPointerState(0, 0)&SDL_BUTTON(Options::geoDragScrollButton)))
 		{ // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
@@ -1958,7 +1948,7 @@ void Globe::mouseClick(Action *action, State *state)
 	if (_isMouseScrolling)
 	{
 		// While scrolling, other buttons are ineffective
-		if (action->getDetails()->button.button == Options::geoDragScrollButton)
+		if (action->getMouseButton() == Options::geoDragScrollButton)
 		{
 			_isMouseScrolling = false;
 			stopScrolling(action);
@@ -1981,7 +1971,7 @@ void Globe::mouseClick(Action *action, State *state)
 	if (converted)
 	{
 		InteractiveSurface::mouseClick(action, state);
-		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		{
 			center(lon, lat);
 		}
@@ -1996,11 +1986,11 @@ void Globe::mouseClick(Action *action, State *state)
 void Globe::keyboardPress(Action *action, State *state)
 {
 	InteractiveSurface::keyboardPress(action, state);
-	if (action->getDetails()->key.keysym.sym == Options::keyGeoToggleDetail)
+	if (action->getKeycode() == Options::keyGeoToggleDetail)
 	{
 		toggleDetail();
 	}
-	if (action->getDetails()->key.keysym.sym == Options::keyGeoToggleRadar)
+	if (action->getKeycode() == Options::keyGeoToggleRadar)
 	{
 		toggleRadarLines();
 	}
@@ -2106,16 +2096,8 @@ void Globe::setupRadii(int width, int height)
  */
 void Globe::stopScrolling(Action *action)
 {
-#ifndef __MOBILE__
-	/* FIXME: Still doesn't work as intended */
-	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
-#else
-	//Log(LOG_INFO) << "Globe.cpp: stopScrolling(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
-	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
-	/* action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
-	_game->getCursor()->handle(action); */
-#endif
 }
 
 /**
@@ -2123,9 +2105,9 @@ void Globe::stopScrolling(Action *action)
  */
 void Globe::multiGesture(Action *action, State *state)
 {
-	static double accumulatedPinch;
-	double pinchVal = action->getDetails()->mgesture.dDist;
-	const double distThreshold = 0.03;
+	static float accumulatedPinch;
+	float pinchVal = action->getMultigestureDDist();
+	const float distThreshold = 0.03;
 	accumulatedPinch += pinchVal;
 	if (fabs(accumulatedPinch) > distThreshold)
 	{

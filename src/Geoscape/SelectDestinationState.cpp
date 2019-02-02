@@ -199,7 +199,7 @@ void SelectDestinationState::globeClick(Action *action)
 	}
 
 	// Clicking on a valid target
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		std::vector<Target*> v = _globe->getTargets(mouseX, mouseY, true, _craft);
 		if (v.empty())

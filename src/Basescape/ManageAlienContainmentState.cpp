@@ -389,7 +389,7 @@ void ManageAlienContainmentState::btnTransferClick(Action *)
 void ManageAlienContainmentState::lstItemsRightArrowPress(Action *action)
 {
 	_sel = _lstAliens->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && !_timerInc->isRunning()) _timerInc->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT && !_timerInc->isRunning()) _timerInc->start();
 }
 
 /**
@@ -398,7 +398,7 @@ void ManageAlienContainmentState::lstItemsRightArrowPress(Action *action)
  */
 void ManageAlienContainmentState::lstItemsRightArrowRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerInc->stop();
 	}
@@ -411,8 +411,8 @@ void ManageAlienContainmentState::lstItemsRightArrowRelease(Action *action)
  */
 void ManageAlienContainmentState::lstItemsRightArrowClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) increaseByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT) increaseByValue(INT_MAX);
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		increaseByValue(1);
 		_timerInc->setInterval(250);
@@ -427,7 +427,7 @@ void ManageAlienContainmentState::lstItemsRightArrowClick(Action *action)
 void ManageAlienContainmentState::lstItemsLeftArrowPress(Action *action)
 {
 	_sel = _lstAliens->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && !_timerDec->isRunning()) _timerDec->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT && !_timerDec->isRunning()) _timerDec->start();
 }
 
 /**
@@ -436,7 +436,7 @@ void ManageAlienContainmentState::lstItemsLeftArrowPress(Action *action)
  */
 void ManageAlienContainmentState::lstItemsLeftArrowRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerDec->stop();
 	}
@@ -449,8 +449,8 @@ void ManageAlienContainmentState::lstItemsLeftArrowRelease(Action *action)
  */
 void ManageAlienContainmentState::lstItemsLeftArrowClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) decreaseByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT) decreaseByValue(INT_MAX);
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		decreaseByValue(1);
 		_timerInc->setInterval(250);
@@ -465,7 +465,7 @@ void ManageAlienContainmentState::lstItemsLeftArrowClick(Action *action)
 void ManageAlienContainmentState::lstItemsMousePress(Action *action)
 {
 	_sel = _lstAliens->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+	if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 	{
 		RuleResearch *selectedTopic = _game->getMod()->getResearch(_aliens[_sel]);
 		if (selectedTopic != 0)
@@ -483,15 +483,14 @@ void ManageAlienContainmentState::lstItemsMousePress(Action *action)
 void ManageAlienContainmentState::lstItemsMouseWheel(Action *action)
 {
 	_sel = _lstAliens->getSelectedRow();
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
 		_timerInc->stop();
 		_timerDec->stop();
 		if (action->getAbsoluteXMouse() >= _lstAliens->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstAliens->getArrowsRightEdge())
 		{
-			if (ev.wheel.y > 0)
+			if (action->getMouseWheelY() > 0)
 				increaseByValue(Options::changeValueByMouseWheel);
 			else
 				decreaseByValue(Options::changeValueByMouseWheel);

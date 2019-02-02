@@ -302,7 +302,7 @@ void ListGamesState::lstSavesMouseOut(Action *)
  */
 void ListGamesState::lstSavesPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT && _lstSaves->getSelectedRow() >= _firstValidRow)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT && _lstSaves->getSelectedRow() >= _firstValidRow)
 	{
 		_game->pushState(new DeleteGameState(_origin, _saves[_lstSaves->getSelectedRow() - _firstValidRow].fileName));
 	}
