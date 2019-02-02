@@ -198,7 +198,7 @@ MedikitState::MedikitState (BattleUnit *targetUnit, BattleAction *action, TileEn
 void MedikitState::handle(Action *action)
 {
 	State::handle(action);
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN && action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getType() == SDL_MOUSEBUTTONDOWN && action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		onEndClick(0);
 	}

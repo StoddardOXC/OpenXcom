@@ -694,16 +694,13 @@ void Inventory::mouseOver(Action *action, State *state)
 
 	if (CrossPlatform::getPointerState(0, 0) && _clicked)
 	{
-		int mx = action->getDetails()->motion.x;
-		int my = action->getDetails()->motion.y;
+		int mx = action->getXMouseMotion();
+		int my = action->getYMouseMotion();
 		if ((std::abs(mx - _xBeforeDrag) + std::abs(my - _yBeforeDrag)) > Options::dragScrollPixelTolerance)
 		{
 			if (!_dragging)
 			{
-				action->setMouseAction(_xBeforeDrag + action->getLeftBlackBand(),
-					_yBeforeDrag + action->getTopBlackBand(),
-					action->getSender()->getX(),
-					action->getSender()->getY());
+				action->setMouseAction(_xBeforeDrag, _yBeforeDrag, action->getSender()->getX(), action->getSender()->getY());
 				mouseClick(action, state);
 				_dragging = true;
 				//_longPressTimer->stop();
@@ -722,15 +719,15 @@ void Inventory::mouseOver(Action *action, State *state)
  */
 void Inventory::mouseClick(Action *action, State *state)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		if (_selUnit == 0)
 			return;
 		// Pickup item
 		if (_selItem == 0)
 		{
-			int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
-				y = (int)floor(action->getAbsoluteYMouse()) - getY();
+			int x = (int)floor(action->getAbsoluteXMouse()) - getX();
+			int y = (int)floor(action->getAbsoluteYMouse()) - getY();
 			RuleInventory *slot = getSlotInPosition(&x, &y);
 			if (slot != 0)
 			{
@@ -1044,7 +1041,7 @@ void Inventory::mouseClick(Action *action, State *state)
 			}
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		if (_selItem == 0)
 		{
@@ -1107,7 +1104,7 @@ void Inventory::mouseClick(Action *action, State *state)
 			setSelectedItem(0);
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+	else if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 	{
 		if (_selUnit == 0)
 			return;

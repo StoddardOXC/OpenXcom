@@ -219,7 +219,7 @@ OptionInfo *OptionsAdvancedState::getSetting(size_t sel)
  */
 void OptionsAdvancedState::lstOptionsClick(Action *action)
 {
-	Uint8 button = action->getDetails()->button.button;
+	Uint8 button = action->getMouseButton();
 	if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_RIGHT)
 	{
 		return;

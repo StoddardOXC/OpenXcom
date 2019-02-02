@@ -507,7 +507,7 @@ void GraphsState::btnRegionListClick(Action * action)
 	size_t number = 0;
 	ToggleTextButton *button = dynamic_cast<ToggleTextButton*>(action->getSender());
 
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		for (size_t i = 0; i < _btnRegions.size(); ++i)
 		{
@@ -555,7 +555,7 @@ void GraphsState::btnCountryListClick(Action * action)
 	size_t number = 0;
 	ToggleTextButton *button = dynamic_cast<ToggleTextButton*>(action->getSender());
 
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		for (size_t i = 0; i < _btnCountries.size(); ++i)
 		{
@@ -1205,15 +1205,14 @@ void GraphsState::shiftButtons(Action *action)
 	if (_finance)
 		return;
 	// select the data's we'll processing - regions or countries
-    const SDL_Event &ev(*action->getDetails());
 	if (_country)
 	{
 		// too few countries? - return
 		if (_countryToggles.size() <= GRAPH_MAX_BUTTONS)
 			return;
-		else if (ev.type == SDL_MOUSEWHEEL)
+		else if (action->getType() == SDL_MOUSEWHEEL)
 		{
-			const int inc = ev.wheel.y > 0 ? -1 : 1;
+			const int inc = action->getMouseWheelY() > 0 ? -1 : 1;
 			scrollButtons(_countryToggles, _btnCountries, _butCountriesOffset, inc);
 		}
 	}
@@ -1222,9 +1221,9 @@ void GraphsState::shiftButtons(Action *action)
 		// too few regions? - return
 		if (_regionToggles.size() <= GRAPH_MAX_BUTTONS)
 			return;
-		else if (ev.type == SDL_MOUSEWHEEL)
+		else if (action->getType() == SDL_MOUSEWHEEL)
 		{
-			const int inc = ev.wheel.y > 0 ? -1 : 1;
+			const int inc = action->getMouseWheelY() > 0 ? -1 : 1;
 			scrollButtons(_regionToggles, _btnRegions, _butRegionsOffset, inc);
 		}
 	}

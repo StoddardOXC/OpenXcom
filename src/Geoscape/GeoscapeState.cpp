@@ -492,10 +492,10 @@ void GeoscapeState::handle(Action *action)
 		State::handle(action);
 	}
 
-	if (action->getDetails()->type == SDL_KEYDOWN)
+	if (action->getType() == SDL_KEYDOWN)
 	{
 		// "ctrl-d" - enable debug mode
-		if (Options::debug && action->getDetails()->key.keysym.sym == SDLK_d && (SDL_GetModState() & KMOD_CTRL) != 0)
+		if (Options::debug && action->getKeycode() == SDLK_d && (action->getKeymods() & KMOD_CTRL) != 0)
 		{
 			_game->getSavedGame()->setDebugMode();
 			if (_game->getSavedGame()->getDebugMode())
@@ -509,16 +509,16 @@ void GeoscapeState::handle(Action *action)
 			_cbxRegion->setVisible(_game->getSavedGame()->getDebugMode());
 			_cbxZone->setVisible(_game->getSavedGame()->getDebugMode());
 		}
-		if (Options::debug && _game->getSavedGame()->getDebugMode() && (SDL_GetModState() & KMOD_CTRL) != 0)
+		if (Options::debug && _game->getSavedGame()->getDebugMode() && (action->getKeymods() & KMOD_CTRL) != 0)
 		{
 			// "ctrl-1"
-			if (action->getDetails()->key.keysym.sym == SDLK_1)
+			if (action->getKeycode() == SDLK_1)
 			{
 				_txtDebug->setText("I'M A BILLIONAIRE! ALMOST...");
 				_game->getSavedGame()->setFunds(999999999);
 			}
 			// "ctrl-2"
-			if (action->getDetails()->key.keysym.sym == SDLK_2)
+			if (action->getKeycode() == SDLK_2)
 			{
 				_txtDebug->setText("ALL FACILITY CONSTRUCTION COMPLETED");
 				for (auto& base : *_game->getSavedGame()->getBases())
@@ -531,7 +531,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-3"
-			if (action->getDetails()->key.keysym.sym == SDLK_3)
+			if (action->getKeycode() == SDLK_3)
 			{
 				_txtDebug->setText("+50 SCIENTISTS/ENGINEERS");
 				for (auto& base : *_game->getSavedGame()->getBases())
@@ -541,7 +541,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-4"
-			if (action->getDetails()->key.keysym.sym == SDLK_4)
+			if (action->getKeycode() == SDLK_4)
 			{
 				_txtDebug->setText("+2 ALL ITEMS");
 				for (auto& base : *_game->getSavedGame()->getBases())
@@ -557,7 +557,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-5"
-			if (action->getDetails()->key.keysym.sym == SDLK_5)
+			if (action->getKeycode() == SDLK_5)
 			{
 				_txtDebug->setText("+2 ALL LIVE ALIENS");
 				for (auto& base : *_game->getSavedGame()->getBases())
@@ -573,7 +573,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-6"
-			if (action->getDetails()->key.keysym.sym == SDLK_6)
+			if (action->getKeycode() == SDLK_6)
 			{
 				_txtDebug->setText("XCOM/ALIEN ACTIVITY FOR THIS MONTH RESET");
 				size_t invertedEntry = _game->getSavedGame()->getFundsList().size() - 1;
@@ -603,7 +603,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-a"
-			if (action->getDetails()->key.keysym.sym == SDLK_a)
+			if (action->getKeycode() == SDLK_a)
 			{
 				_txtDebug->setText("SOLDIER DIARIES DELETED");
 				for (auto& base : *_game->getSavedGame()->getBases())
@@ -615,7 +615,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-c"
-			if (action->getDetails()->key.keysym.sym == SDLK_c)
+			if (action->getKeycode() == SDLK_c)
 			{
 				_txtDebug->setText("SOLDIER COMMENDATIONS DELETED");
 				for (auto& base : *_game->getSavedGame()->getBases())
@@ -634,11 +634,11 @@ void GeoscapeState::handle(Action *action)
 		// quick save and quick load
 		if (!_game->getSavedGame()->isIronman())
 		{
-			if (action->getDetails()->key.keysym.sym == Options::keyQuickSave)
+			if (action->getKeycode() == Options::keyQuickSave)
 			{
 				popup(new SaveGameState(OPT_GEOSCAPE, SAVE_QUICK, _palette));
 			}
-			else if (action->getDetails()->key.keysym.sym == Options::keyQuickLoad)
+			else if (action->getKeycode() == Options::keyQuickLoad)
 			{
 				popup(new LoadGameState(OPT_GEOSCAPE, SAVE_QUICK, _palette));
 			}
@@ -2819,7 +2819,7 @@ void GeoscapeState::globeClick(Action *action)
 	int mouseX = (int)floor(action->getAbsoluteXMouse()), mouseY = (int)floor(action->getAbsoluteYMouse());
 
 	// Clicking markers on the globe
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		std::vector<Target*> v = _globe->getTargets(mouseX, mouseY, false, 0);
 		if (!v.empty())

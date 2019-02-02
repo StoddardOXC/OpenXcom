@@ -217,10 +217,9 @@ void ResearchInfoState::setAssignedScientist()
  */
 void ResearchInfoState::handleWheel(Action *action)
 {
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y > 0)
+		if (action->getMouseWheelY() > 0)
 			moreByValue(Options::changeValueByMouseWheel);
 		else
 			lessByValue(Options::changeValueByMouseWheel);
@@ -233,7 +232,7 @@ void ResearchInfoState::handleWheel(Action *action)
  */
 void ResearchInfoState::morePress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerMore->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) _timerMore->start();
 }
 
 /**
@@ -242,7 +241,7 @@ void ResearchInfoState::morePress(Action *action)
  */
 void ResearchInfoState::moreRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerMore->setInterval(250);
 		_timerMore->stop();
@@ -256,9 +255,9 @@ void ResearchInfoState::moreRelease(Action *action)
  */
 void ResearchInfoState::moreClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		moreByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		moreByValue(1);
 }
 
@@ -268,7 +267,7 @@ void ResearchInfoState::moreClick(Action *action)
  */
 void ResearchInfoState::lessPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerLess->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) _timerLess->start();
 }
 
 /**
@@ -277,7 +276,7 @@ void ResearchInfoState::lessPress(Action *action)
  */
 void ResearchInfoState::lessRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerLess->setInterval(250);
 		_timerLess->stop();
@@ -291,9 +290,9 @@ void ResearchInfoState::lessRelease(Action *action)
  */
 void ResearchInfoState::lessClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		lessByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		lessByValue(1);
 }
 

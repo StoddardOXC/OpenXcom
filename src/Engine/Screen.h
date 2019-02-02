@@ -105,7 +105,10 @@ public:
 	SDL_Window *getWindow() const;
 	/// Make an Action
 	std::unique_ptr<Action> makeAction(SDL_Event *ev) const;
-
+	/// Warp the mouse (absolute Screen coordinates)
+	void warpMouse(int x, int y);
+	/// Warp the mouse (Screen coordinates delta)
+	void warpMouseRelative(int dx, int dy);
 };
 
 }

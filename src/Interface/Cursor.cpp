@@ -53,10 +53,10 @@ Cursor::~Cursor()
  */
 void Cursor::handle(Action *action)
 {
-	if (action->getDetails()->type == SDL_MOUSEMOTION)
+	if (action->getType() == SDL_MOUSEMOTION)
 	{
-		setX((int)floor((action->getDetails()->motion.x - action->getLeftBlackBand()) / action->getXScale()));
-		setY((int)floor((action->getDetails()->motion.y - action->getTopBlackBand()) / action->getYScale()));
+		setX(action->getAbsoluteXMouse());
+		setY(action->getAbsoluteYMouse());
 	}
 }
 

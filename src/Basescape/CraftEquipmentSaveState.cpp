@@ -150,7 +150,7 @@ void CraftEquipmentSaveState::lstLoadoutPress(Action *action)
 	}
 	_selected = _lstLoadout->getCellText(_selectedRow, 0);
 
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT && _edtSave->isFocused())
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT && _edtSave->isFocused())
 	{
 		_previousSelectedRow = -1;
 		_selectedRow = -1;
@@ -160,7 +160,7 @@ void CraftEquipmentSaveState::lstLoadoutPress(Action *action)
 		_edtSave->setFocus(false, false);
 		_lstLoadout->setScrolling(true);
 	}
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_lstLoadout->setCellText(_selectedRow, 0, "");
 
@@ -180,8 +180,8 @@ void CraftEquipmentSaveState::lstLoadoutPress(Action *action)
 */
 void CraftEquipmentSaveState::edtSaveKeyPress(Action *action)
 {
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
+	if (action->getKeycode() == SDLK_RETURN ||
+		action->getKeycode() == SDLK_KP_ENTER)
 	{
 		saveTemplate();
 	}

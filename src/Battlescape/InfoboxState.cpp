@@ -88,7 +88,7 @@ void InfoboxState::handle(Action *action)
 {
 	State::handle(action);
 
-	if (action->getDetails()->type == SDL_KEYDOWN || action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
+	if (action->getType() == SDL_KEYDOWN || action->getType() == SDL_MOUSEBUTTONDOWN)
 	{
 		close();
 	}

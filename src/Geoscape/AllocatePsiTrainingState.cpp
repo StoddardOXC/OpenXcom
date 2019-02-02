@@ -349,11 +349,11 @@ void AllocatePsiTrainingState::lstItemsLeftArrowClick(Action *action)
 	unsigned int row = _lstSoldiers->getSelectedRow();
 	if (row > 0)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			moveSoldierUp(action, row);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		{
 			moveSoldierUp(action, row, true);
 		}
@@ -382,9 +382,7 @@ void AllocatePsiTrainingState::moveSoldierUp(Action *action, unsigned int row, b
 		_base->getSoldiers()->at(row - 1) = s;
 		if (row != _lstSoldiers->getScroll())
 		{
-#ifndef __MOBILE__
-			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
-#endif
+			_game->warpMouseRelative(0, -8);
 		}
 		else
 		{
@@ -404,11 +402,11 @@ void AllocatePsiTrainingState::lstItemsRightArrowClick(Action *action)
 	size_t numSoldiers = _base->getSoldiers()->size();
 	if (0 < numSoldiers && INT_MAX >= numSoldiers && row < numSoldiers - 1)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			moveSoldierDown(action, row);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		{
 			moveSoldierDown(action, row, true);
 		}
@@ -437,9 +435,7 @@ void AllocatePsiTrainingState::moveSoldierDown(Action *action, unsigned int row,
 		_base->getSoldiers()->at(row + 1) = s;
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
-#ifndef __MOBILE__
-			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
-#endif
+			_game->warpMouseRelative(0, -8);
 		}
 		else
 		{
@@ -462,7 +458,7 @@ void AllocatePsiTrainingState::lstSoldiersClick(Action *action)
 	}
 
 	_sel = _lstSoldiers->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		if (!_base->getSoldiers()->at(_sel)->isInPsiTraining())
 		{
@@ -497,7 +493,7 @@ void AllocatePsiTrainingState::lstSoldiersMousePress(Action *action)
 		return;
 	unsigned int row = _lstSoldiers->getSelectedRow();
 	size_t numSoldiers = _base->getSoldiers()->size();
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP &&
+	if (action->getMouseButton() == SDL_BUTTON_WHEELUP &&
 		row > 0)
 	{
 		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
@@ -506,7 +502,7 @@ void AllocatePsiTrainingState::lstSoldiersMousePress(Action *action)
 			moveSoldierUp(action, row);
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN &&
+	else if (action->getMouseButton() == SDL_BUTTON_WHEELDOWN &&
 		0 < numSoldiers && INT_MAX >= numSoldiers && row < numSoldiers - 1)
 	{
 		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&

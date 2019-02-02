@@ -75,7 +75,7 @@ TextEdit::~TextEdit()
 void TextEdit::handle(Action *action, State *state)
 {
 	InteractiveSurface::handle(action, state);
-	if (_isFocused && _modal && action->getDetails()->type == SDL_MOUSEBUTTONDOWN &&
+	if (_isFocused && _modal && action->getType() == SDL_MOUSEBUTTONDOWN &&
 		(action->getAbsoluteXMouse() < getX() || action->getAbsoluteXMouse() >= getX() + getWidth() ||
 		 action->getAbsoluteYMouse() < getY() || action->getAbsoluteYMouse() >= getY() + getHeight()))
 	{
@@ -485,7 +485,7 @@ bool TextEdit::isValidChar(UCode c) const
  */
 void TextEdit::mousePress(Action *action, State *state)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 #ifdef __MOBILE__
 	/* Show keyboard */
@@ -497,9 +497,8 @@ void TextEdit::mousePress(Action *action, State *state)
 		}
 		else
 		{
-			double mouseX = action->getRelativeXMouse();
-			double scaleX = action->getXScale();
-			double w = 0;
+			int mouseX = action->getRelativeXMouse();
+			int w = 0;
 			int c = 0;
 			for (UString::iterator i = _value.begin(); i < _value.end(); ++i)
 			{
@@ -507,13 +506,13 @@ void TextEdit::mousePress(Action *action, State *state)
 				{
 					break;
 				}
-				w += (double)_text->getFont()->getCharSize(*i).w / 2 * scaleX;
+				w += _text->getFont()->getCharSize(*i).w / 2;
 				if (mouseX <= w)
 				{
 					break;
 				}
 				c++;
-				w += (double) _text->getFont()->getCharSize(*i).w / 2 * scaleX;
+				w += _text->getFont()->getCharSize(*i).w / 2;
 			}
 			_caretPos = c;
 		}
@@ -532,7 +531,7 @@ void TextEdit::keyboardPress(Action *action, State *state)
 	bool enterPressed = false;
 	if (Options::keyboardMode == KEYBOARD_OFF)
 	{
-		switch (action->getDetails()->key.keysym.sym)
+		switch (action->getKeycode())
 		{
 		case SDLK_UP:
 			_char++;
@@ -566,7 +565,7 @@ void TextEdit::keyboardPress(Action *action, State *state)
 	}
 	else if (Options::keyboardMode == KEYBOARD_ON)
 	{
-		switch (action->getDetails()->key.keysym.sym)
+		switch (action->getKeycode())
 		{
 		case SDLK_LEFT:
 			if (_caretPos > 0)
@@ -653,7 +652,7 @@ void TextEdit::onEnter(ActionHandler handler)
 void TextEdit::textInput(Action *action, State *state)
 {
 	// FIXME: This might not be consistent with current changes
-	std::string text(action->getDetails()->text.text);
+	std::string text(action->getText());
 	UString wText = Unicode::convUtf8ToUtf32(text);
 	bool correct = true;
 	for(UString::iterator it = wText.begin(); it != wText.end(); ++it)

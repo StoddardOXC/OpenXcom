@@ -177,7 +177,7 @@ void InventorySaveState::lstLayoutPress(Action *action)
 	}
 	_selected = _lstLayout->getCellText(_selectedRow, 0);
 
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT && _edtSave->isFocused())
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT && _edtSave->isFocused())
 	{
 		_previousSelectedRow = -1;
 		_selectedRow = -1;
@@ -187,7 +187,7 @@ void InventorySaveState::lstLayoutPress(Action *action)
 		_edtSave->setFocus(false, false);
 		_lstLayout->setScrolling(true);
 	}
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_lstLayout->setCellText(_selectedRow, 0, "");
 
@@ -216,8 +216,8 @@ void InventorySaveState::lstLayoutPress(Action *action)
 */
 void InventorySaveState::edtSaveKeyPress(Action *action)
 {
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
+	if (action->getKeycode() == SDLK_RETURN ||
+		action->getKeycode() == SDLK_KP_ENTER)
 	{
 		saveTemplate(false);
 	}

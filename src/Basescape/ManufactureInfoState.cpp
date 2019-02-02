@@ -368,7 +368,7 @@ void ManufactureInfoState::moreEngineer(int change)
  */
 void ManufactureInfoState::moreEngineerPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerMoreEngineer->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) _timerMoreEngineer->start();
 }
 
 /**
@@ -377,7 +377,7 @@ void ManufactureInfoState::moreEngineerPress(Action *action)
  */
 void ManufactureInfoState::moreEngineerRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerMoreEngineer->setInterval(250);
 		_timerMoreEngineer->stop();
@@ -390,8 +390,8 @@ void ManufactureInfoState::moreEngineerRelease(Action *action)
  */
 void ManufactureInfoState::moreEngineerClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) moreEngineer(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) moreEngineer(1);
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT) moreEngineer(INT_MAX);
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) moreEngineer(1);
 }
 
 /**
@@ -417,7 +417,7 @@ void ManufactureInfoState::lessEngineer(int change)
  */
 void ManufactureInfoState::lessEngineerPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerLessEngineer->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) _timerLessEngineer->start();
 }
 
 /**
@@ -426,7 +426,7 @@ void ManufactureInfoState::lessEngineerPress(Action *action)
  */
 void ManufactureInfoState::lessEngineerRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerLessEngineer->setInterval(250);
 		_timerLessEngineer->stop();
@@ -439,8 +439,8 @@ void ManufactureInfoState::lessEngineerRelease(Action *action)
  */
 void ManufactureInfoState::lessEngineerClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) lessEngineer(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) lessEngineer(1);
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT) lessEngineer(INT_MAX);
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) lessEngineer(1);
 }
 
 /**
@@ -476,7 +476,7 @@ void ManufactureInfoState::moreUnit(int change)
  */
 void ManufactureInfoState::moreUnitPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && _production->getAmountTotal() < INT_MAX)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT && _production->getAmountTotal() < INT_MAX)
 		_timerMoreUnit->start();
 }
 
@@ -486,7 +486,7 @@ void ManufactureInfoState::moreUnitPress(Action *action)
  */
 void ManufactureInfoState::moreUnitRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerMoreUnit->setInterval(250);
 		_timerMoreUnit->stop();
@@ -500,7 +500,7 @@ void ManufactureInfoState::moreUnitRelease(Action *action)
 void ManufactureInfoState::moreUnitClick(Action *action)
 {
 	if (_production->getInfiniteAmount()) return; // We can't increase over infinite :)
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		if (_production->getRules()->getProducedCraft())
 		{
@@ -512,7 +512,7 @@ void ManufactureInfoState::moreUnitClick(Action *action)
 			setAssignedEngineer();
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	else if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		moreUnit(1);
 	}
@@ -537,7 +537,7 @@ void ManufactureInfoState::lessUnit(int change)
  */
 void ManufactureInfoState::lessUnitPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerLessUnit->start();
+	if (action->getMouseButton() == SDL_BUTTON_LEFT) _timerLessUnit->start();
 }
 
 /**
@@ -546,7 +546,7 @@ void ManufactureInfoState::lessUnitPress(Action *action)
  */
 void ManufactureInfoState::lessUnitRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timerLessUnit->setInterval(250);
 		_timerLessUnit->stop();
@@ -559,18 +559,18 @@ void ManufactureInfoState::lessUnitRelease(Action *action)
  */
 void ManufactureInfoState::lessUnitClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT
-	||  action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT
+	||  action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		bool wasInfinite = _production->getInfiniteAmount();
 		_production->setInfiniteAmount(false);
-		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT
+		if (action->getMouseButton() == SDL_BUTTON_RIGHT
 		|| _production->getAmountTotal() <= _production->getAmountProduced())
 		{ // So the produced item number is increased over the planned, OR it was simply a right-click
 			_production->setAmountTotal(_production->getAmountProduced()+1);
 			setAssignedEngineer();
 		}
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			if (wasInfinite)
 			{
@@ -624,10 +624,9 @@ void ManufactureInfoState::onLessEngineer()
  */
 void ManufactureInfoState::handleWheelEngineer(Action *action)
 {
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y > 0)
+		if (action->getMouseWheelY() > 0)
 			moreEngineer(Options::changeValueByMouseWheel);
 		else
 			lessEngineer(Options::changeValueByMouseWheel);
@@ -658,10 +657,9 @@ void ManufactureInfoState::onLessUnit()
  */
 void ManufactureInfoState::handleWheelUnit(Action *action)
 {
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y > 0)
+		if (action->getMouseWheelY() > 0)
 			moreUnit(Options::changeValueByMouseWheel);
 		else
 			lessUnit(Options::changeValueByMouseWheel);

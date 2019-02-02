@@ -343,11 +343,11 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 	unsigned int row = _lstSoldiers->getSelectedRow();
 	if (row > 0)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			moveSoldierUp(action, row);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		{
 			moveSoldierUp(action, row, true);
 		}
@@ -376,9 +376,7 @@ void CraftSoldiersState::moveSoldierUp(Action *action, unsigned int row, bool ma
 		_base->getSoldiers()->at(row - 1) = s;
 		if (row != _lstSoldiers->getScroll())
 		{
-#ifndef __MOBILE__
-			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
-#endif
+			_game->warpMouseRelative(0, -8);
 		}
 		else
 		{
@@ -398,11 +396,11 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 	size_t numSoldiers = _base->getSoldiers()->size();
 	if (0 < numSoldiers && INT_MAX >= numSoldiers && row < numSoldiers - 1)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			moveSoldierDown(action, row);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 		{
 			moveSoldierDown(action, row, true);
 		}
@@ -431,10 +429,7 @@ void CraftSoldiersState::moveSoldierDown(Action *action, unsigned int row, bool 
 		_base->getSoldiers()->at(row + 1) = s;
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
-			//assert (0 && "FIXME");
-#ifndef __MOBILE__
-			SDL_WarpMouseInWindow(NULL, action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
-#endif
+			_game->warpMouseRelative(0, 8);
 		}
 		else
 		{
@@ -468,7 +463,7 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		return;
 	}
 	int row = _lstSoldiers->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		Craft *c = _base->getCrafts()->at(_craft);
 		Soldier *s = _base->getSoldiers()->at(_lstSoldiers->getSelectedRow());
@@ -502,7 +497,7 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		_txtAvailable->setText(tr("STR_SPACE_AVAILABLE").arg(c->getSpaceAvailable()));
 		_txtUsed->setText(tr("STR_SPACE_USED").arg(c->getSpaceUsed()));
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		_game->pushState(new SoldierInfoState(_base, row));
 	}
@@ -535,10 +530,9 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 		return;
 	unsigned int row = _lstSoldiers->getSelectedRow();
 	size_t numSoldiers = _base->getSoldiers()->size();
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y > 0 && row > 0)
+		if (action->getMouseWheelY() > 0 && row > 0)
 		{
 			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
 				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
@@ -546,7 +540,7 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 				moveSoldierUp(action, row);
 			}
 		}
-		else if (ev.wheel.y < 0 && 0 < numSoldiers && row + 1 < numSoldiers)
+		else if (action->getMouseWheelY() < 0 && 0 < numSoldiers && row + 1 < numSoldiers)
 		{
 			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
 				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
@@ -573,9 +567,8 @@ void CraftSoldiersState::lstSoldiersMouseOver(Action *action)
 		return;
 	}
 	if (Options::dragSoldierReorder) {
-		const SDL_Event *ev = action->getDetails();
-		if ((ev->type == SDL_MOUSEMOTION) && (ev->motion.state) &&
-											 (_lstSoldiers->getSelectedRow() < _base->getSoldiers()->size()))
+		if ((action->getType() == SDL_MOUSEMOTION) && action->getMouseButton()
+			&& (_lstSoldiers->getSelectedRow() < _base->getSoldiers()->size()))
 		{
 			int delta = row - _pselSoldier;
 			{

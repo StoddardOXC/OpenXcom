@@ -362,7 +362,7 @@ void ComboBox::handle(Action *action, State *state)
 	_list->handle(action, state);
 	InteractiveSurface::handle(action, state);
 	int topY = std::min(getY(), _window->getY());
-	if (_window->getVisible() && action->getDetails()->type == SDL_MOUSEBUTTONDOWN &&
+	if (_window->getVisible() && action->getType() == SDL_MOUSEBUTTONDOWN &&
 		(action->getAbsoluteXMouse() < getX() || action->getAbsoluteXMouse() >= getX() + getWidth() ||
 		 action->getAbsoluteYMouse() < topY || action->getAbsoluteYMouse() >= topY + getHeight() + _window->getHeight()))
 	{

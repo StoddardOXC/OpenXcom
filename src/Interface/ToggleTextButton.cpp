@@ -38,7 +38,7 @@ ToggleTextButton::~ToggleTextButton(void)
 /// handle mouse clicks by toggling the button state; use _fakeGroup to trick TextButton into drawing the right thing
 void ToggleTextButton::mousePress(Action *action, State *state)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT || action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT || action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		_isPressed = !_isPressed;
 		_fakeGroup = _isPressed ? this : 0; // this is the trick that makes TextButton stick

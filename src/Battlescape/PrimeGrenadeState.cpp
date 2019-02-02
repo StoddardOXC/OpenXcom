@@ -138,7 +138,7 @@ PrimeGrenadeState::~PrimeGrenadeState()
 void PrimeGrenadeState::handle(Action *action)
 {
 	State::handle(action);
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN && action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getType() == SDL_MOUSEBUTTONDOWN && action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		if (!_inInventoryView) _action->value = -1;
 		_game->popState();
@@ -154,7 +154,7 @@ void PrimeGrenadeState::btnClick(Action *action)
 {
 	int btnID = -1;
 
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		if (!_inInventoryView) _action->value = btnID;
 		_game->popState();

@@ -81,7 +81,7 @@ void FpsCounter::setColor(Uint8 color)
  */
 void FpsCounter::handle(Action *action)
 {
-	if (action->getDetails()->type == SDL_KEYDOWN && action->getDetails()->key.keysym.sym == Options::keyFps)
+	if (action->getType() == SDL_KEYDOWN && action->getKeycode() == Options::keyFps)
 	{
 		_visible = !_visible;
 		Options::fpsCounter = _visible;

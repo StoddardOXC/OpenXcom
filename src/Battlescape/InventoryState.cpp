@@ -882,7 +882,7 @@ void InventoryState::btnGlobalEquipmentLayoutClick(Action *action)
 	}
 
 	// SDLK_1 = 49, SDLK_9 = 57
-	const int index = action->getDetails()->key.keysym.sym - 49;
+	const int index = action->getKeycode() - 49;
 	if (index < 0 || index > 8)
 	{
 		return; // just in case
@@ -1071,7 +1071,7 @@ void InventoryState::btnQuickSearchApply(Action *)
  */
 void InventoryState::btnGroundClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		// scroll backwards
 		_inv->arrangeGround(-1);
@@ -1819,18 +1819,18 @@ void InventoryState::handle(Action *action)
 {
 	State::handle(action);
 
-	if (action->getDetails()->type == SDL_KEYDOWN)
+	if (action->getType() == SDL_KEYDOWN)
 	{
 		// "ctrl+1..9" - save equipment
 		// "1..9" - load equipment
-		if (action->getDetails()->key.keysym.sym >= SDLK_1 && action->getDetails()->key.keysym.sym <= SDLK_9)
+		if (action->getKeycode() >= SDLK_1 && action->getKeycode() <= SDLK_9)
 		{
 			if (!_btnQuickSearch->isFocused())
 			{
 				btnGlobalEquipmentLayoutClick(action);
 			}
 		}
-		if (action->getDetails()->key.keysym.sym == Options::keyInvClear)
+		if (action->getKeycode() == Options::keyInvClear)
 		{
 			if ((SDL_GetModState() & KMOD_CTRL) != 0 && (SDL_GetModState() & KMOD_ALT) != 0)
 			{
@@ -1840,13 +1840,13 @@ void InventoryState::handle(Action *action)
 	}
 
 #ifndef __MORPHOS__
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
+	if (action->getType() == SDL_MOUSEBUTTONDOWN)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_X1)
+		if (action->getMouseButton() == SDL_BUTTON_X1)
 		{
 			btnNextClick(action);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_X2)
+		else if (action->getMouseButton() == SDL_BUTTON_X2)
 		{
 			btnPrevClick(action);
 		}

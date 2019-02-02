@@ -335,7 +335,7 @@ void ArrowButton::mousePress(Action *action, State *state)
 	ImageButton::mousePress(action, state);
 	if (_list != 0)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (action->getMouseButton() == SDL_BUTTON_LEFT)
 		{
 			_timer->start();
 		}
@@ -349,12 +349,11 @@ void ArrowButton::mousePress(Action *action, State *state)
 void ArrowButton::mouseWheel(Action *action, State *state)
 {
 	ImageButton::mouseWheel(action, state);
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL) // FIXME: WHY DO WE EVEN GET NULL POINTERS?!
+	if (action->getType() == SDL_MOUSEWHEEL)
 	{
 		if (_list)
 		{
-			if (ev.wheel.y > 0)
+			if (action->getMouseWheelY() > 0)
 				_list->scrollUp(false, true);
 			else
 				_list->scrollDown(false, true);
@@ -371,7 +370,7 @@ void ArrowButton::mouseWheel(Action *action, State *state)
 void ArrowButton::mouseRelease(Action *action, State *state)
 {
 	ImageButton::mouseRelease(action, state);
-	if (_list != 0 && action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (_list != 0 && action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_timer->stop();
 	}
@@ -385,7 +384,7 @@ void ArrowButton::mouseRelease(Action *action, State *state)
 void ArrowButton::mouseClick(Action *action, State *state)
 {
 	ImageButton::mouseClick(action, state);
-	if (_list != 0 && SDL_BUTTON_RIGHT == action->getDetails()->button.button) {
+	if (_list != 0 && SDL_BUTTON_RIGHT == action->getMouseButton()) {
 		if (_shape == ARROW_BIG_UP) _list->scrollUp(true);
 		else if (_shape == ARROW_BIG_DOWN) _list->scrollDown(true);
 	}

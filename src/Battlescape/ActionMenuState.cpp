@@ -251,14 +251,14 @@ void ActionMenuState::addItem(BattleActionType ba, const std::string &name, int 
 void ActionMenuState::handle(Action *action)
 {
 	State::handle(action);
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN && action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (action->getType() == SDL_MOUSEBUTTONDOWN && action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		_game->popState();
 	}
-	else if (action->getDetails()->type == SDL_KEYDOWN &&
-		(action->getDetails()->key.keysym.sym == Options::keyCancel ||
-		action->getDetails()->key.keysym.sym == Options::keyBattleUseLeftHand ||
-		action->getDetails()->key.keysym.sym == Options::keyBattleUseRightHand))
+	else if (action->getType() == SDL_KEYDOWN &&
+		(action->getKeycode() == Options::keyCancel ||
+		action->getKeycode() == Options::keyBattleUseLeftHand ||
+		action->getKeycode() == Options::keyBattleUseRightHand))
 	{
 		_game->popState();
 	}
@@ -516,6 +516,7 @@ void ActionMenuState::handleAction()
 			_game->getSavedGame()->getSavedBattle()->appendToHitLog(HITLOG_PLAYER_FIRING, FACTION_PLAYER, tr(weapon->getType()));
 		}
 	}
+	action->setConsumed();
 }
 
 /**

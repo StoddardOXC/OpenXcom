@@ -142,7 +142,7 @@ void Screen::handle(Action *action)
 {
 	if (Options::debug)
 	{
-		if (action->getDetails()->type == SDL_KEYDOWN && action->getDetails()->key.keysym.sym == SDLK_F8 && (SDL_GetModState() & KMOD_ALT) != 0)
+		if (action->getType() == SDL_KEYDOWN && action->getKeycode() == SDLK_F8 && (action->getKeymods() & KMOD_ALT) != 0)
 		{
 			switch(Timer::gameSlowSpeed)
 			{
@@ -153,12 +153,12 @@ void Screen::handle(Action *action)
 		}
 	}
 
-	if (action->getDetails()->type == SDL_KEYDOWN && action->getDetails()->key.keysym.sym == SDLK_RETURN && (SDL_GetModState() & KMOD_ALT) != 0)
+	if (action->getType() == SDL_KEYDOWN && action->getKeycode() == SDLK_RETURN && (SDL_GetModState() & KMOD_ALT) != 0)
 	{
 		Options::fullscreen = !Options::fullscreen;
 		resetDisplay();
 	}
-	else if (action->getDetails()->type == SDL_KEYDOWN && action->getDetails()->key.keysym.sym == Options::keyScreenshot)
+	else if (action->getType() == SDL_KEYDOWN && action->getKeycode() == Options::keyScreenshot)
 	{
 		std::ostringstream ss;
 		int i = 0;
@@ -169,7 +169,7 @@ void Screen::handle(Action *action)
 			i++;
 		}
 		while (CrossPlatform::fileExists(ss.str()));
-		if (action->getDetails()->key.keysym.mod) {
+		if (action->getKeymods()) {
 			// modded (alt/shift/ctrl/etc) screenshot keypresses
 			// shoot the unscaled screen
 			screenshot(ss.str());
@@ -686,4 +686,21 @@ std::unique_ptr<Action> Screen::makeAction(SDL_Event *ev) const
 {
 	return std::unique_ptr<Action>(new Action(ev, _scaleX, _scaleY, _cursorTopBlackBand, _cursorLeftBlackBand));
 }
+
+void Screen::warpMouse(int x, int y)
+{
+#ifndef __MOBILE__
+	SDL_WarpMouseInWindow(_window, x * _scaleX + _leftBlackBand, y * _scaleY + _topBlackBand);
+#endif
+}
+
+void Screen::warpMouseRelative(int dx, int dy)
+{
+#ifndef __MOBILE__
+	int x, y;
+	SDL_GetMouseState(&x, &y);
+	SDL_WarpMouseInWindow(_window, x + dx * _scaleX, y + dy * _scaleY);
+#endif
+}
+
 }

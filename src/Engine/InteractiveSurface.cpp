@@ -111,24 +111,6 @@ void InteractiveSurface::handle(Action *action, State *state)
 
 	action->setSender(this);
 
-	if (action->getDetails()->type == SDL_MOUSEBUTTONUP || action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
-	{
-		action->setMouseAction(action->getDetails()->button.x, action->getDetails()->button.y, getX(), getY());
-	}
-	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
-	{
-		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
-		int mouseX, mouseY;
-		CrossPlatform::getPointerState(&mouseX, &mouseY);
-		mouseX = mouseX;
-		mouseY = mouseY;
-		action->setMouseAction(mouseX, mouseY, getX(), getY());
-	}
-	else if (action->getDetails()->type == SDL_MOUSEMOTION)
-	{
-		action->setMouseAction(action->getDetails()->motion.x, action->getDetails()->motion.y, getX(), getY());
-	}
-
 	if (action->isMouseAction())
 	{
 		if ((action->getAbsoluteXMouse() >= getX() && action->getAbsoluteXMouse() < getX() + getWidth()) &&
@@ -139,14 +121,14 @@ void InteractiveSurface::handle(Action *action, State *state)
 				_isHovered = true;
 				mouseIn(action, state);
 			}
-			if (_listButton && action->getDetails()->type == SDL_MOUSEMOTION)
+			if (_listButton && action->getType() == SDL_MOUSEMOTION)
 			{
 				_buttonsPressed = CrossPlatform::getPointerState(0, 0);
 				for (Uint8 i = 1; i <= NUM_BUTTONS; ++i)
 				{
 					if (isButtonPressed(i))
 					{
-						action->getDetails()->button.button = i;
+						action->setMouseButton(i);
 						mousePress(action, state);
 					}
 				}
@@ -159,7 +141,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 			{
 				_isHovered = false;
 				mouseOut(action, state);
-				if (_listButton && action->getDetails()->type == SDL_MOUSEMOTION)
+				if (_listButton && action->getType() == SDL_MOUSEMOTION)
 				{
 					for (Uint8 i = 1; i <= NUM_BUTTONS; ++i)
 					{
@@ -167,7 +149,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 						{
 							setButtonPressed(i, false);
 						}
-						action->getDetails()->button.button = i;
+						action->setMouseButton(i);
 						mouseRelease(action, state);
 					}
 				}
@@ -175,26 +157,26 @@ void InteractiveSurface::handle(Action *action, State *state)
 		}
 	}
 
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
+	if (action->getType() == SDL_MOUSEBUTTONDOWN)
 	{
-		if (_isHovered && !isButtonPressed(action->getDetails()->button.button))
+		if (_isHovered && !isButtonPressed(action->getMouseButton()))
 		{
-			setButtonPressed(action->getDetails()->button.button, true);
+			setButtonPressed(action->getMouseButton(), true);
 			mousePress(action, state);
 		}
 	}
-	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
+	else if (action->getType() == SDL_MOUSEWHEEL)
 	{
 		if (_isHovered)
 		{
 			mouseWheel(action, state);
 		}
 	}
-	else if (action->getDetails()->type == SDL_MOUSEBUTTONUP)
+	else if (action->getType() == SDL_MOUSEBUTTONUP)
 	{
-		if (isButtonPressed(action->getDetails()->button.button))
+		if (isButtonPressed(action->getMouseButton()))
 		{
-			setButtonPressed(action->getDetails()->button.button, false);
+			setButtonPressed(action->getMouseButton(), false);
 			mouseRelease(action, state);
 			if (_isHovered)
 			{
@@ -202,26 +184,26 @@ void InteractiveSurface::handle(Action *action, State *state)
 			}
 		}
 	}
-	else if (action->getDetails()->type == SDL_FINGERMOTION)
+	else if (action->getType() == SDL_FINGERMOTION)
 	{
 		fingerMotion(action, state);
 	}
-	else if (action->getDetails()->type == SDL_MULTIGESTURE)
+	else if (action->getType() == SDL_MULTIGESTURE)
 	{
 		multiGesture(action, state);
 	}
 
 	if (_isFocused)
 	{
-		if (action->getDetails()->type == SDL_KEYDOWN)
+		if (action->getType() == SDL_KEYDOWN)
 		{
 			keyboardPress(action, state);
 		}
-		else if (action->getDetails()->type == SDL_KEYUP)
+		else if (action->getType() == SDL_KEYUP)
 		{
 			keyboardRelease(action, state);
 		}
-		else if (action->getDetails()->type == SDL_TEXTINPUT)
+		else if (action->getType() == SDL_TEXTINPUT)
 		{
 			textInput(action, state);
 		}
@@ -276,7 +258,7 @@ void InteractiveSurface::unpress(State *state)
 void InteractiveSurface::mousePress(Action *action, State *state)
 {
 	std::map<Uint8, ActionHandler>::iterator allHandler = _press.find(0);
-	std::map<Uint8, ActionHandler>::iterator oneHandler = _press.find(action->getDetails()->button.button);
+	std::map<Uint8, ActionHandler>::iterator oneHandler = _press.find(action->getMouseButton());
 	if (allHandler != _press.end())
 	{
 		ActionHandler handler = allHandler->second;
@@ -299,7 +281,7 @@ void InteractiveSurface::mousePress(Action *action, State *state)
 void InteractiveSurface::mouseRelease(Action *action, State *state)
 {
 	std::map<Uint8, ActionHandler>::iterator allHandler = _release.find(0);
-	std::map<Uint8, ActionHandler>::iterator oneHandler = _release.find(action->getDetails()->button.button);
+	std::map<Uint8, ActionHandler>::iterator oneHandler = _release.find(action->getMouseButton());
 	if (allHandler != _release.end())
 	{
 		ActionHandler handler = allHandler->second;
@@ -322,7 +304,7 @@ void InteractiveSurface::mouseRelease(Action *action, State *state)
 void InteractiveSurface::mouseClick(Action *action, State *state)
 {
 	std::map<Uint8, ActionHandler>::iterator allHandler = _click.find(0);
-	std::map<Uint8, ActionHandler>::iterator oneHandler = _click.find(action->getDetails()->button.button);
+	std::map<Uint8, ActionHandler>::iterator oneHandler = _click.find(action->getMouseButton());
 	if (allHandler != _click.end())
 	{
 		ActionHandler handler = allHandler->second;
@@ -390,14 +372,14 @@ void InteractiveSurface::mouseOut(Action *action, State *state)
 void InteractiveSurface::keyboardPress(Action *action, State *state)
 {
 	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyPress.find((SDL_Keycode)SDLK_ANY);
-	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyPress.find(action->getDetails()->key.keysym.sym);
+	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyPress.find(action->getKeycode());
 	if (allHandler != _keyPress.end())
 	{
 		ActionHandler handler = allHandler->second;
 		(state->*handler)(action);
 	}
 	// Check if Ctrl, Alt and Shift aren't pressed
-	bool mod = ((action->getDetails()->key.keysym.mod & (KMOD_CTRL|KMOD_ALT|KMOD_SHIFT)) != 0);
+	bool mod = ((action->getKeymods() & (KMOD_CTRL|KMOD_ALT|KMOD_SHIFT)) != 0);
 	if (oneHandler != _keyPress.end() && !mod)
 	{
 		ActionHandler handler = oneHandler->second;
@@ -415,14 +397,14 @@ void InteractiveSurface::keyboardPress(Action *action, State *state)
 void InteractiveSurface::keyboardRelease(Action *action, State *state)
 {
 	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyRelease.find((SDL_Keycode)SDLK_ANY);
-	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyRelease.find(action->getDetails()->key.keysym.sym);
+	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyRelease.find(action->getKeycode());
 	if (allHandler != _keyRelease.end())
 	{
 		ActionHandler handler = allHandler->second;
 		(state->*handler)(action);
 	}
 	// Check if Ctrl, Alt and Shift aren't pressed
-	bool mod = ((action->getDetails()->key.keysym.mod & (KMOD_CTRL|KMOD_ALT|KMOD_SHIFT)) != 0);
+	bool mod = ((action->getKeymods() & (KMOD_CTRL|KMOD_ALT|KMOD_SHIFT)) != 0);
 	if (oneHandler != _keyRelease.end() && !mod)
 	{
 		ActionHandler handler = oneHandler->second;

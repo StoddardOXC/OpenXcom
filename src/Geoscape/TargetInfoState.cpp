@@ -182,8 +182,8 @@ void TargetInfoState::edtTitleChange(Action *action)
 	{
 		_target->setName(_edtTitle->getText());
 	}
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
+	if (action->getKeycode() == SDLK_RETURN ||
+		action->getKeycode() == SDLK_KP_ENTER)
 	{
 		_edtTitle->setText(_target->getName(_game->getLanguage()));
 	}

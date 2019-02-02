@@ -105,6 +105,10 @@ public:
 	void setUpdateFlag(bool update) { _update = update; }
 	/// Returns the update flag.
 	bool getUpdateFlag() const { return _update; }
+	/// Warp the mouse (absolute Screen coordinates)
+	void warpMouse(int x, int y);
+	/// Warp the mouse (relative Screen coordinates)
+	void warpMouseRelative(int dx, int dy);
 };
 
 }

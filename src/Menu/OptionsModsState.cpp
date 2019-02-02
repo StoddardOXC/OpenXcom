@@ -300,11 +300,11 @@ void OptionsModsState::lstModsLeftArrowClick(Action *action)
 		return;
 	}
 
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		moveModUp(action, row);
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		moveModUp(action, row, true);
 	}
@@ -353,14 +353,12 @@ void OptionsModsState::moveModUp(Action *action, unsigned int row, bool max)
 		if (curScrollPos < targetScrollPos)
 		{
 			int ydiff = _lstMods->getTextHeight(row - 1);
-			SDL_WarpMouseInWindow(0, action->getLeftBlackBand() + action->getXMouse(),
-				 action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(ydiff * action->getYScale()));
+			_game->warpMouseRelative(0, -ydiff);
 		}
 		else
 		{
 			int ydiff = _lstMods->getRowY(row) - _lstMods->getY();
-			SDL_WarpMouseInWindow(0, action->getLeftBlackBand() + action->getXMouse(),
-				 action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(ydiff * action->getYScale()));
+			_game->warpMouseRelative(0, -ydiff);
 			_lstMods->scrollTo(targetScrollPos);
 		}
 
@@ -379,11 +377,11 @@ void OptionsModsState::lstModsRightArrowClick(Action *action)
 		return;
 	}
 
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		moveModDown(action, row);
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
 		moveModDown(action, row, true);
 	}
@@ -437,14 +435,12 @@ void OptionsModsState::moveModDown(Action *action, unsigned int row, bool max)
 		if (curScrollPos + (int)_lstMods->getVisibleRows() > targetScrollPos)
 		{
 			int ydiff = _lstMods->getTextHeight(row + 1);
-			SDL_WarpMouseInWindow(0, action->getLeftBlackBand() + action->getXMouse(),
-				 action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(ydiff * action->getYScale()));
+			_game->warpMouseRelative(0, ydiff);
 		}
 		else
 		{
 			int ydiff = _lstMods->getY() + _lstMods->getHeight() - (_lstMods->getRowY(row) + _lstMods->getTextHeight(row));
-			SDL_WarpMouseInWindow(0, action->getLeftBlackBand() + action->getXMouse(),
-				 action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(ydiff * action->getYScale()));
+			_game->warpMouseRelative(0, ydiff);
 			_lstMods->scrollTo(targetScrollPos - _lstMods->getVisibleRows() + 1);
 		}
 
@@ -464,7 +460,7 @@ void OptionsModsState::lstModsMouseWheel(Action *action)
 		return;
     unsigned int row = _lstMods->getSelectedRow();
     size_t numMods = _mods.size();
-    if (action->getDetails()->wheel.y > 0 &&
+    if (action->getMouseWheelY() > 0 &&
 		row > 0)
     {
 		if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
@@ -473,7 +469,7 @@ void OptionsModsState::lstModsMouseWheel(Action *action)
 			moveModUp(action, row);
         }
     }
-    else if (action->getDetails()->wheel.y < 0 &&
+    else if (action->getMouseWheelY() < 0 &&
              0 < numMods && INT_MAX >= numMods && row < numMods - 1)
     {
 		if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
