@@ -521,24 +521,6 @@ void Screen::resetDisplay(bool resetVideo, bool noShaders)
 }
 
 /**
- * Returns the screen's top black forbidden to cursor band's height.
- * @return Height in pixel.
- */
-int Screen::getCursorTopBlackBand() const
-{
-	return _cursorTopBlackBand;
-}
-
-/**
- * Returns the screen's left black forbidden to cursor band's width.
- * @return Width in pixel.
- */
-int Screen::getCursorLeftBlackBand() const
-{
-	return _cursorLeftBlackBand;
-}
-
-/**
  * Saves a screenshot of the screen's contents.
  * @param filename Filename of the PNG file.
  */
@@ -593,6 +575,8 @@ bool Screen::useOpenGL()
 
 /**
  * Gets the Horizontal offset from the mid-point of the screen, in pixels.
+ * More like - get X coordinate of the top left corner of the original
+ * 320x200 screen on the current screen, because it might be bigger.
  * @return the horizontal offset.
  */
 int Screen::getDX() const
