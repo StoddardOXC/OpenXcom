@@ -81,6 +81,7 @@ void Action::setMousePosition(int mouseX, int mouseY)
 		case SDL_MOUSEWHEEL:
 			_mouseX = mouseX;
 			_mouseY = mouseY;
+			break;
 		default:
 			throw(Exception("WTF: setting mouse posn on non-mouse event"));
 			break;
