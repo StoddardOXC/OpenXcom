@@ -472,27 +472,27 @@ void Screen::setMode(ScreenMode mode)
 			break;
 		case SCALE_SCREEN_DIV_6:
 			_baseWidth  = target_width / 6;
-			_baseHeight = target_width / 6;
+			_baseHeight = target_height / 6;
 			break;
 		case SCALE_SCREEN_DIV_5:
 			_baseWidth  = target_width / 5;
-			_baseHeight = target_width / 5;
+			_baseHeight = target_height / 5;
 			break;
 		case SCALE_SCREEN_DIV_4:
 			_baseWidth  = target_width / 4;
-			_baseHeight = target_width / 4;
+			_baseHeight = target_height / 4;
 			break;
 		case SCALE_SCREEN_DIV_3:
 			_baseWidth  = target_width / 3;
-			_baseHeight = target_width / 3;
+			_baseHeight = target_height / 3;
 			break;
 		case SCALE_SCREEN_DIV_2:
 			_baseWidth  = target_width / 2;
-			_baseHeight = target_width  / 2;
+			_baseHeight = target_height  / 2;
 			break;
 		case SCALE_SCREEN:
 			_baseWidth  = target_width;
-			_baseHeight = target_width;
+			_baseHeight = target_height;
 			break;
 		case SCALE_ORIGINAL:
 		default:
@@ -545,7 +545,7 @@ void Screen::setMode(ScreenMode mode)
 	// first determine which of width or height will fit the window
 
 	double pixelRatioY = Options::nonSquarePixelRatio ? 1.2 : 1.0;
-	double scaleX = target_width / _baseWidth;
+	double scaleX = target_width / (_baseWidth * 1.0);
 	double scaleY = target_height / (_baseHeight * pixelRatioY);
 	double scale;
 
