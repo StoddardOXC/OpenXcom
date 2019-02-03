@@ -675,7 +675,9 @@ std::unique_ptr<Action> Screen::makeAction(const SDL_Event *ev) const
 void Screen::warpMouse(int x, int y)
 {
 #ifndef __MOBILE__
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 	SDL_WarpMouseInWindow(_window, x * _scaleX + _leftBlackBand, y * _scaleY + _topBlackBand);
+	SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 #endif
 }
 
@@ -684,7 +686,9 @@ void Screen::warpMouseRelative(int dx, int dy)
 #ifndef __MOBILE__
 	int x, y;
 	SDL_GetMouseState(&x, &y);
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 	SDL_WarpMouseInWindow(_window, x + dx * _scaleX, y + dy * _scaleY);
+	SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 #endif
 }
 
