@@ -210,6 +210,7 @@ void Screen::flip()
 	if (!_screenshotFilename.empty()) {
 		if (SDL_SavePNG(_surface.get(), _screenshotFilename.c_str())) {
 			Log(LOG_FATAL) << "Screen::screenshot('" << _screenshotFilename << "'):" << SDL_GetError();
+			throw(Exception(SDL_GetError()));
 		}
 		_screenshotFilename.clear();
 	}

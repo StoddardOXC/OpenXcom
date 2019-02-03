@@ -380,10 +380,12 @@ void Surface::loadImage(const std::string &filename)
 		if (pixelformat != SDL_PIXELFORMAT_INDEX8) {
 			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): has "
 				<< SDL_GetPixelFormatName(pixelformat) << " but only paletted images are accepted.";
+			throw(Exception(SDL_GetError()));
 		}
 		surface = NewSdlSurface(SDL_LoadPNG_RW(rw, SDL_TRUE));
 		if (!surface) {
 			Log(LOG_FATAL) << "Surface::loadImage(" << filename << "): SDL_LoadPNG_RW():" << SDL_GetError();
+			throw(Exception(SDL_GetError()));
 		}
 	}
 	// Fall through to SDL_image - it's not a PNG, maybe we can trust the other codecs.
@@ -392,6 +394,7 @@ void Surface::loadImage(const std::string &filename)
 		if (!surface) {
 			std::string err = filename + ":" + IMG_GetError();
 			Log(LOG_FATAL) << err;
+			throw(Exception(err));
 		}
 	}
 	if (surface->format->BitsPerPixel != 8)

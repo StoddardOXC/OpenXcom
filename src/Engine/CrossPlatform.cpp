@@ -1752,10 +1752,6 @@ void log(int level, const std::ostringstream& baremsgstream) {
 	if (failed || !logToFile(logFileName, msg)) {
 		logBuffer.push_back(std::make_pair(level, msg));
 	}
-
-	if (level == LOG_FATAL) {
-		throw(Exception(msg));
-	}
 }
 
 #if defined(EMBED_ASSETS)
