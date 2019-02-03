@@ -401,7 +401,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 			// We don't want to see the mouse-cursor jumping :)
 			if (Options::battleDragScrollInvert)
 			{
-				action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+				action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 			}
 			else
 			{
@@ -410,7 +410,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 				int cursorY =_cursorPosition.y + delta.y;
 				_cursorPosition.x = Clamp(cursorX, getX(), getX() + getWidth());
 				_cursorPosition.y = Clamp(cursorY, getY(), getY() + getHeight());
-				action->setMouseAction(_cursorPosition.x, _cursorPosition.y, getX(), getY());
+				action->setMousePosition(_cursorPosition.x, _cursorPosition.y);
 			}
 		}
 		_game->getCursor()->handle(action);
@@ -450,9 +450,9 @@ void MiniMapView::stopScrolling(Action *action)
 	{
 		_game->warpMouse(_cursorPosition.x, _cursorPosition.y);
 #ifndef __MOBILE__
-		action->setMouseAction(_cursorPosition.x, _cursorPosition.y, getX(), getY());
+		action->setMousePosition(_cursorPosition.x, _cursorPosition.y);
 #else
-		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+		action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 #endif
 	}
 	// reset our "mouse position stored" flag

@@ -1858,7 +1858,7 @@ void Globe::mouseOver(Action *action, State *state)
 		if (Options::touchEnabled == false)
 		{
 			// We don't want to see the mouse-cursor jumping :)
-			action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+			action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		}
 
 		_game->getCursor()->handle(action);
@@ -1867,7 +1867,7 @@ void Globe::mouseOver(Action *action, State *state)
 	if (Options::touchEnabled == false && _isMouseScrolling &&
 		(action->getAbsoluteXMouse() != _xBeforeMouseScrolling || action->getAbsoluteYMouse() != _yBeforeMouseScrolling))
 	{
-		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+		action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	}
 	// Check for errors
 	if (converted)
@@ -2129,7 +2129,7 @@ void Globe::setupRadii(int width, int height)
 void Globe::stopScrolling(Action *action)
 {
 	_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
-	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+	action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 }
 
 /**

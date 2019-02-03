@@ -666,7 +666,7 @@ SDL_Window * Screen::getWindow() const
 	return _window;
 }
 
-std::unique_ptr<Action> Screen::makeAction(SDL_Event *ev) const
+std::unique_ptr<Action> Screen::makeAction(const SDL_Event *ev) const
 {
 	return std::unique_ptr<Action>(new Action(ev, _scaleX, _scaleY, _cursorTopBlackBand, _cursorLeftBlackBand));
 }

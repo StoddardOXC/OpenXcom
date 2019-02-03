@@ -100,7 +100,7 @@ public:
 	/// Get the pointer for our current window
 	SDL_Window *getWindow() const;
 	/// Make an Action
-	std::unique_ptr<Action> makeAction(SDL_Event *ev) const;
+	std::unique_ptr<Action> makeAction(const SDL_Event *ev) const;
 	/// Warp the mouse (absolute Screen coordinates)
 	void warpMouse(int x, int y);
 	/// Warp the mouse (Screen coordinates delta)

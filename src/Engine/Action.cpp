@@ -32,23 +32,34 @@ namespace OpenXcom
  * @param leftBlackBand Screen's left black band width.
  * @param ev Pointer to SDL_event.
  */
-Action::Action(SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand) : _ev(ev), _scaleX(scaleX), _scaleY(scaleY), _topBlackBand(topBlackBand), _leftBlackBand(leftBlackBand), _mouseX(-1), _mouseY(-1), _surfaceX(-1), _surfaceY(-1), _mouseMotionX(0), _mouseMotionY(0), _sender(0)
+Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand) : _ev(ev), _scaleX(scaleX), _scaleY(scaleY), _topBlackBand(topBlackBand), _leftBlackBand(leftBlackBand), _mouseX(-1), _mouseY(-1), _surfaceX(-1), _surfaceY(-1), _mouseRelX(0), _mouseRelY(0), _mouseButton(0), _sender(0)
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+
 	if (ev->type == SDL_MOUSEBUTTONUP || ev->type == SDL_MOUSEBUTTONDOWN)
 	{
-		setMouseAction((ev->button.x - leftBlackBand) / scaleX, (ev->button.y - topBlackBand) / scaleY, 0, 0);
+		_mouseX = (ev->button.x - leftBlackBand) / scaleX;
+		_mouseY = (ev->button.y - topBlackBand) / scaleY;
+		_mouseButton = ev->button.button;
 	}
 	else if (ev->type == SDL_MOUSEWHEEL)
 	{
 		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
 		int mouseX, mouseY;
 		CrossPlatform::getPointerState(&mouseX, &mouseY);
-		setMouseAction((mouseX - leftBlackBand) / scaleX, (mouseY - topBlackBand) / scaleY, 0, 0);
+		_mouseX = (mouseX - leftBlackBand) / scaleX;
+		_mouseY = (mouseY - topBlackBand) / scaleY;
 	}
 	else if ( ev->type == SDL_MOUSEMOTION )
 	{
-		setMouseAction((ev->motion.x - leftBlackBand) / scaleX, (ev->motion.y - topBlackBand) / scaleY, 0, 0);
-		setMouseMotion(ev->motion.xrel / scaleX, ev->motion.yrel / scaleY);
+		_mouseX = (ev->motion.x - leftBlackBand) / scaleX; // where it ended up?
+		_mouseY = (ev->motion.y - topBlackBand) / scaleY;  // or where it started from?
+		_mouseRelX = ev->motion.xrel / scaleX;
+		_mouseRelY = ev->motion.yrel / scaleY;
+		_mouseButton = ev->motion.state;
+
+		Log(LOG_INFO) << "SDL_MOUSEMOTION orig(" << ev->motion.x << ", " << ev->motion.y << "), _mouseXY: " << _mouseX << ", "<<_mouseY;
 	}
 }
 
@@ -57,19 +68,23 @@ Action::~Action()
 }
 
 /**
- * Sets this action as a mouse action with
- * the respective mouse properties.
- * @param mouseX Mouse's X position.
- * @param mouseY Mouse's Y position.
- * @param surfaceX Surface's X position.
- * @param surfaceY Surface's Y position.
+ * Sets mouse position if this action was in any way related to mouse
  */
-void Action::setMouseAction(int mouseX, int mouseY, int surfaceX, int surfaceY)
+void Action::setMousePosition(int mouseX, int mouseY)
 {
-	_mouseX = mouseX * _scaleX - _leftBlackBand;
-	_mouseY = mouseY * _scaleY - _topBlackBand;
-	_surfaceX = surfaceX;
-	_surfaceY = surfaceY;
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	switch(_ev->type) {
+		case SDL_MOUSEMOTION:
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEWHEEL:
+			_mouseX = mouseX;
+			_mouseY = mouseY;
+		default:
+			throw(Exception("WTF: setting mouse posn on non-mouse event"));
+			break;
+	}
 }
 
 /**
@@ -77,7 +92,9 @@ void Action::setMouseAction(int mouseX, int mouseY, int surfaceX, int surfaceY)
  */
 bool Action::isMouseAction() const
 {
-	return (_mouseX != -1);
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseX != -1;
 }
 
 /**
@@ -85,7 +102,7 @@ bool Action::isMouseAction() const
  */
 bool  Action::isMouseLeftClick() const
 {
-	return isMouseAction() && _ev->button.button == SDL_BUTTON_LEFT;
+	return isMouseAction() && _mouseButton == SDL_BUTTON_LEFT;
 }
 
 /**
@@ -93,7 +110,7 @@ bool  Action::isMouseLeftClick() const
  */
 bool  Action::isMouseRightClick() const
 {
-	return isMouseAction() && _ev->button.button == SDL_BUTTON_RIGHT;
+	return isMouseAction() && _mouseButton == SDL_BUTTON_RIGHT;
 }
 
 /**
@@ -104,9 +121,9 @@ bool  Action::isMouseRightClick() const
  */
 int Action::getAbsoluteXMouse() const
 {
-	if (_mouseX == -1)
-		return -1;
-	return floor(_mouseX / _scaleX);
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseX;
 }
 
 /**
@@ -117,9 +134,9 @@ int Action::getAbsoluteXMouse() const
  */
 int Action::getAbsoluteYMouse() const
 {
-	if (_mouseY == -1)
-		return -1;
-	return floor(_mouseY / _scaleY);
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseY;
 }
 
 /**
@@ -130,9 +147,9 @@ int Action::getAbsoluteYMouse() const
  */
 int Action::getRelativeXMouse() const
 {
-	if (_mouseX == -1)
-		return -1;
-	return floor(_mouseX / _scaleX - _surfaceX);
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseX - _surfaceX;
 }
 
 /**
@@ -143,9 +160,9 @@ int Action::getRelativeXMouse() const
  */
 int Action::getRelativeYMouse() const
 {
-	if (_mouseY == -1)
-		return -1;
-	return floor(_mouseY / _scaleY - _surfaceY);
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseY - _surfaceY;
 }
 
 /**
@@ -155,6 +172,8 @@ int Action::getRelativeYMouse() const
  */
 InteractiveSurface *Action::getSender() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	return _sender;
 }
 
@@ -165,6 +184,8 @@ InteractiveSurface *Action::getSender() const
  */
 void Action::setSender(InteractiveSurface *sender)
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	_sender = sender;
 	_surfaceX = sender->getY();
 	_surfaceY = sender->getX();
@@ -173,41 +194,43 @@ void Action::setSender(InteractiveSurface *sender)
 /// Gets the mouse's position delta x (relative motion), Screen coords.
 int Action::getXMouseMotion() const
 {
-	return _mouseMotionX;
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseRelX;
 }
 /// Gets the mouse's position delta y (relative motion), Screen coords.
 int Action::getYMouseMotion() const
 {
-	return _mouseMotionY;
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseRelY;
 }
 /// Sets the mouse motion
 void Action::setMouseMotion(int mx, int my)
 {
-	_mouseMotionX = mx;
-	_mouseMotionY = my;
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	_mouseRelX = mx;
+	_mouseRelY = my;
 }
 
 /// Gets the action / event type
 Uint32 Action::getType() const
 {
-	return _ev->type;
+	return _ev != NULL ? _ev->type : SDL_FIRSTEVENT;
 }
 /// Gets mouse button number if that's a click or release
 int Action::getMouseButton() const
 {
-	switch (_ev->type) {
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-			return _ev->button.button;
-		case SDL_MOUSEMOTION:
-			return _ev->button.button;
-		default:
-			return 0;
-	}
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
+	return _mouseButton;
 }
 /// Gets the key sym if that's a key press or release
 SDL_Keycode Action::getKeycode() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	switch (_ev->type) {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -220,6 +243,8 @@ SDL_Keycode Action::getKeycode() const
 /// Gets the keys mods status
 Uint16 Action::getKeymods() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	switch (_ev->type) {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -231,6 +256,8 @@ Uint16 Action::getKeymods() const
 /// Gets the key sym if that's a key press or release
 SDL_Scancode Action::getScancode() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	switch (_ev->type) {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -241,32 +268,40 @@ SDL_Scancode Action::getScancode() const
 }
 const char *Action::getText() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	return _ev->type == SDL_TEXTINPUT ? _ev->text.text : NULL;
 }
 /// Gets the wheel motion in y axis
 Sint32 Action::getMouseWheelY() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	return _ev->type == SDL_MOUSEWHEEL ? _ev->wheel.y : 0;
 }
 
 /// SDL_MULTIGESTURE y
 float Action::getMultigestureY() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	return _ev->type == SDL_MULTIGESTURE ? _ev->mgesture.y : 0.0;
 }
 /// SDL_MULTIGESTURE dDist
 float Action::getMultigestureDDist() const
 {
+	if (_ev == NULL)
+		throw(Exception("bad stuff in action handling"));
 	return _ev->type == SDL_MULTIGESTURE ? _ev->mgesture.dDist : 0.0;
 }
 
 void Action::setConsumed(void)
 {
-	_ev->type = SDL_FIRSTEVENT;
+	_ev = NULL;
 }
 void Action::setMouseButton(int button)
 {
-	_ev->button.button = button;
+	_mouseButton = button;
 }
 
 }

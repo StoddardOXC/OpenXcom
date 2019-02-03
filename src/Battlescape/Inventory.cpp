@@ -700,7 +700,7 @@ void Inventory::mouseOver(Action *action, State *state)
 		{
 			if (!_dragging)
 			{
-				action->setMouseAction(_xBeforeDrag, _yBeforeDrag, action->getSender()->getX(), action->getSender()->getY());
+				action->setMousePosition(_xBeforeDrag, _yBeforeDrag);
 				mouseClick(action, state);
 				_dragging = true;
 				//_longPressTimer->stop();

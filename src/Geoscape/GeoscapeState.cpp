@@ -4103,8 +4103,8 @@ void GeoscapeState::btnTimerClick(Action *action)
 	SDL_Event ev;
 	ev.type = SDL_MOUSEBUTTONDOWN;
 	ev.button.button = SDL_BUTTON_LEFT;
-	Action a = Action(&ev, 0.0, 0.0, 0, 0);
-	action->getSender()->mousePress(&a, this);
+	auto a = _game->getScreen()->makeAction(&ev);
+	action->getSender()->mousePress(a.get(), this);
 }
 
 /**
