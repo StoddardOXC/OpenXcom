@@ -400,7 +400,7 @@ void Surface::loadImage(const std::string &filename)
 	*this = Surface(surface->w, surface->h, 0, 0);
 	setPalette(surface->format->palette->colors, 0, surface->format->palette->ncolors);
 	RawCopySurf(_surface, surface);
-	Uint32 colorkey;
+	Uint32 colorkey = 0;
 	SDL_GetColorKey(surface.get(), &colorkey);
 	FixTransparent(_surface, colorkey);
 	if (colorkey != 0)
