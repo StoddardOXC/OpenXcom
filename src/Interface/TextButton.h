@@ -81,6 +81,8 @@ public:
 	void draw() override;
 	/// Special handling for mouse presses.
 	void mousePress(Action *action, State *state) override;
+	/// Programmatic handling for mouse presses.
+	void forceMouseClick();
 	/// Special handling for mouse releases.
 	void mouseRelease(Action *action, State *state) override;
 	/// Attaches this button to a combobox.

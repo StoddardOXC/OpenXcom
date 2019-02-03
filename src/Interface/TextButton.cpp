@@ -309,6 +309,28 @@ void TextButton::mousePress(Action *action, State *state)
 }
 
 /**
+ * Sets the button as the pressed button if it's part of a group.
+ */
+void TextButton::forceMouseClick()
+{
+	if (_group != 0)
+	{
+		TextButton *old = *_group;
+		*_group = this;
+		if (old != 0)
+			old->draw();
+		draw();
+	}
+	if (_comboBox)
+	{
+		_comboBox->toggle();
+	}
+
+	draw();
+	//_redraw = true;
+}
+
+/**
  * Sets the button as the released button.
  * @param action Pointer to an action.
  * @param state State that the action handlers belong to.

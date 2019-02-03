@@ -2783,10 +2783,7 @@ void GeoscapeState::time1Month()
  */
 void GeoscapeState::timerReset()
 {
-	SDL_Event ev;
-	ev.button.button = SDL_BUTTON_LEFT;
-	auto action = _game->getScreen()->makeAction(&ev);
-	_btn5Secs->mousePress(action.get(), this);
+	_btn5Secs->forceMouseClick();
 }
 
 /**
@@ -4103,11 +4100,7 @@ bool GeoscapeState::processCommand(RuleMissionScript *command)
  */
 void GeoscapeState::btnTimerClick(Action *action)
 {
-	SDL_Event ev;
-	ev.type = SDL_MOUSEBUTTONDOWN;
-	ev.button.button = SDL_BUTTON_LEFT;
-	auto a = _game->getScreen()->makeAction(&ev);
-	action->getSender()->mousePress(a.get(), this);
+	dynamic_cast<TextButton *>(action->getSender())->forceMouseClick();
 }
 
 /**
