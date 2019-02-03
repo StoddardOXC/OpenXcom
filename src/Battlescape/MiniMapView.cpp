@@ -262,7 +262,7 @@ void MiniMapView::mouseClick(Action *action, State *state)
 	// (this part handles the release if it is missed and now an other button is used)
 	if (_isMouseScrolling) {
 		if (action->getMouseButton() != Options::battleDragScrollButton
-		&& 0==(CrossPlatform::getPointerState(0,0)&SDL_BUTTON(Options::battleDragScrollButton))) { // so we missed again the mouse-release :(
+		&& 0==(action->getMouseButton() & SDL_BUTTON(Options::battleDragScrollButton))) { // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
 			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
 				{ _camera->centerOnPosition(_posBeforeMouseScrolling); _redraw = true; }
@@ -331,7 +331,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		// the mouse-release event is missed for any reason.
 		// However if the SDL is also missed the release event, then it is to no avail :(
 		// (checking: is the dragScroll-mouse-button still pressed?)
-		if (0==(CrossPlatform::getPointerState(0,0)&SDL_BUTTON(Options::battleDragScrollButton))) { // so we missed again the mouse-release :(
+		if (0==(action->getMouseButton() & SDL_BUTTON(Options::battleDragScrollButton))) { // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
 			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
 			{
@@ -348,9 +348,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		if (Options::touchEnabled == false)
 		{
 			// Set the mouse cursor back
-			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
-			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+			_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		}
 #endif
 		// Check the threshold

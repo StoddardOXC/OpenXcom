@@ -631,11 +631,34 @@ BattleItem *Inventory::getMouseOverItem() const
  * Changes the item currently under mouse cursor.
  * @param item Pointer to selected item, or NULL if none.
  */
-void Inventory::setMouseOverItem(BattleItem *item)
+void Inventory::setMouseOverItem(Action *action)
 {
-	_mouseOverItem = (item && !(item->getRules()->isFixed() && item->getRules()->getBattleType() == BT_NONE)) ? item : 0;
+	if (action == NULL)
+	{
+		_mouseOverItem = 0;
+		return;
+	}
+	int x = action->getRelativeXMouse();
+	int y = action->getRelativeYMouse();
+	RuleInventory *slot = getSlotInPosition(&x, &y);
+	if (slot != 0)
+	{
+		if (slot->getType() == INV_GROUND)
+		{
+			x += _groundOffset;
+		}
+		BattleItem *item = _selUnit->getItem(slot, x, y);
+		_mouseOverItem = (item && !(item->getRules()->isFixed() && item->getRules()->getBattleType() == BT_NONE)) ? item : 0;
+	}
+	else
+	{
+		_mouseOverItem = 0;
+	}
 }
-
+void Inventory::clearMouseOverItem()
+{
+	_mouseOverItem = 0;
+}
 /**
  * Handles timers.
  */
@@ -669,32 +692,15 @@ void Inventory::blit(SDL_Surface *surface)
  */
 void Inventory::mouseOver(Action *action, State *state)
 {
-	_selection->setX((int)floor(action->getAbsoluteXMouse()) - _selection->getWidth()/2 - getX());
-	_selection->setY((int)floor(action->getAbsoluteYMouse()) - _selection->getHeight()/2 - getY());
+	_selection->setX(action->getRelativeXMouse() - _selection->getWidth()/2);
+	_selection->setY(action->getRelativeXMouse() - _selection->getHeight()/2);
+
 	if (_selUnit == 0)
 		return;
 
-	int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
-		y = (int)floor(action->getAbsoluteYMouse()) - getY();
-	RuleInventory *slot = getSlotInPosition(&x, &y);
-	if (slot != 0)
-	{
-		if (slot->getType() == INV_GROUND)
-		{
-			x += _groundOffset;
-		}
-		BattleItem *item = _selUnit->getItem(slot, x, y);
-		setMouseOverItem(item);
-	}
-	else
-	{
-		setMouseOverItem(0);
-	}
+	setMouseOverItem(action);
 
-	_selection->setX((int)floor(action->getAbsoluteXMouse()) - _selection->getWidth()/2 - getX());
-	_selection->setY((int)floor(action->getAbsoluteYMouse()) - _selection->getHeight()/2 - getY());
-
-	if (CrossPlatform::getPointerState(0, 0) && _clicked)
+	if (action->getMouseButton() && _clicked)
 	{
 		int mx = action->getXMouseMotion();
 		int my = action->getYMouseMotion();

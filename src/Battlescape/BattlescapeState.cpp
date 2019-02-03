@@ -854,7 +854,7 @@ void BattlescapeState::mapOver(Action *action)
 		// the mouse-release event is missed for any reason.
 		// (checking: is the dragScroll-mouse-button still pressed?)
 		// However if the SDL is also missed the release event, then it is to no avail :(
-		if ((CrossPlatform::getPointerState(0,0)&SDL_BUTTON(Options::battleDragScrollButton)) == 0)
+		if ((action->getMouseButton() & SDL_BUTTON(Options::battleDragScrollButton)) == 0)
 		{ // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
 			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))
@@ -946,7 +946,8 @@ void BattlescapeState::mapPress(Action *action)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		CrossPlatform::getPointerState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
+		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{
@@ -1060,7 +1061,7 @@ void BattlescapeState::mapClick(Action *action)
 	if (_isMouseScrolling)
 	{
 		if (action->getMouseButton() != Options::battleDragScrollButton
-		&& (CrossPlatform::getPointerState(0,0)&SDL_BUTTON(Options::battleDragScrollButton)) == 0)
+		&& (action->getMouseButton() & SDL_BUTTON(Options::battleDragScrollButton)) == 0)
 		{   // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
 			if ((!_mouseMovedOverThreshold) && ((int)(SDL_GetTicks() - _mouseScrollingStartTime) <= (Options::dragScrollTimeTolerance)))

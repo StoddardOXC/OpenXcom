@@ -472,7 +472,7 @@ void InventoryState::init()
 	}
 
 	updateStats();
-	refreshMouse();
+	refreshMouse(NULL);
 }
 
 /**
@@ -769,7 +769,7 @@ void InventoryState::btnGlobalEquipmentLayoutClick(Action *action)
 
 		// give audio feedback
 		_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
-		refreshMouse();
+		refreshMouse(action);
 	}
 	else
 	{
@@ -778,7 +778,7 @@ void InventoryState::btnGlobalEquipmentLayoutClick(Action *action)
 		// refresh ui
 		_inv->arrangeGround();
 		updateStats();
-		refreshMouse();
+		refreshMouse(action);
 
 		// give audio feedback
 		_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
@@ -974,7 +974,7 @@ void InventoryState::_createInventoryTemplate(std::vector<EquipmentLayoutItem*> 
 	}
 }
 
-void InventoryState::btnCreateTemplateClick(Action *)
+void InventoryState::btnCreateTemplateClick(Action *action)
 {
 	// don't accept clicks when moving items
 	if (_inv->getSelectedItem() != 0)
@@ -990,7 +990,7 @@ void InventoryState::btnCreateTemplateClick(Action *)
 
 	// give audio feedback
 	_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
-	refreshMouse();
+	refreshMouse(action);
 }
 
 void InventoryState::_applyInventoryTemplate(std::vector<EquipmentLayoutItem*> &inventoryTemplate)
@@ -1140,7 +1140,7 @@ void InventoryState::_applyInventoryTemplate(std::vector<EquipmentLayoutItem*> &
 	}
 }
 
-void InventoryState::btnApplyTemplateClick(Action *)
+void InventoryState::btnApplyTemplateClick(Action *action)
 {
 	// don't accept clicks when moving items
 	// it's ok if the template is empty -- it will just result in clearing the
@@ -1155,24 +1155,20 @@ void InventoryState::btnApplyTemplateClick(Action *)
 	// refresh ui
 	_inv->arrangeGround();
 	updateStats();
-	refreshMouse();
+	refreshMouse(action);
 
 	// give audio feedback
 	_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
 }
 
-void InventoryState::refreshMouse()
+void InventoryState::refreshMouse(Action *action)
 {
-	// send a mouse motion event to refresh any hover actions FIXME!
-	int x, y;
-	CrossPlatform::getPointerState(&x, &y);
-	SDL_WarpMouseInWindow(NULL, x+1, y);
-
-	// move the mouse back to avoid cursor creep
-	SDL_WarpMouseInWindow(NULL, x, y);
+	// Refresh any hover actions
+	_inv->setMouseOverItem(action);
+	invMouseOver(action);
 }
 
-void InventoryState::onClearInventory(Action *)
+void InventoryState::onClearInventory(Action *action)
 {
 	// don't act when moving items
 	if (_inv->getSelectedItem() != 0)
@@ -1188,13 +1184,13 @@ void InventoryState::onClearInventory(Action *)
 	// refresh ui
 	_inv->arrangeGround();
 	updateStats();
-	refreshMouse();
+	refreshMouse(action);
 
 	// give audio feedback
 	_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
 }
 
-void InventoryState::onAutoequip(Action *)
+void InventoryState::onAutoequip(Action *action)
 {
 	// don't act when moving items
 	if (_inv->getSelectedItem() != 0)
@@ -1216,7 +1212,7 @@ void InventoryState::onAutoequip(Action *)
 	// refresh ui
 	_inv->arrangeGround();
 	updateStats();
-	refreshMouse();
+	refreshMouse(action);
 
 	// give audio feedback
 	_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
@@ -1468,14 +1464,14 @@ void InventoryState::invMouseOut(Action *)
 	_txtItem->setText("");
 	_txtAmmo->setText("");
 	_selAmmo->clear();
-	_inv->setMouseOverItem(0);
+	_inv->clearMouseOverItem();
 	_mouseHoverItem = nullptr;
 	_currentDamageTooltipItem = nullptr;
 	_currentDamageTooltip = "";
 	updateTemplateButtons(!_tu);
 }
 
-void InventoryState::onMoveGroundInventoryToBase(Action *)
+void InventoryState::onMoveGroundInventoryToBase(Action *action)
 {
 	// don't act when moving items
 	if (_inv->getSelectedItem() != 0)
@@ -1544,7 +1540,7 @@ void InventoryState::onMoveGroundInventoryToBase(Action *)
 	// refresh ui
 	_inv->arrangeGround();
 	updateStats();
-	refreshMouse();
+	refreshMouse(action);
 
 	// give audio feedback
 	_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
