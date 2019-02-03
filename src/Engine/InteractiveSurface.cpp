@@ -123,7 +123,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 			}
 			if (_listButton && action->getType() == SDL_MOUSEMOTION)
 			{
-				_buttonsPressed = CrossPlatform::getPointerState(0, 0);
+				_buttonsPressed = action->getMouseButton();
 				for (Uint8 i = 1; i <= NUM_BUTTONS; ++i)
 				{
 					if (isButtonPressed(i))

@@ -112,7 +112,9 @@ public:
 	/// Gets the mouse over item.
 	BattleItem *getMouseOverItem() const;
 	/// Sets the mouse over item.
-	void setMouseOverItem(BattleItem *item);
+	void setMouseOverItem(Action *action);
+	/// Clears the mouse over item
+	void clearMouseOverItem();
 	/// Handles timers.
 	void think() override;
 	/// Blits the inventory onto another surface.

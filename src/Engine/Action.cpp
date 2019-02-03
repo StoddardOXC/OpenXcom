@@ -43,14 +43,6 @@ Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBa
 		_mouseY = (ev->button.y - topBlackBand) / scaleY;
 		_mouseButton = ev->button.button;
 	}
-	else if (ev->type == SDL_MOUSEWHEEL)
-	{
-		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
-		int mouseX, mouseY;
-		CrossPlatform::getPointerState(&mouseX, &mouseY);
-		_mouseX = (mouseX - leftBlackBand) / scaleX;
-		_mouseY = (mouseY - topBlackBand) / scaleY;
-	}
 	else if ( ev->type == SDL_MOUSEMOTION )
 	{
 		_mouseX = (ev->motion.x - leftBlackBand) / scaleX; // where it ended up?
@@ -58,6 +50,13 @@ Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBa
 		_mouseRelX = ev->motion.xrel / scaleX;
 		_mouseRelY = ev->motion.yrel / scaleY;
 		_mouseButton = ev->motion.state;
+	}
+	else
+	{	// for all the rest of events, this is _sometimes_ useful
+		int mouseX, mouseY;
+		_mouseButton = CrossPlatform::getPointerState(&mouseX, &mouseY);
+		_mouseX = (mouseX - leftBlackBand) / scaleX;
+		_mouseY = (mouseY - topBlackBand) / scaleY;
 	}
 }
 
