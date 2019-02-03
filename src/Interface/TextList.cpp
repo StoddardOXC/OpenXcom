@@ -1219,7 +1219,7 @@ void TextList::mouseOver(Action *action, State *state)
 		if (action->getType() == SDL_MOUSEMOTION && action->getMouseButton() != 0)
 		{
 			// Only accumulate delta while mouse button is pressed
-			_accumulatedDelta += action->getXMouseMotion();
+			_accumulatedDelta += action->getYMouseMotion();
 		}
 		if (std::abs(_accumulatedDelta) >= threshold)
 		{
