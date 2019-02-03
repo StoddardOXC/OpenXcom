@@ -45,52 +45,15 @@ const int Screen::ORIGINAL_WIDTH = 320;
 const int Screen::ORIGINAL_HEIGHT = 200;
 
 /**
- * Sets up all the internal display flags depending on
- * the current video settings.
- */
-void Screen::makeVideoFlags()
-{
-	_flags = SDL_WINDOW_OPENGL;
-	if (Options::allowResize)
-	{
-		_flags |= SDL_WINDOW_RESIZABLE;
-	}
-
-    // Handle display mode
-	if (Options::fullscreen)
-	{
-		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-	}
-	if (Options::borderless)
-	{
-		_flags |= SDL_WINDOW_BORDERLESS;
-	}
-
-	// Try fixing the Samsung devices - see https://bugzilla.libsdl.org/show_bug.cgi?id=2291
-#ifdef __ANDROID__
-	if (Options::forceGLMode)
-	{
-		Log(LOG_INFO) << "Setting GL format to RGB565";
-		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 6);
-		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-		//SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-	}
-	CrossPlatform::setSystemUI();
-#endif
-
-	_baseWidth = Options::baseXResolution;
-	_baseHeight = Options::baseYResolution;
-}
-
-
-/**
  * Initializes a new display screen for the game to render contents to.
  * The screen is set up based on the current options.
  */
 Screen::Screen() : _window(NULL), _renderer(NULL),
 	_baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0),
-	_numColors(0), _firstColor(0), _pushPalette(false), _screenshotFilename(),
+	_topBlackBand(0), _leftBlackBand(0), deferredPalette{},
+	_numColors(0), _firstColor(0), _pushPalette(false),
+	_buffer(), _surface(),
+	_screenshotFilename(),
 	_currentScaleType(SCALE_SCREEN), _currentScaleMode(SC_STARTSTATE), _resizeAccountedFor(false)
 {
 	resetVideo(Options::displayWidth, Options::displayHeight);
@@ -459,7 +422,7 @@ void Screen::setMode(ScreenMode mode)
 	// the type from above determines logical game screen size.
 	int target_width, target_height;
 	_renderer->getOutputSize(target_width, target_height);
-
+	Log(LOG_INFO) << "Screen::setMode(): output size " << target_width << "x" << target_height;
 	Options::displayWidth = target_width;   //FIXME: those obnoxious globals..
 	Options::displayHeight = target_height;
 
@@ -556,12 +519,13 @@ void Screen::setMode(ScreenMode mode)
 	} else { // height wins
 		scale = scaleY;
 	}
-
+	Log(LOG_INFO) << "Screen::setMode(): scales " << scaleX << ", " << scaleY << " winner " << scale;
 	// now would be the time to clamp it down to an integer.
 	if (Options::integerRatioScaling) {
 		scale = floor(scale);
 	}
 	_scaleX = _scaleY = scale;
+	Log(LOG_INFO) << "Screen::setMode(): after clamp: " << scaleX << ", " << scaleY << " winner " << scale;
 
 	int scaledWidth = scale * _baseWidth;
 	int scaledHeight = scale * _baseHeight * pixelRatioY; // this breaks the integer ratio but what you can do

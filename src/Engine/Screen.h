@@ -57,7 +57,6 @@ private:
 	int _baseWidth, _baseHeight;
 	double _scaleX, _scaleY;
 	int _topBlackBand, _leftBlackBand;
-	Uint32 _flags;
 	SDL_Color deferredPalette[256];
 	int _numColors, _firstColor;
 	bool _pushPalette;
@@ -67,9 +66,6 @@ private:
 	int _currentScaleType;
 	ScreenMode _currentScaleMode;
 	bool _resizeAccountedFor;
-
-	/// Sets the _flags and _bpp variables based on game options; needed in more than one place now
-	void makeVideoFlags();
 
 public:
 	static const int ORIGINAL_WIDTH;
