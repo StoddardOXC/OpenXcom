@@ -187,8 +187,8 @@ void Action::setSender(InteractiveSurface *sender)
 	if (_ev == NULL)
 		throw(Exception("bad stuff in action handling"));
 	_sender = sender;
-	_surfaceX = sender->getY();
-	_surfaceY = sender->getX();
+	_surfaceX = sender->getX();
+	_surfaceY = sender->getY();
 }
 
 /// Gets the mouse's position delta x (relative motion), Screen coords.
