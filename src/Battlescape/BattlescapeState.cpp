@@ -924,7 +924,7 @@ void BattlescapeState::mapOver(Action *action)
 
 			if (Options::touchEnabled == false)
 			{
-				action->setMouseAction(_cursorPosition.x, _cursorPosition.y, _map->getX(), _map->getY());
+				action->setMousePosition(_cursorPosition.x, _cursorPosition.y);
 			}
 		}
 
@@ -3596,7 +3596,7 @@ void BattlescapeState::stopScrolling(Action *action)
 	{
 		/* FIXME: Mouse warping still doesn't work as intended */
 		_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
-		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
+		action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		_battleGame->setupCursor();
 		if (_battleGame->getCurrentAction()->actor == 0 && (_save->getSide() == FACTION_PLAYER || _save->getDebugMode()))
 		{
@@ -3607,7 +3607,7 @@ void BattlescapeState::stopScrolling(Action *action)
 	{
 		/* FIXME: Mouse warping still doesn't work as intended */
 		_game->warpMouse(_cursorPosition.x, _cursorPosition.y);
-		action->setMouseAction(_cursorPosition.x, _cursorPosition.y, _map->getX(), _map->getY());
+		action->setMousePosition(_cursorPosition.x, _cursorPosition.y);
 		_map->setSelectorPosition(_cursorPosition.x, _cursorPosition.y);
 	}
 #endif

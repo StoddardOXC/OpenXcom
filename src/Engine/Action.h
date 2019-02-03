@@ -32,18 +32,19 @@ class InteractiveSurface;
 class Action
 {
 private:
-	SDL_Event *_ev;
+	const SDL_Event *_ev;
 	double _scaleX, _scaleY;
 	int _topBlackBand, _leftBlackBand, _mouseX, _mouseY, _surfaceX, _surfaceY;
-	int _mouseMotionX, _mouseMotionY;
+	int _mouseRelX, _mouseRelY;
+	int _mouseButton;
 	InteractiveSurface *_sender;
 public:
 	/// Creates an action with given event data.
-	Action(SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand);
+	Action(const SDL_Event* ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand);
 	/// Cleans up the action.
 	~Action();
 	/// Sets the action as a mouse action.
-	void setMouseAction(int mouseX, int mouseY, int surfaceX, int surfaceY);
+	void setMousePosition(int mouseX, int mouseY);
 	/// Gets if the action is a mouse action.
 	bool isMouseAction() const;
 	/// Gets if action is mouse left click.
