@@ -41,7 +41,8 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 		Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
 	}
 	_format = info.texture_formats[0];
-	if (!SDL_PixelFormatEnumToMasks(_format, &_format_bpp, 0 ,0 ,0, 0)) {
+	Uint32 r, g, b, a;
+	if (!SDL_PixelFormatEnumToMasks(_format, &_format_bpp, &r, &g, &b, &a)) {
 		Log(LOG_FATAL) << "[SDLRenderer] Couldn't get bpp for "
 		<< SDL_GetPixelFormatName(_format) << ": " << SDL_GetError();
 	}
