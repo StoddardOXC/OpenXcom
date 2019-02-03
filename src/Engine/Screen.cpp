@@ -313,6 +313,7 @@ void Screen::resetVideo(int width, int height)
 	}
 
 	// fix up scaling.
+	_resizeAccountedFor = false;
 	setMode(_currentScaleMode);
 }
 
@@ -406,6 +407,7 @@ void Screen::updateScale(int& dX, int& dY)
 {
 	dX = getWidth();
 	dY = getHeight();
+	_resizeAccountedFor = false;
 	setMode(_currentScaleMode);
 	dX = getWidth() - dX;
 	dY = getHeight() - dY;
