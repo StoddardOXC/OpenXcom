@@ -122,9 +122,12 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 	}
 
 	// flip starts here.
-	// the most honorable cursor should be rendercopied too.
-
-	//SDL_SetRenderDrawColor(_renderer, fc%255, fc%255, fc%255, 255);
+	{
+		static size_t fc = 0;
+		fc += 1;
+		int shade = (fc % 512 > 255) ? 255 - fc % 512 : fc % 512;
+		SDL_SetRenderDrawColor(_renderer, shade, shade, shade, 255);
+	}
 	if (SDL_RenderClear(_renderer)) {
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderClear(): " << SDL_GetError();
 		throw Exception(SDL_GetError());
@@ -134,6 +137,7 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderCopy(): " << SDL_GetError();
 		throw Exception(SDL_GetError());
 	}
+	// the most honorable cursor should be rendercopied too. TODO.
 	SDL_RenderPresent(_renderer);
 	doScreenshot();
 }
