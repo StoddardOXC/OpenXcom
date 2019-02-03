@@ -95,6 +95,22 @@ void BattlescapeButton::mousePress(Action *action, State *state)
 	InteractiveSurface::mousePress(action, state);
 }
 
+void BattlescapeButton::forcedMouseClick()
+{
+	if (_group != 0)
+	{
+		{
+			(*_group)->toggle(false);
+			*_group = this;
+			_inverted = true;
+		}
+	}
+	else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_inverted && isButtonPressed() /* && isButtonHandled(action->getMouseButton())*/ ) // this is going to bite FIXME.
+	{
+		_inverted = true;
+	}
+}
+
 /*
  * Sets the button as the released button if it's part of a group.
  * @param action Pointer to an action.

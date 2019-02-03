@@ -240,11 +240,7 @@ void InteractiveSurface::unpress(State *state)
 	if (isButtonPressed())
 	{
 		_buttonsPressed = 0;
-		SDL_Event ev;
-		ev.type = SDL_MOUSEBUTTONUP;
-		ev.button.button = SDL_BUTTON_LEFT;
-		Action a = Action(&ev, 0.0, 0.0, 0, 0);
-		mouseRelease(&a, state);
+		mouseRelease(SDL_BUTTON_LEFT, state);
 	}
 }
 
@@ -291,6 +287,22 @@ void InteractiveSurface::mouseRelease(Action *action, State *state)
 	{
 		ActionHandler handler = oneHandler->second;
 		(state->*handler)(action);
+	}
+}
+
+void InteractiveSurface::mouseRelease(int mouseButton, State *state)
+{
+	std::map<Uint8, ActionHandler>::iterator allHandler = _release.find(0);
+	std::map<Uint8, ActionHandler>::iterator oneHandler = _release.find(mouseButton);
+	if (allHandler != _release.end())
+	{
+		ActionHandler handler = allHandler->second;
+		(state->*handler)(NULL);
+	}
+	if (oneHandler != _release.end())
+	{
+		ActionHandler handler = oneHandler->second;
+		(state->*handler)(NULL);
 	}
 }
 

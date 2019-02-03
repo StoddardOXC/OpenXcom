@@ -95,6 +95,8 @@ public:
 	virtual void mousePress(Action *action, State *state);
 	/// Processes a mouse button release event.
 	virtual void mouseRelease(Action *action, State *state);
+	/// Processes a fake mouse button release event.
+	virtual void mouseRelease(int mouseButton, State *state);
 	/// Processes a mouse click event.
 	virtual void mouseClick(Action *action, State *state);
 	/// Processes a mouse hover in event.

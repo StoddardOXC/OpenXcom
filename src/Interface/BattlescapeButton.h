@@ -54,6 +54,8 @@ public:
 	void mousePress(Action *action, State *state) override;
 	/// Special handling for mouse releases.
 	void mouseRelease(Action *action, State *state) override;
+	/// Programmatic mouse clikc
+	void forcedMouseClick();
 	/// Invert a button explicitly either ON or OFF.
 	void toggle(bool invert);
 	/// Allows this button to be toggled on/off with a click.

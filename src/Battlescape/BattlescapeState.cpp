@@ -1761,11 +1761,7 @@ void BattlescapeState::btnReserveClick(Action *action)
 {
 	if (allowButtons())
 	{
-		SDL_Event ev;
-		ev.type = SDL_MOUSEBUTTONDOWN;
-		ev.button.button = SDL_BUTTON_LEFT;
-		Action a = Action(&ev, 0.0, 0.0, 0, 0);
-		action->getSender()->mousePress(&a, this);
+		dynamic_cast<BattlescapeButton *>(action->getSender())->forcedMouseClick();
 
 		if (_reserve == _btnReserveNone)
 			_battleGame->setTUReserved(BA_NONE);
@@ -3238,11 +3234,7 @@ void BattlescapeState::btnReserveKneelClick(Action *action)
 {
 	if (allowButtons())
 	{
-		SDL_Event ev;
-		ev.type = SDL_MOUSEBUTTONDOWN;
-		ev.button.button = SDL_BUTTON_LEFT;
-		Action a = Action(&ev, 0.0, 0.0, 0, 0);
-		action->getSender()->mousePress(&a, this);
+		dynamic_cast<BattlescapeButton *>(action->getSender())->forcedMouseClick();
 		_battleGame->setKneelReserved(!_battleGame->getKneelReserved());
 
 		_btnReserveKneel->toggle(_battleGame->getKneelReserved());
@@ -3264,11 +3256,7 @@ void BattlescapeState::btnZeroTUsClick(Action *action)
 {
 	if (allowButtons())
 	{
-		SDL_Event ev;
-		ev.type = SDL_MOUSEBUTTONDOWN;
-		ev.button.button = SDL_BUTTON_LEFT;
-		Action a = Action(&ev, 0.0, 0.0, 0, 0);
-		action->getSender()->mousePress(&a, this);
+		dynamic_cast<BattlescapeButton *>(action->getSender())->forcedMouseClick();
 		if (_battleGame->getSave()->getSelectedUnit())
 		{
 			_battleGame->getSave()->getSelectedUnit()->clearTimeUnits();
@@ -3292,6 +3280,7 @@ void BattlescapeState::btnZeroTUsRelease(Action *action)
 void BattlescapeState::btnZeroTUsLongPress()
 {
 	_longPressTimer->stop();
+	dynamic_cast<BattlescapeButton *>(action->getSender())->forcedMouseClick();
 	SDL_Event ev;
 	ev.type = SDL_MOUSEBUTTONDOWN;
 	ev.button.button = SDL_BUTTON_LEFT;
