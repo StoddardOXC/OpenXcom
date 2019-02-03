@@ -22,6 +22,7 @@
 namespace OpenXcom
 {
 
+class Screen;
 class InteractiveSurface;
 
 /**
@@ -31,6 +32,7 @@ class InteractiveSurface;
  */
 class Action
 {
+	friend class Screen; // factory-construction only, in Screen.
 private:
 	const SDL_Event *_ev;
 	double _scaleX, _scaleY;
@@ -38,9 +40,10 @@ private:
 	int _mouseRelX, _mouseRelY;
 	int _mouseButton;
 	InteractiveSurface *_sender;
-public:
+protected:
 	/// Creates an action with given event data.
 	Action(const SDL_Event* ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand);
+public:
 	/// Cleans up the action.
 	~Action();
 	/// Sets the action as a mouse action.
