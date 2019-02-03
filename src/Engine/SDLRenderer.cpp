@@ -21,6 +21,7 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 	if (_renderer == NULL)
 	{
 		Log(LOG_FATAL) << "[SDLRenderer] Couldn't create renderer; error message: " << SDL_GetError();
+		throw(Exception(SDL_GetError()));
 	}
 	Log(LOG_INFO) << "[SDLRenderer] Renderer created";
 	const char *scaleHint = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
@@ -45,6 +46,7 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 	if (!SDL_PixelFormatEnumToMasks(_format, &_format_bpp, &r, &g, &b, &a)) {
 		Log(LOG_FATAL) << "[SDLRenderer] Couldn't get bpp for "
 		<< SDL_GetPixelFormatName(_format) << ": " << SDL_GetError();
+		throw(Exception(SDL_GetError()));
 	}
 }
 
@@ -186,9 +188,11 @@ void SDLRenderer::doScreenshot() {
 
 	if (SDL_RenderReadPixels(_renderer, &vprect, _format, shot->pixels, shot->pitch)) {
 		Log(LOG_FATAL) << "SDLRenderer::doScreenshot(): SDL_RenderReadPixels(): " << SDL_GetError();
+		throw(Exception(SDL_GetError()));
 	}
 	if (SDL_SavePNG(shot, _screenshotFilename.c_str())) {
 		Log(LOG_FATAL) << "SDLRenderer::doScreenshot(): SDL_SavePNG('" << _screenshotFilename << "'): " << SDL_GetError();
+		throw(Exception(SDL_GetError()));
 	}
 	SDL_FreeSurface(shot);
 	_screenshotFilename.clear();
