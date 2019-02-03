@@ -41,13 +41,6 @@ namespace OpenXcom
  */
 MiniMapState::MiniMapState (Camera * camera, SavedBattleGame * battleGame)
 {
-	if (Options::maximizeInfoScreens)
-	{
-		Options::baseXResolution = Screen::ORIGINAL_WIDTH;
-		Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
-		_game->getScreen()->resetDisplay(false);
-	}
-
 	_bg = new Surface(320, 200);
 	_miniMapView = new MiniMapView(221, 148, 48, 16, _game, camera, battleGame);
 	_btnLvlUp = new BattlescapeButton(18, 20, 24, 62);
@@ -122,11 +115,6 @@ void MiniMapState::handle(Action *action)
  */
 void MiniMapState::btnOkClick(Action *)
 {
-	if (Options::maximizeInfoScreens)
-	{
-		Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
-		_game->getScreen()->resetDisplay(false);
-	}
 	_game->popState();
 }
 

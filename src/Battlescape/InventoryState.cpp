@@ -77,17 +77,7 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 {
 	_battleGame = _game->getSavedGame()->getSavedBattle();
 
-	if (Options::maximizeInfoScreens)
-	{
-		Options::baseXResolution = Screen::ORIGINAL_WIDTH;
-		Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
-		_game->getScreen()->resetDisplay(false);
-	}
-	else if (_battleGame->isBaseCraftInventory())
-	{
-		Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
-		_game->getScreen()->resetDisplay(false);
-	}
+	_screenMode = _battleGame->isBaseCraftInventory() ? SC_BATTLESCAPE : SC_INFOSCREEN;
 
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
@@ -306,20 +296,10 @@ InventoryState::~InventoryState()
 
 	if (!_battleGame->isBaseCraftInventory())
 	{
-		if (Options::maximizeInfoScreens)
-		{
-			Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
-			_game->getScreen()->resetDisplay(false);
-		}
 		Tile *inventoryTile = _battleGame->getSelectedUnit()->getTile();
 		_battleGame->getTileEngine()->applyGravity(inventoryTile);
 		_battleGame->getTileEngine()->calculateLighting(LL_ITEMS); // dropping/picking up flares
 		_battleGame->getTileEngine()->recalculateFOV();
-	}
-	else
-	{
-		Screen::updateScale(Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, true);
-		_game->getScreen()->resetDisplay(false);
 	}
 }
 

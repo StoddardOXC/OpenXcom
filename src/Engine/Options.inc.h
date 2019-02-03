@@ -10,7 +10,8 @@ OPT bool fullscreen, asyncBlit, playIntro, useScaleFilter, useHQXFilter, useXBRZ
 	cursorInBlackBandsInFullscreen, cursorInBlackBandsInWindow, cursorInBlackBandsInBorderlessWindow, maximizeInfoScreens, musicAlwaysLoop, StereoSound, verboseLogging, soldierDiaries, touchEnabled,
 	rootWindowedMode, rawScreenShots, lazyLoadResources, backgroundMute, listVFSContents, embeddedOnly;
 // SDL2 scalers
-OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler;
+OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler, integerRatioScaling;
+
 OPT std::string language, useOpenGLShader;
 OPT KeyboardType keyboardMode;
 OPT SaveSort saveOrder;

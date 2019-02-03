@@ -21,6 +21,7 @@
 #include <string>
 #include <SDL.h>
 #include "LocalizedText.h"
+#include "../Engine/Screen.h"
 
 namespace OpenXcom
 {
@@ -55,9 +56,11 @@ protected:
 	InteractiveSurface *_modal;
 	RuleInterface *_ruleInterface;
 	RuleInterface *_ruleInterfaceParent;
+	ScreenMode _screenMode;
 
 	SDL_Color _palette[256];
 	Uint8 _cursorColor;
+
 public:
 	/// Creates a new state linked to a game.
 	State();
@@ -129,6 +132,7 @@ public:
 	virtual void recenter(int dX, int dY);
 	/// Returns the pointer to the game object
 	static Game *getGame();
+	virtual ScreenMode getScreenMode() const;
 };
 
 }

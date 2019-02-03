@@ -44,12 +44,7 @@ namespace OpenXcom
  */
 AlienInventoryState::AlienInventoryState(BattleUnit *unit)
 {
-	if (Options::maximizeInfoScreens)
-	{
-		Options::baseXResolution = Screen::ORIGINAL_WIDTH;
-		Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
-		_game->getScreen()->resetDisplay(false);
-	}
+	_screenMode = SC_INFOSCREEN;
 
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
@@ -269,11 +264,6 @@ AlienInventoryState::AlienInventoryState(BattleUnit *unit)
  */
 AlienInventoryState::~AlienInventoryState()
 {
-	if (Options::maximizeInfoScreens)
-	{
-		Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
-		_game->getScreen()->resetDisplay(false);
-	}
 }
 
 void AlienInventoryState::calculateMeleeWeapon(BattleUnit* unit, BattleItem* weapon, Text* label)

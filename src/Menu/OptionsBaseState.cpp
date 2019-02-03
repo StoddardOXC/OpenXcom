@@ -221,18 +221,10 @@ void OptionsBaseState::setCategory(TextButton *button)
 void OptionsBaseState::btnOkClick(Action *)
 {
 	Options::switchDisplay();
-	int dX = Options::baseXResolution;
-	int dY = Options::baseYResolution;
-	Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, _origin == OPT_BATTLESCAPE);
-	Screen::updateScale(Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, _origin != OPT_BATTLESCAPE);
-	dX = Options::baseXResolution - dX;
-	dY = Options::baseYResolution - dY;
-	recenter(dX, dY);
 	Options::save();
 	_game->loadLanguages();
-	SDL_SetWindowGrab(_game->getScreen()->getWindow(), (Options::captureMouse)?SDL_TRUE:SDL_FALSE); //Breaks stuff. Hard.
+	_game->getScreen()->setWindowGrab(Options::captureMouse);
 	CrossPlatform::setSystemUI();
-	_game->getScreen()->resetDisplay();
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	if (Options::reload && _origin == OPT_MENU)
 	{
@@ -267,10 +259,7 @@ void OptionsBaseState::btnCancelClick(Action *)
 	Options::reload = false;
 	Options::load();
 	// Again, Android and stuff.
-	SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
-	SDL_SetWindowGrab(_game->getScreen()->getWindow(), captureMouse);
-	Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, _origin == OPT_BATTLESCAPE);
-	Screen::updateScale(Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, _origin != OPT_BATTLESCAPE);
+	_game->getScreen()->setWindowGrab(Options::captureMouse);
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	_game->popState();
 }

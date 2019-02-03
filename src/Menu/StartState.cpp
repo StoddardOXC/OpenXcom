@@ -50,20 +50,7 @@ std::string StartState::error;
  */
 StartState::StartState() : _anim(0)
 {
-	//updateScale() uses newDisplayWidth/Height and needs to be set ahead of time
-	Options::newDisplayWidth = Options::displayWidth;
-	Options::newDisplayHeight = Options::displayHeight;
-	Screen::updateScale(Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
-	Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
-#ifdef __ANDROID__
-	// Maybe try a higher resolution this time?
-	Options::baseXResolution = std::min(Screen::ORIGINAL_WIDTH * 2, Options::displayWidth);
-	Options::baseYResolution = std::min(Screen::ORIGINAL_HEIGHT * 2, Options::displayHeight);
-#else
-	Options::baseXResolution = Options::displayWidth;
-	Options::baseYResolution = Options::displayHeight;
-#endif
-	_game->getScreen()->resetDisplay(false, true);
+	_screenMode = SC_STARTSTATE;
 
 	// Create objects
 	_thread = 0;

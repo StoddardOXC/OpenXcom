@@ -137,8 +137,11 @@ namespace OpenXcom
  */
 GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomOutEffectDone(false), _minimizedDogfights(0), _slowdownCounter(0)
 {
-	int screenWidth = Options::baseXGeoscape;
-	int screenHeight = Options::baseYGeoscape;
+	_screenMode = SC_GEOSCAPE;
+	_game->getScreen()->setMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
+
+	int screenWidth = _game->getScreen()->getWidth();
+	int screenHeight = _game->getScreen()->getHeight();
 
 	// Create objects
 	Surface *hd = _game->getMod()->getSurface("ALTGEOBORD.SCR");
@@ -4116,45 +4119,6 @@ void GeoscapeState::resize(int &dX, int &dY)
 {
 	if (_game->getSavedGame()->getSavedBattle())
 		return;
-	dX = Options::baseXResolution;
-	dY = Options::baseYResolution;
-	int divisor = 1;
-	double pixelRatioY = 1.0;
-
-	if (Options::nonSquarePixelRatio)
-	{
-		pixelRatioY = 1.2;
-	}
-	switch (Options::geoscapeScale)
-	{
-	case SCALE_SCREEN_DIV_6:
-		divisor = 6;
-		break;
-	case SCALE_SCREEN_DIV_5:
-		divisor = 5;
-		break;
-	case SCALE_SCREEN_DIV_4:
-		divisor = 4;
-		break;
-	case SCALE_SCREEN_DIV_3:
-		divisor = 3;
-		break;
-	case SCALE_SCREEN_DIV_2:
-		divisor = 2;
-		break;
-	case SCALE_SCREEN:
-		break;
-	default:
-		dX = 0;
-		dY = 0;
-		return;
-	}
-
-	Options::baseXResolution = std::max(Screen::ORIGINAL_WIDTH, Options::displayWidth / divisor);
-	Options::baseYResolution = std::max(Screen::ORIGINAL_HEIGHT, (int)(Options::displayHeight / pixelRatioY / divisor));
-
-	dX = Options::baseXResolution - dX;
-	dY = Options::baseYResolution - dY;
 
 	_globe->resize();
 
@@ -4170,13 +4134,13 @@ void GeoscapeState::resize(int &dX, int &dY)
 	_bg->setX((_globe->getWidth() - _bg->getWidth()) / 2);
 	_bg->setY((_globe->getHeight() - _bg->getHeight()) / 2);
 
-	int height = (Options::baseYResolution - Screen::ORIGINAL_HEIGHT) / 2 + 10;
+	int height = _game->getScreen()->getDY() / 2 + 10;
 	_sideTop->setHeight(height);
 	_sideTop->setY(_sidebar->getY() - height - 1);
 	_sideBottom->setHeight(height);
 	_sideBottom->setY(_sidebar->getY() + _sidebar->getHeight() + 1);
 
-	_sideLine->setHeight(Options::baseYResolution);
+	_sideLine->setHeight(_game->getScreen()->getHeight());
 	_sideLine->setY(0);
 	_sideLine->drawRect(0, 0, _sideLine->getWidth(), _sideLine->getHeight(), 15);
 }

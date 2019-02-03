@@ -59,7 +59,7 @@ NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *stat
 	_txtMessage = new Text(320, 17, 0, 132);
 	_txtMessage2 = new Text(320, 33, 0, 156);
 	_txtMessage3 = new Text(320, 17, 0, 172);
-	_bg = new Surface(_game->getScreen()->getWidth(), _game->getScreen()->getWidth(), 0, 0);
+	_bg = new Surface(_game->getScreen()->getWidth(), _game->getScreen()->getWidth(), 0, 0); // FIXME: should it really be square?
 
 	// Set palette
 	battleGame->setPaletteByDepth(this);

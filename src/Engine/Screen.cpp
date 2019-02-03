@@ -56,23 +56,7 @@ void Screen::makeVideoFlags()
 		_flags |= SDL_WINDOW_RESIZABLE;
 	}
 
-#if 0
-	if (Options::asyncBlit)
-	{
-		_flags |= SDL_ASYNCBLIT;
-	}
-	if (useOpenGL())
-	{
-		_flags = SDL_OPENGL;
-		SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
-		SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
-		SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
-		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
-		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	}
-#endif
-
-	// Handle display mode
+    // Handle display mode
 	if (Options::fullscreen)
 	{
 		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -95,8 +79,6 @@ void Screen::makeVideoFlags()
 	CrossPlatform::setSystemUI();
 #endif
 
-	//_bpp = (use32bitScaler() || useOpenGL()) ? 32 : 8;
-	_bpp = 32;
 	_baseWidth = Options::baseXResolution;
 	_baseHeight = Options::baseYResolution;
 }
@@ -108,10 +90,10 @@ void Screen::makeVideoFlags()
  */
 Screen::Screen() : _window(NULL), _renderer(NULL),
 	_baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0),
-	_numColors(0), _firstColor(0), _pushPalette(false),
-	_prevWidth(0), _prevHeight(0), _screenshotFilename()
+	_numColors(0), _firstColor(0), _pushPalette(false), _screenshotFilename(),
+	_currentScaleType(SCALE_SCREEN), _currentScaleMode(SC_STARTSTATE), _resizeAccountedFor(false)
 {
-	resetDisplay();
+	resetVideo(Options::displayWidth, Options::displayHeight);
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
 
@@ -156,7 +138,7 @@ void Screen::handle(Action *action)
 	if (action->getType() == SDL_KEYDOWN && action->getKeycode() == SDLK_RETURN && (SDL_GetModState() & KMOD_ALT) != 0)
 	{
 		Options::fullscreen = !Options::fullscreen;
-		resetDisplay();
+		resetVideo(Options::displayWidth, Options::displayHeight);
 	}
 	else if (action->getType() == SDL_KEYDOWN && action->getKeycode() == Options::keyScreenshot)
 	{
@@ -268,9 +250,7 @@ const SDL_Color *Screen::getPalette() const
  */
 int Screen::getWidth() const
 {
-	int w, h;
-	SDL_GetWindowSize(_window, &w, &h);
-	return w;
+	return _baseWidth;
 }
 
 /**
@@ -279,9 +259,61 @@ int Screen::getWidth() const
  */
 int Screen::getHeight() const
 {
-	int w, h;
-	SDL_GetWindowSize(_window, &w, &h);
-	return h;
+	return _baseHeight;
+}
+
+/**
+ * Recreates video: both renderer and the window
+ */
+void Screen::resetVideo(int width, int height)
+{
+	Log(LOG_INFO) << "Screen::resetVideo(" << width << ", " << height << ")";
+	if (_renderer) { delete _renderer; }
+	if (_window) { SDL_DestroyWindow(_window); }
+
+	Uint32 window_flags = SDL_WINDOW_OPENGL;
+	if (Options::allowResize) { window_flags |= SDL_WINDOW_RESIZABLE; }
+	if (Options::fullscreen) { window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP; }
+	if (Options::borderless) { window_flags |= SDL_WINDOW_BORDERLESS; }
+
+	/* Attempt to set scaling */
+	if (Options::useNearestScaler) {
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+	} else if (Options::useLinearScaler) {
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	} else if (Options::useAnisotropicScaler) {
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+	}
+
+	int winX, winY;
+	if (Options::borderless) {
+		winX = SDL_WINDOWPOS_CENTERED;
+		winY = SDL_WINDOWPOS_CENTERED;
+	} else if (!Options::fullscreen && Options::rootWindowedMode) {
+		winX = Options::windowedModePositionX;
+		winY = Options::windowedModePositionY;
+	} else {
+		winX = SDL_WINDOWPOS_UNDEFINED;
+		winY = SDL_WINDOWPOS_UNDEFINED;
+	}
+
+	_window = SDL_CreateWindow("OpenXcom Extended SDL2", winX, winY, width, height, window_flags);
+
+	if (_window == NULL) {
+		Log(LOG_ERROR) << SDL_GetError();
+		throw Exception(SDL_GetError());
+	}
+	Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
+
+	_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+
+	if (!_renderer)	{
+		Log(LOG_ERROR) << SDL_GetError();
+		throw Exception(SDL_GetError());
+	}
+
+	// fix up scaling.
+	setMode(_currentScaleMode);
 }
 
 /**
@@ -289,236 +321,8 @@ int Screen::getHeight() const
  * as they don't automatically take effect.
  * @param resetVideo Reset display surface.
  */
-void Screen::resetDisplay(bool resetVideo, bool noShaders)
+void Screen::resetDisplay(bool resetVideo)
 {
-	int width = Options::displayWidth;
-	int height = Options::displayHeight;
-	bool switchRenderer = false;
-	if (!_renderer)
-	{
-		switchRenderer = true;
-	}
-	else
-	{
-		if ( (Options::useOpenGL && _renderer->getRendererType() == RENDERER_SDL2)
-			|| (!Options::useOpenGL && _renderer->getRendererType() == RENDERER_OPENGL) )
-		{
-			switchRenderer = true;
-		}
-	}
-	makeVideoFlags();
-
-	Log(LOG_INFO) << "resetDisplay( resetVideo="<<(resetVideo? "true":"false")<<")";
-	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
-
-	std::tie(_buffer, _surface) = Surface::NewPair8Bit(_baseWidth, _baseHeight);
-	SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
-	SDL_SetColorKey(_surface.get(), 0, 0); // turn off color key! FIXME: probably not needed.
-
-	if (resetVideo)
-	{
-		/* FIXME: leak? */  // what leak?
-		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
-		/* Attempt to set scaling */
-		if (Options::useNearestScaler)
-		{
-			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-		}
-		else if (Options::useLinearScaler)
-		{
-			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-		}
-		else if (Options::useAnisotropicScaler)
-		{
-			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-		}
-		// Hack: you have to destroy and recreate a window to make it resizable.
-		if (_window)
-		{
-			if ((SDL_GetWindowFlags(_window) & SDL_WINDOW_RESIZABLE) != (_flags & SDL_WINDOW_RESIZABLE))
-			{
-				if (_renderer)
-				{
-					delete _renderer;
-					_renderer = NULL;
-				}
-				SDL_DestroyWindow(_window);
-				_window = NULL;
-			}
-		}
-		/* Now, we only need to create a window AND a renderer when we have none*/
-		if (_window == NULL)
-		{
-			Log(LOG_INFO) << "Attempting to create a new window since we have none yet";
-			int winX, winY;
-			if (Options::borderless)
-			{
-				winX = SDL_WINDOWPOS_CENTERED;
-				winY = SDL_WINDOWPOS_CENTERED;
-			}
-			else
-			{
-				// FIXME: Check if this code is correct w.r.t. latest patches
-				//if ((Options::windowedModePositionX != -1) && (Options::windowedModePositionY != -1))
-				if (!Options::fullscreen && Options::rootWindowedMode)
-				{
-					winX = Options::windowedModePositionX;
-					winY = Options::windowedModePositionY;
-				}
-				else
-				{
-					winX = SDL_WINDOWPOS_UNDEFINED;
-					winY = SDL_WINDOWPOS_UNDEFINED;
-				}
-			}
-			_window = SDL_CreateWindow("OpenXcom", winX, winY, width, height, _flags);
-			/* In case something went horribly wrong */
-			if (_window == NULL)
-			{
-				Log(LOG_ERROR) << SDL_GetError();
-				throw Exception(SDL_GetError());
-			}
-			Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
-		}
-		else
-		{
-#if 0 // FIXME? doesn't seem to be needed at all
-#ifndef __ANDROID__
-			SDL_SetWindowSize(_window, width, height);
-#endif
-#endif
-			SDL_SetWindowBordered(_window, Options::borderless? SDL_FALSE : SDL_TRUE);
-			SDL_SetWindowFullscreen(_window, Options::fullscreen? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-		}
-
-		/* By this point we have a window and no renderer, so it's time to make one! */
-		if (switchRenderer)
-		{
-			delete _renderer;
-			_renderer = NULL;
-		}
-
-		if (!_renderer)
-		{
-			_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
-		}
-
-		Log(LOG_INFO) << "    Display set to " << getWidth() << "x" << getHeight() << "x32 (32 is LIES).";
-
-		/* Save new baseWidth and baseHeight */
-		_prevWidth = _baseWidth;
-		_prevHeight = _baseHeight;
-	}
-	else
-	{
-		clear();
-	}
-
-	assert (_window != 0 && _renderer != 0);
-
-	Options::displayWidth = getWidth();
-	Options::displayHeight = getHeight();
-	_scaleX = getWidth() / (double)_baseWidth;
-	_scaleY = getHeight() / (double)_baseHeight;
-	Log(LOG_INFO) << "    Pre-bar scales: _scaleX = " << _scaleX << ", _scaleY = " << _scaleY;
-
-	double pixelRatioY = 1.0;
-	if (Options::nonSquarePixelRatio && !Options::allowResize)
-	{
-		pixelRatioY = 1.2;
-	}
-	bool cursorInBlackBands;
-	if (!Options::keepAspectRatio)
-	{
-		cursorInBlackBands = false;
-	}
-#ifndef __ANDROID__
-	else if (Options::fullscreen)
-	{
-		cursorInBlackBands = Options::cursorInBlackBandsInFullscreen;
-	}
-	else if (!Options::borderless)
-	{
-		cursorInBlackBands = Options::cursorInBlackBandsInWindow;
-	}
-	else
-	{
-		cursorInBlackBands = Options::cursorInBlackBandsInBorderlessWindow;
-	}
-#else
-	else {
-	// Force the scales to be equal?
-		cursorInBlackBands = true;
-	}
-#endif
-
-	if (_scaleX > _scaleY && Options::keepAspectRatio)
-	{
-		int targetWidth = (int)floor(_scaleY * (double)_baseWidth);
-		_topBlackBand = _bottomBlackBand = 0;
-		_leftBlackBand = (getWidth() - targetWidth) / 2;
-		if (_leftBlackBand < 0)
-		{
-			_leftBlackBand = 0;
-		}
-		_rightBlackBand = getWidth() - targetWidth - _leftBlackBand;
-		_cursorTopBlackBand = 0;
-
-		if (cursorInBlackBands)
-		{
-			_scaleX = _scaleY;
-			_cursorLeftBlackBand = _leftBlackBand;
-		}
-		else
-		{
-			_cursorLeftBlackBand = 0;
-		}
-	}
-	else if (_scaleY > _scaleX && Options::keepAspectRatio)
-	{
-		int targetHeight = (int)floor(_scaleX * (double)_baseHeight * pixelRatioY);
-		_topBlackBand = (getHeight() - targetHeight) / 2;
-		if (_topBlackBand < 0)
-		{
-			_topBlackBand = 0;
-		}
-		_bottomBlackBand = getHeight() - targetHeight - _topBlackBand;
-		if (_bottomBlackBand < 0)
-		{
-			_bottomBlackBand = 0;
-		}
-		_leftBlackBand = _rightBlackBand = 0;
-		_cursorLeftBlackBand = 0;
-
-		if (cursorInBlackBands)
-		{
-			_scaleY = _scaleX;
-			_cursorTopBlackBand = _topBlackBand;
-		}
-		else
-		{
-			_cursorTopBlackBand = 0;
-		}
-	}
-	else
-	{
-		_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
-	}
-	Log(LOG_INFO) << "    Scale (post-bar): scaleX = " << _scaleX << ", scaleY = " << _scaleY;
-	Log(LOG_INFO) << "    Black bars: top: " << _topBlackBand << ", left: " << _leftBlackBand;
-
-	SDL_Rect baseRect;
-	baseRect.x = baseRect.y = 0;
-	baseRect.w = _baseWidth;
-	baseRect.h = _baseHeight;
-	_renderer->setInternalRect(&baseRect);
-	SDL_Rect outRect;
-	outRect.x = _leftBlackBand;
-	outRect.y = _topBlackBand;
-	outRect.w = getWidth() - _leftBlackBand - _rightBlackBand;
-	outRect.h = getHeight() - _topBlackBand - _bottomBlackBand;
-	_renderer->setOutputRect(&outRect);
-
 }
 
 /**
@@ -595,71 +399,182 @@ int Screen::getDY() const
 }
 
 /**
- * Changes a given scale, and if necessary, switch the current base resolution.
- * @param type the new scale level.
- * @param width reference to which x scale to adjust.
- * @param height reference to which y scale to adjust.
- * @param change should we change the current scale.
+ * Updates scaling in case the window got resized.
+ * returns the delta in dX and dY.
  */
-void Screen::updateScale(int type, int &width, int &height, bool change)
+void Screen::updateScale(int& dX, int& dY)
 {
-	double pixelRatioY = 1.0;
+	dX = getWidth();
+	dY = getHeight();
+	setMode(_currentScaleMode);
+	dX = getWidth() - dX;
+	dY = getHeight() - dY;
+}
 
-	if (Options::nonSquarePixelRatio)
-	{
-		pixelRatioY = 1.2;
+/**
+ * Depending on the mode this sets up scaling.
+ */
+void Screen::setMode(ScreenMode mode)
+{
+	if (_resizeAccountedFor && _currentScaleMode == mode) {
+		return;
+	}
+	_currentScaleMode = mode;
+	int type;
+	switch (mode) {
+		case SC_STARTSTATE:
+			type = SCALE_SCREEN;
+			break;
+		case SC_INTRO:
+			type = SCALE_ORIGINAL;
+			break;
+		case SC_GEOSCAPE:
+			type = Options::geoscapeScale;
+			break;
+		case SC_BATTLESCAPE:
+			type = Options::battlescapeScale;
+			break;
+		case SC_INFOSCREEN:
+			if (Options::maximizeInfoScreens) {
+				type = SCALE_ORIGINAL;
+			} else {
+				return;
+			}
+			break;
+		case SC_NONE:
+		case SC_ORIGINAL:
+		default:
+			// dunno. maybe don't accept blits.
+			type = SCALE_ORIGINAL;
+			break;
 	}
 
-	switch (type)
-	{
-	case SCALE_15X:
-		width = Screen::ORIGINAL_WIDTH * 1.5;
-		height = Screen::ORIGINAL_HEIGHT * 1.5;
-		break;
-	case SCALE_2X:
-		width = Screen::ORIGINAL_WIDTH * 2;
-		height = Screen::ORIGINAL_HEIGHT * 2;
-		break;
-	case SCALE_SCREEN_DIV_6:
-		width = Options::displayWidth / 6.0;
-		height = Options::displayHeight / pixelRatioY / 6.0;
-		break;
-	case SCALE_SCREEN_DIV_5:
-		width = Options::displayWidth / 5.0;
-		height = Options::displayHeight / pixelRatioY / 5.0;
-		break;
-	case SCALE_SCREEN_DIV_4:
-		width = Options::displayWidth / 4.0;
-		height = Options::displayHeight / pixelRatioY / 4.0;
-		break;
-	case SCALE_SCREEN_DIV_3:
-		width = Options::displayWidth / 3.0;
-		height = Options::displayHeight / pixelRatioY / 3.0;
-		break;
-	case SCALE_SCREEN_DIV_2:
-		width = Options::displayWidth / 2.0;
-		height = Options::displayHeight / pixelRatioY  / 2.0;
-		break;
-	case SCALE_SCREEN:
-		width = Options::displayWidth;
-		height = Options::displayHeight / pixelRatioY;
-		break;
-	case SCALE_ORIGINAL:
-	default:
-		width = Screen::ORIGINAL_WIDTH;
-		height = Screen::ORIGINAL_HEIGHT;
-		break;
+	// if nothing changed, do nothing.
+	if (_resizeAccountedFor && type == _currentScaleType) {
+		return;
+	}
+	_currentScaleType = type;
+	// the type from above determines logical game screen size.
+	int target_width, target_height;
+	_renderer->getOutputSize(target_width, target_height);
+
+	Options::displayWidth = target_width;   //FIXME: those obnoxious globals..
+	Options::displayHeight = target_height;
+
+	switch (type) {
+		case SCALE_15X:
+			_baseWidth  = ORIGINAL_WIDTH * 1.5;
+			_baseHeight = ORIGINAL_HEIGHT * 1.5;
+			break;
+		case SCALE_2X:
+			_baseWidth  = ORIGINAL_WIDTH * 2;
+			_baseHeight = ORIGINAL_HEIGHT * 2;
+			break;
+		case SCALE_SCREEN_DIV_6:
+			_baseWidth  = target_width / 6;
+			_baseHeight = target_width / 6;
+			break;
+		case SCALE_SCREEN_DIV_5:
+			_baseWidth  = target_width / 5;
+			_baseHeight = target_width / 5;
+			break;
+		case SCALE_SCREEN_DIV_4:
+			_baseWidth  = target_width / 4;
+			_baseHeight = target_width / 4;
+			break;
+		case SCALE_SCREEN_DIV_3:
+			_baseWidth  = target_width / 3;
+			_baseHeight = target_width / 3;
+			break;
+		case SCALE_SCREEN_DIV_2:
+			_baseWidth  = target_width / 2;
+			_baseHeight = target_width  / 2;
+			break;
+		case SCALE_SCREEN:
+			_baseWidth  = target_width;
+			_baseHeight = target_width;
+			break;
+		case SCALE_ORIGINAL:
+		default:
+			_baseWidth  = ORIGINAL_WIDTH;
+			_baseHeight = ORIGINAL_HEIGHT;
+			break;
 	}
 
-	// don't go under minimum resolution... it's bad, mmkay?
-	width = std::max(width, Screen::ORIGINAL_WIDTH);
-	height = std::max(height, Screen::ORIGINAL_HEIGHT);
+	// make sure we don't get below the original
+	if (_baseWidth < ORIGINAL_WIDTH) { _baseWidth  = ORIGINAL_WIDTH; }
+	if (_baseHeight < ORIGINAL_HEIGHT) { _baseHeight  = ORIGINAL_HEIGHT; }
 
-	if (change && (Options::baseXResolution != width || Options::baseYResolution != height))
-	{
-		Options::baseXResolution = width;
-		Options::baseYResolution = height;
+	// set the source rect for the renderer
+	SDL_Rect baseRect;
+	baseRect.x = baseRect.y = 0;
+	baseRect.w = _baseWidth;
+	baseRect.h = _baseHeight;
+	_renderer->setInternalRect(&baseRect);
+
+	std::tie(_buffer, _surface) = Surface::NewPair8Bit(_baseWidth, _baseHeight);
+	SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
+	SDL_SetColorKey(_surface.get(), 0, 0); // turn off color key! FIXME: probably not needed.
+
+	Log(LOG_INFO) << "Screen::setMode(): logical size " << _baseWidth << "x" << _baseHeight;
+
+	// Having determined the logical screen size (srcRect/internalRect) we can now
+	// calculate scaling factors and dstRect / outputRect
+	// This is where keepAspectRatio and nonSquarePixelRatio come into play.
+	// I think we should drop keepAspectRatio and do it always letterboxed.
+	// besides, keepAspectRatio makes nonSquarePixelRatio impossible.
+	// outRect is in actual pixels.
+	SDL_Rect outRect;
+	if (!Options::keepAspectRatio) {
+		// this just blows the screen up to completely fill the window.
+		outRect.x = 0;
+		outRect.y = 0;
+		outRect.w = target_width;
+		outRect.h = target_height;
+		_renderer->setOutputRect(&outRect);
+		_scaleX = target_width / _baseWidth;
+		_scaleY = target_height / _baseHeight;
+		_leftBlackBand = 0;
+		_topBlackBand = 0;
+		Log(LOG_INFO) << "Screen::setMode(): scaled size " << target_width << "x" << target_height << ", no letterboxing.";
+		_resizeAccountedFor = true;
+		return;
 	}
+
+	// now we're letterboxing.
+	// first determine which of width or height will fit the window
+
+	double pixelRatioY = Options::nonSquarePixelRatio ? 1.2 : 1.0;
+	double scaleX = target_width / _baseWidth;
+	double scaleY = target_height / (_baseHeight * pixelRatioY);
+	double scale;
+
+	if (scaleX < scaleY) { // width wins
+		scale = scaleX;
+	} else { // height wins
+		scale = scaleY;
+	}
+
+	// now would be the time to clamp it down to an integer.
+	if (Options::integerRatioScaling) {
+		scale = floor(scale);
+	}
+	_scaleX = _scaleY = scale;
+
+	int scaledWidth = scale * _baseWidth;
+	int scaledHeight = scale * _baseHeight * pixelRatioY; // this breaks the integer ratio but what you can do
+
+	Log(LOG_INFO) << "Screen::setMode(): scaled size " << scaledWidth << "x" << scaledHeight
+				  << ", target size " << target_width << "x" << target_height;
+
+	_leftBlackBand = ( target_width - scaledWidth)/2;
+	_topBlackBand = ( target_height - scaledHeight)/2;
+	outRect.x = _leftBlackBand;
+	outRect.y = _topBlackBand;
+	outRect.w = scaledWidth;
+	outRect.h = scaledHeight;
+	_renderer->setOutputRect(&outRect);
+	_resizeAccountedFor = true;
 }
 
 SDL_Window * Screen::getWindow() const
@@ -669,7 +584,7 @@ SDL_Window * Screen::getWindow() const
 
 std::unique_ptr<Action> Screen::makeAction(const SDL_Event *ev) const
 {
-	return std::unique_ptr<Action>(new Action(ev, _scaleX, _scaleY, _cursorTopBlackBand, _cursorLeftBlackBand));
+	return std::unique_ptr<Action>(new Action(ev, _scaleX, _scaleY, _topBlackBand, _leftBlackBand));
 }
 
 void Screen::warpMouse(int x, int y)
@@ -692,4 +607,9 @@ void Screen::warpMouseRelative(int dx, int dy)
 #endif
 }
 
+void Screen::setWindowGrab(int grab)
+{
+	// was : Breaks stuff. Hard. FIXME: why? what?
+	SDL_SetWindowGrab(_window, grab ? SDL_TRUE : SDL_FALSE);
+}
 }

@@ -102,10 +102,13 @@ BattlescapeState::BattlescapeState() :
 	_numberOfDirectlyVisibleUnits(0), _numberOfEnemiesTotal(0), _numberOfEnemiesTotalPlusWounded(0),
 	_swipeFromSoldier(false), _multiGestureProcess(false)
 {
+	_screenMode = SC_BATTLESCAPE;
+	_game->getScreen()->setMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
+
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
-	const int screenWidth = Options::baseXResolution;
-	const int screenHeight = Options::baseYResolution;
+	const int screenWidth = _game->getScreen()->getWidth();
+	const int screenHeight = _game->getScreen()->getHeight();
 	const int iconsWidth = _game->getMod()->getInterface("battlescape")->getElement("icons")->w;
 	const int iconsHeight = _game->getMod()->getInterface("battlescape")->getElement("icons")->h;
 	const int visibleMapHeight = screenHeight - iconsHeight;
@@ -3712,47 +3715,8 @@ void BattlescapeState::txtTooltipOut(Action *action)
  */
 void BattlescapeState::resize(int &dX, int &dY)
 {
-	dX = Options::baseXResolution;
-	dY = Options::baseYResolution;
-	int divisor = 1;
-	double pixelRatioY = 1.0;
-
-	if (Options::nonSquarePixelRatio)
-	{
-		pixelRatioY = 1.2;
-	}
-	switch (Options::battlescapeScale)
-	{
-	case SCALE_SCREEN_DIV_6:
-		divisor = 6;
-		break;
-	case SCALE_SCREEN_DIV_5:
-		divisor = 5;
-		break;
-	case SCALE_SCREEN_DIV_4:
-		divisor = 4;
-		break;
-	case SCALE_SCREEN_DIV_3:
-		divisor = 3;
-		break;
-	case SCALE_SCREEN_DIV_2:
-		divisor = 2;
-		break;
-	case SCALE_SCREEN:
-		break;
-	default:
-		dX = 0;
-		dY = 0;
-		return;
-	}
-
-	Options::baseXResolution = std::max(Screen::ORIGINAL_WIDTH, Options::displayWidth / divisor);
-	Options::baseYResolution = std::max(Screen::ORIGINAL_HEIGHT, (int)(Options::displayHeight / pixelRatioY / divisor));
-
-	dX = Options::baseXResolution - dX;
-	dY = Options::baseYResolution - dY;
-	_map->setWidth(Options::baseXResolution);
-	_map->setHeight(Options::baseYResolution);
+	_map->setWidth(_game->getScreen()->getWidth());
+	_map->setHeight(_game->getScreen()->getHeight());
 	_map->getCamera()->resize();
 	_map->getCamera()->jumpXY(dX/2, dY/2);
 

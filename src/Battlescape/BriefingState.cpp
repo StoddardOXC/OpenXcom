@@ -225,9 +225,6 @@ void BriefingState::init()
 void BriefingState::btnOkClick(Action *)
 {
 	_game->popState();
-	Options::baseXResolution = Options::baseXBattlescape;
-	Options::baseYResolution = Options::baseYBattlescape;
-	_game->getScreen()->resetDisplay(false);
 	if (_infoOnly) return;
 
 	BattlescapeState *bs = new BattlescapeState;
@@ -241,9 +238,6 @@ void BriefingState::btnOkClick(Action *)
 	}
 	else
 	{
-		Options::baseXResolution = Options::baseXGeoscape;
-		Options::baseYResolution = Options::baseYGeoscape;
-		_game->getScreen()->resetDisplay(false);
 		delete bs;
 		_game->pushState(new AliensCrashState);
 	}
