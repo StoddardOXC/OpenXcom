@@ -1850,7 +1850,6 @@ void Globe::mousePress(Action *action, State *state)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
 		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
 		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
 		_lonBeforeMouseScrolling = _cenLon;

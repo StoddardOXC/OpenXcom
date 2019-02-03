@@ -2098,7 +2098,7 @@ void Map::scrollKey()
  */
 void Map::fadeShade()
 {
-	bool hold = SDL_GetKeyboardState(NULL)[SDL_GetScancodeFromKey(Options::keyNightVisionHold)];
+	bool hold = SDL_GetKeyboardState(NULL)[SDL_GetScancodeFromKey(Options::keyNightVisionHold)]; // FIXME: it's Keycode now
 	if ((_nightVisionOn && !hold) || (!_nightVisionOn && hold))
 	{
 		_nvColor = Options::oxceNightVisionColor;
