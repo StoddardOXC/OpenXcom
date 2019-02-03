@@ -1827,15 +1827,7 @@ void Globe::mouseOver(Action *action, State *state)
 		}
 
 		_isMouseScrolled = true;
-#ifndef __MOBILE__
-		if (Options::touchEnabled == false)
-		{
-			// Set the mouse cursor back
-			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			SDL_WarpMouseInWindow(NULL, (_game->getScreen()->getWidth() - 100) / 2 , _game->getScreen()->getHeight() / 2);
-			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-		}
-#endif
+
 		// Check the threshold
 		_totalMouseMoveX += action->getXMouseMotion();
 		_totalMouseMoveY += action->getYMouseMotion();
