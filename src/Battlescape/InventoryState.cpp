@@ -1163,7 +1163,7 @@ void InventoryState::btnApplyTemplateClick(Action *)
 
 void InventoryState::refreshMouse()
 {
-	// send a mouse motion event to refresh any hover actions
+	// send a mouse motion event to refresh any hover actions FIXME!
 	int x, y;
 	CrossPlatform::getPointerState(&x, &y);
 	SDL_WarpMouseInWindow(NULL, x+1, y);
