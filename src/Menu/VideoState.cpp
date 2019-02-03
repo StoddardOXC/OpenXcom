@@ -46,6 +46,7 @@ namespace OpenXcom
 VideoState::VideoState(const std::vector<std::string> *videos, const std::vector<std::string> *tracks, bool useUfoAudioSequence)
 		: _videos(videos), _tracks(tracks), _useUfoAudioSequence(useUfoAudioSequence)
 {
+	_screenMode = SC_INTRO;
 }
 
 /**
@@ -397,8 +398,6 @@ void VideoState::init()
 {
 	State::init();
 
-	bool wasLetterboxed = CutsceneState::initDisplay();
-
 	bool ufoIntroSoundFileDosExists = false;
 	bool ufoIntroSoundFileWinExists = false;
 	int prevMusicVol = Options::musicVolume;
@@ -551,7 +550,6 @@ void VideoState::init()
 #endif
 
 	_game->getCursor()->setVisible(true);
-	CutsceneState::resetDisplay(wasLetterboxed);
 	_game->popState();
 }
 

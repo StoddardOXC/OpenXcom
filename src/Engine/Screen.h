@@ -30,6 +30,16 @@ class Action;
 
 class Renderer;
 
+enum ScreenMode {
+	SC_NONE = 0,
+	SC_ORIGINAL,
+	SC_STARTSTATE,
+	SC_INTRO,
+	SC_GEOSCAPE,
+	SC_BATTLESCAPE,
+	SC_INFOSCREEN
+};
+
 /**
  * A display screen, handles rendering onto the game window.
  * In SDL a Screen is treated like a Surface, so this is just
@@ -44,20 +54,22 @@ private:
 	//SDL_Surface *_screen;
 	SDL_Window *_window;
 	Renderer *_renderer;
-	int _bpp;
 	int _baseWidth, _baseHeight;
-	double _scaleX, _scaleY, _scale;
-	int _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, _cursorTopBlackBand, _cursorLeftBlackBand;
+	double _scaleX, _scaleY;
+	int _topBlackBand, _leftBlackBand;
 	Uint32 _flags;
 	SDL_Color deferredPalette[256];
 	int _numColors, _firstColor;
 	bool _pushPalette;
 	Surface::UniqueBufferPtr _buffer;
 	Surface::UniqueSurfacePtr _surface;
+	std::string _screenshotFilename;
+	int _currentScaleType;
+	ScreenMode _currentScaleMode;
+	bool _resizeAccountedFor;
+
 	/// Sets the _flags and _bpp variables based on game options; needed in more than one place now
 	void makeVideoFlags();
-	int _prevWidth, _prevHeight;
-	std::string _screenshotFilename;
 
 public:
 	static const int ORIGINAL_WIDTH;
@@ -79,24 +91,28 @@ public:
 	void flip();
 	/// Clears the screen.
 	void clear();
+	/// sets the screen mode - battlescape, geoscape, startscreen, bigmenu, intro, etc..
+	void setMode(ScreenMode mode);
+	/// this is the new real updateScale - to be called on window resize / renderer recreation only.
+	void updateScale(int& dX, int& dY);
 	/// Sets the screen's 8bpp palette.
 	void setPalette(const SDL_Color *colors, int firstcolor = 0, int ncolors = 256, bool immediately = false);
 	/// Gets the screen's 8bpp palette.
 	const SDL_Color *getPalette() const;
-	/// Gets the screen's width.
+	/// Gets the screen's width, logical pixels.
 	int getWidth() const;
-	/// Gets the screen's height.
+	/// Gets the screen's height, logical pixels.
 	int getHeight() const;
-	/// Resets the screen display.
+	/// Resets the screen display. Does nothing.
 	void resetDisplay(bool resetVideo = true);
+	/// Actually resets the video stuff.
+	void resetVideo(int width, int height);
 	/// Takes a screenshot.
 	void screenshot(const std::string &filename);
 	/// Checks whether a 32bit scaler is requested and works for the selected resolution
 	static bool use32bitScaler();
 	/// Checks whether OpenGL output is requested
 	static bool useOpenGL();
-	/// update the game scale as required.
-	static void updateScale(int type, int &width, int &height, bool change);
 	/// Get the pointer for our current window
 	SDL_Window *getWindow() const;
 	/// Make an Action
@@ -105,6 +121,8 @@ public:
 	void warpMouse(int x, int y);
 	/// Warp the mouse (Screen coordinates delta)
 	void warpMouseRelative(int dx, int dy);
+	/// Set the window grabbing status
+	void setWindowGrab(int grab);
 };
 
 }

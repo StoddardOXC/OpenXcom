@@ -42,6 +42,7 @@
 #include "../Menu/TestState.h"
 #include <algorithm>
 #include "../fallthrough.h"
+#include "State.h"
 
 namespace OpenXcom
 {
@@ -80,8 +81,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 	CrossPlatform::setWindowIcon(IDI_ICON1, "openxcom.png", _screen->getWindow());
 
 	// And only then you can think about grabbing the mouse
-	SDL_bool captureMouse = Options::captureMouse? SDL_TRUE : SDL_FALSE;
-	SDL_SetWindowGrab(_screen->getWindow(), captureMouse);
+	_screen->setWindowGrab(Options::captureMouse);
 
 	// Create cursor
 	_cursor = new Cursor(9, 13);
@@ -364,68 +364,19 @@ void Game::run()
 						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
 					}
 					[[gnu::fallthrough]];
-
-#if 0
-				// SDL2 handles things differently, so this is basically commented out for historical purposes.
-				case SDL_ACTIVEEVENT:
-					switch (reinterpret_cast<SDL_ActiveEvent*>(&_event)->state)
-					{
-						case SDL_APPACTIVE:
-							runningState = reinterpret_cast<SDL_ActiveEvent*>(&_event)->gain ? RUNNING : stateRun[Options::pauseMode];
-							break;
-						case SDL_APPMOUSEFOCUS:
-							// We consciously ignore it.
-							break;
-						case SDL_APPINPUTFOCUS:
-							runningState = reinterpret_cast<SDL_ActiveEvent*>(&_event)->gain ? RUNNING : kbFocusRun[Options::pauseMode];
-							break;
-					}
-					break;
-				case SDL_VIDEORESIZE:
-					if (Options::allowResize)
-					{
-						if (!startupEvent)
-						{
-							Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, _event.resize.w);
-							Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, _event.resize.h);
-							int dX = 0, dY = 0;
-							Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
-							Screen::updateScale(Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
-							for (std::list<State*>::iterator i = _states.begin(); i != _states.end(); ++i)
-							{
-								(*i)->resize(dX, dY);
-							}
-							_screen->resetDisplay();
-						}
-						else
-						{
-							startupEvent = false;
-						}
-					}
-					break;
-#endif
 				case SDL_WINDOWEVENT:
 					switch(_event.window.event)
 					{
-						case SDL_WINDOWEVENT_RESIZED:
-							// It should be better to handle SDL_WINDOWEVENT_SIZE_CHANGED, but
-							// it won't tell the new width and height.
-							// New width is in data1, new height is in data2.
-							// Otherwise the code is carbon-copied from SDL1.2 resize code.
-
-							// Okay, if you got this event, this probably means that your window IS resizable.
-							//if (Options::allowResize)
+						case SDL_WINDOWEVENT_SIZE_CHANGED:
+							// SDL_WINDOWEVENT_RESIZED - external change.
+							// SDL_WINDOWEVENT_SIZE_CHANGED: external or internal change.
 							{
-								Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, _event.window.data1);
-								Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, _event.window.data2);
 								int dX = 0, dY = 0;
-								Screen::updateScale(Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
-								Screen::updateScale(Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
+								_screen->updateScale(dX, dY);
 								for (std::list<State*>::iterator i = _states.begin(); i != _states.end(); ++i)
 								{
 									(*i)->resize(dX, dY);
 								}
-								_screen->resetDisplay();
 							}
 							break;
 						case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -669,10 +620,12 @@ void Game::setState(State *state)
 {
 	while (!_states.empty())
 	{
-		popState();
+		_deleted.push_back(_states.back());
+		_states.pop_back();
 	}
 	pushState(state);
 	_init = false;
+	_screen->setMode(state->getScreenMode());
 }
 
 /**
@@ -684,6 +637,7 @@ void Game::pushState(State *state)
 {
 	_states.push_back(state);
 	_init = false;
+	_screen->setMode(state->getScreenMode());
 }
 
 /**
@@ -697,6 +651,7 @@ void Game::popState()
 	_deleted.push_back(_states.back());
 	_states.pop_back();
 	_init = false;
+	_screen->setMode(_states.back()->getScreenMode());
 }
 
 /**

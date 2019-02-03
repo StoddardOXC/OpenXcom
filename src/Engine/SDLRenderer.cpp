@@ -198,4 +198,8 @@ void SDLRenderer::doScreenshot() {
 	_screenshotFilename.clear();
 }
 
+void SDLRenderer::getOutputSize(int& w, int& h) const {
+	SDL_GetRendererOutputSize(_renderer, &w, &h);
+}
+
 }

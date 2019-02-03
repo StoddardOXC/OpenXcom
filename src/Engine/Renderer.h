@@ -35,6 +35,8 @@ public:
 	virtual void screenshot(const std::string &filename) = 0;
 	/// Returns the renderer type.
 	virtual RendererType getRendererType() const = 0;
+	/// Returns the output size, real pixels
+	virtual void getOutputSize(int& w, int& h) const = 0;
 
 };
 }

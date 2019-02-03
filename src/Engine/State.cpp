@@ -49,7 +49,7 @@ Game* State::_game = 0;
  * By default states are full-screen.
  * @param game Pointer to the core game.
  */
-State::State() : _screen(true), _soundPlayed(false), _modal(0), _ruleInterface(0), _ruleInterfaceParent(0)
+State::State() : _screen(true), _soundPlayed(false), _modal(0), _ruleInterface(0), _ruleInterfaceParent(0), _screenMode(SC_GEOSCAPE)
 {
 	// initialize palette to all black
 	memset(_palette, 0, sizeof(_palette));
@@ -614,6 +614,11 @@ void State::setGamePtr(Game* game)
 Game* State::getGame()
 {
 	return _game;
+}
+
+ScreenMode State::getScreenMode() const
+{
+	return _screenMode;
 }
 
 }

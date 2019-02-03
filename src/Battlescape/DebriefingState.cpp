@@ -81,11 +81,8 @@ namespace OpenXcom
  */
 DebriefingState::DebriefingState() : _region(0), _country(0), _positiveScore(true), _destroyBase(false), _showSellButton(true), _pageNumber(0)
 {
+	_screenMode = SC_INFOSCREEN;
 	_missionStatistics = new MissionStatistics();
-
-	Options::baseXResolution = Options::baseXGeoscape;
-	Options::baseYResolution = Options::baseYGeoscape;
-	_game->getScreen()->resetDisplay(false);
 
 	// Restore the cursor in case something weird happened
 	_game->getCursor()->setVisible(true);

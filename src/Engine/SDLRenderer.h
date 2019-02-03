@@ -39,6 +39,7 @@ public:
 	void listSDLRendererDrivers();
 	void screenshot(const std::string &filename) override;
 	RendererType getRendererType() const override { return _rendererType; };
+	void getOutputSize(int& w, int& h) const override;
 };
 
 }
