@@ -58,8 +58,6 @@ Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBa
 		_mouseRelX = ev->motion.xrel / scaleX;
 		_mouseRelY = ev->motion.yrel / scaleY;
 		_mouseButton = ev->motion.state;
-
-		Log(LOG_INFO) << "SDL_MOUSEMOTION orig(" << ev->motion.x << ", " << ev->motion.y << "), _mouseXY: " << _mouseX << ", "<<_mouseY;
 	}
 }
 
