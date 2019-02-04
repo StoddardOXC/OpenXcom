@@ -387,7 +387,7 @@ void Screen::setMode(ScreenMode mode)
 	int type;
 	switch (mode) {
 		case SC_STARTSTATE:
-			type = SCALE_SCREEN;
+			type = SCALE_VGA8025;
 			break;
 		case SC_INTRO:
 			type = SCALE_ORIGINAL;
@@ -457,6 +457,10 @@ void Screen::setMode(ScreenMode mode)
 		case SCALE_SCREEN:
 			_baseWidth  = target_width;
 			_baseHeight = target_height;
+			break;
+		case SCALE_VGA8025:
+			_baseWidth = 720;
+			_baseHeight = 400;
 			break;
 		case SCALE_ORIGINAL:
 		default:

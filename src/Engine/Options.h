@@ -56,7 +56,8 @@ enum ScaleType
 	SCALE_SCREEN,
 	SCALE_SCREEN_DIV_4,
 	SCALE_SCREEN_DIV_5,
-	SCALE_SCREEN_DIV_6
+	SCALE_SCREEN_DIV_6,
+	SCALE_VGA8025
 };
 
 // System-specific UI setting
