@@ -30,13 +30,21 @@ class VideoState : public State
 private:
 	const std::vector<std::string> *_videos, *_tracks;
 	bool _useUfoAudioSequence;
+	size_t _currentVideo;
+	size_t _currentTrack;
 public:
 	/// Creates the Intro state.
 	VideoState(const std::vector<std::string> *videos, const std::vector<std::string> *tracks, bool useUfoAudioSequence);
 	/// Cleans up the Intro state.
 	~VideoState();
-	/// Plays the video
+	/// Sets up the player
 	void init() override;
+	// In case it gets interrupted
+	void handle(Action *action) override;
+	/// Decodes next frame; handles sound
+	void think() override;
+	/// Blits the current frame to the screen.
+	void blit() override;
 };
 
 }

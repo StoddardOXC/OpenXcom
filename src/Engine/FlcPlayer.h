@@ -61,9 +61,6 @@ private:
 	SDL_Surface *_mainScreen;
 	Screen *_realScreen;
 	SDL_Color _colors[256];
-	int _screenWidth;
-	int _screenHeight;
-	int _screenDepth;
 	int _dx, _dy;
 	int _offset;
 	int _playingState;
@@ -103,7 +100,6 @@ private:
 	void decodeVideo(bool skipLastFrame);
 	void decodeAudio(int frames);
 	void waitForNextFrame(Uint32 delay);
-	void SDLPolling();
 	bool shouldQuit();
 
 	void playVideoFrame();

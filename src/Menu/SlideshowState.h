@@ -35,7 +35,6 @@ class SlideshowState : public State
 private:
 	const SlideshowHeader &_slideshowHeader;
 	const std::vector<SlideshowSlide> *_slideshowSlides;
-	bool _wasLetterboxed;
 	std::vector<InteractiveSurface *> _slides;
 	std::vector<Text *>_captions;
 	int _curScreen;

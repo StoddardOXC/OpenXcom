@@ -422,8 +422,8 @@ void VideoState::init()
 	}
 	_game->getCursor()->setVisible(false);
 
-	int dx = (Options::baseXResolution - Screen::ORIGINAL_WIDTH) / 2;
-	int dy = (Options::baseYResolution - Screen::ORIGINAL_HEIGHT) / 2;
+	int dx = _game->getScreen()->getDX();
+	int dy = _game->getScreen()->getDY();
 
 	// We can only do a fade out in 8bpp, otherwise instantly end it
 	bool fade = (_game->getScreen()->getSurface()->format->BitsPerPixel == 8);
@@ -482,9 +482,11 @@ void VideoState::init()
 		delete flcPlayer;
 	}
 
+
+	const int FADE_DELAY = 45;
+	const int FADE_STEPS = 20;
+
 #ifndef __NO_MUSIC
-	// fade out!
-	if (fade)
 	{
 		Mix_FadeOutChannel(-1, FADE_DELAY * FADE_STEPS);
 		// SDL_Mixer has trouble with native midi and volume on windows,
@@ -499,14 +501,7 @@ void VideoState::init()
 			Mix_HaltMusic();
 		}
 	}
-	else
-	{
-		Mix_HaltChannel(-1);
-		Mix_HaltMusic();
-	}
 #endif
-
-	if (fade)
 	{
 		SDL_Color pal[256];
 		SDL_Color pal2[256];
@@ -552,5 +547,9 @@ void VideoState::init()
 	_game->getCursor()->setVisible(true);
 	_game->popState();
 }
+
+void VideoState::handle(Action *) { }
+void VideoState::think() { }
+void VideoState::blit() { }
 
 }
