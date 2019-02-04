@@ -990,7 +990,7 @@ void updateOptions()
 	// Load existing option
 	if (CrossPlatform::folderExists(_configFolder))
 	{
-		if (CrossPlatform::fileExists(_configFolder + "options.cfg"))
+		if (CrossPlatform::fileExists(_configFolder + "options-sdl2.cfg"))
 		{
 			load();
 #ifndef EMBED_ASSETS
