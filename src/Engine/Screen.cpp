@@ -49,6 +49,7 @@ const int Screen::ORIGINAL_HEIGHT = 200;
  * The screen is set up based on the current options.
  */
 Screen::Screen() : _window(NULL), _renderer(NULL),
+	_screenTexture(UINT_MAX), _cursorTexture(UINT_MAX), _fpsTexture(UINT_MAX),
 	_baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0),
 	_topBlackBand(0), _leftBlackBand(0), deferredPalette{},
 	_numColors(0), _firstColor(0), _pushPalette(false),
@@ -116,23 +117,20 @@ void Screen::handle(Action *action)
 		while (CrossPlatform::fileExists(ss.str()));
 		if (action->getKeymods()) {
 			// modded (alt/shift/ctrl/etc) screenshot keypresses
-			// shoot the unscaled screen
+			// shoots the unscaled screen without the cursor or fps counter.
 			screenshot(ss.str());
 		} else {
-			// unmodded shoot the window
+			// unmodded shoots the whole window
 			_renderer->screenshot(ss.str());
 		}
 		return;
 	}
 }
 
-
 /**
- * Renders the buffer's contents onto the screen, applying
- * any necessary filters or conversions in the process.
- * If the scaling factor is bigger than 1, the entire contents
- * of the buffer are resized by that factor (eg. 2 = doubled)
- * before being put on screen.
+ * Does a screenshot if requested,
+ * then passes the screen surface to the renderer
+ * and requests a flip.
  */
 void Screen::flip()
 {
@@ -159,7 +157,47 @@ void Screen::flip()
 		}
 		_screenshotFilename.clear();
 	}
-	_renderer->flip(_surface.get());
+	_renderer->updateTexture(_screenTexture, _surface.get());
+	{
+		static size_t fc = 0;
+		fc += 1;
+		int shade = (fc % 512 > 255) ? 255 - fc % 512 : fc % 512;
+		_renderer->setClearColor(shade, shade, shade, shade);
+	}
+	_renderer->flip();
+}
+
+void Screen::drawCursorAndFPS(Surface  *cursor, Surface *fpsCounter)
+{
+	SDL_Rect rect;
+	if (fpsCounter) {
+		rect = { 0, 0, fpsCounter->getWidth(), fpsCounter->getHeight() };
+		_renderer->setInternalRect(_fpsTexture, &rect, true);
+
+		rect =  { (int)(_scaleX), (int)(_scaleY),
+			(int)(fpsCounter->getWidth() * _scaleX), (int)(fpsCounter->getHeight() *_scaleY) };
+
+		_renderer->setOutputRect(_fpsTexture, &rect);
+		_renderer->updateTexture(_fpsTexture, fpsCounter->getSurface());
+	} else {
+		_renderer->updateTexture(_fpsTexture, NULL);
+	}
+	if (cursor) {
+		//Log(LOG_DEBUG) << "Cursor at "<< cursor->getX() <<", " << cursor->getY() << " lbb="<<_leftBlackBand;
+
+		rect = { 0, 0, cursor->getWidth(), cursor->getHeight() };
+		_renderer->setInternalRect(_cursorTexture, &rect, true);
+
+		rect =  { _leftBlackBand + (int)(_scaleX * cursor->getX()),
+				  _topBlackBand  + (int)(_scaleY * cursor->getY()),
+			(int)(cursor->getWidth() * _scaleX), (int)(cursor->getHeight() *_scaleY) };
+
+		_renderer->setOutputRect(_cursorTexture, &rect);
+		_renderer->updateTexture(_cursorTexture, cursor->getSurface());
+	} else {
+		_renderer->updateTexture(_cursorTexture, NULL);
+	}
+
 }
 
 /**
@@ -268,12 +306,17 @@ void Screen::resetVideo(int width, int height)
 	}
 	Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
 
-	_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+	_renderer = new SDLRenderer(_window, -1, 0);
 
 	if (!_renderer)	{
 		Log(LOG_ERROR) << SDL_GetError();
 		throw Exception(SDL_GetError());
 	}
+
+	// textures are blit according to the order below.
+	_screenTexture = _renderer->getTexture();
+	_cursorTexture = _renderer->getTexture();
+	_fpsTexture = _renderer->getTexture();
 
 	// fix up scaling.
 	_resizeAccountedFor = false;
@@ -431,7 +474,7 @@ void Screen::setMode(ScreenMode mode)
 	baseRect.x = baseRect.y = 0;
 	baseRect.w = _baseWidth;
 	baseRect.h = _baseHeight;
-	_renderer->setInternalRect(&baseRect);
+	_renderer->setInternalRect(_screenTexture, &baseRect, false);
 
 	std::tie(_buffer, _surface) = Surface::NewPair8Bit(_baseWidth, _baseHeight);
 	SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
@@ -452,7 +495,7 @@ void Screen::setMode(ScreenMode mode)
 		outRect.y = 0;
 		outRect.w = target_width;
 		outRect.h = target_height;
-		_renderer->setOutputRect(&outRect);
+		_renderer->setOutputRect(_screenTexture, &outRect);
 		_scaleX = target_width / _baseWidth;
 		_scaleY = target_height / _baseHeight;
 		_leftBlackBand = 0;
@@ -480,8 +523,8 @@ void Screen::setMode(ScreenMode mode)
 	if (Options::integerRatioScaling) {
 		scale = floor(scale);
 	}
-	_scaleX = _scaleY = scale;
-	Log(LOG_INFO) << "Screen::setMode(): after clamp: " << scaleX << ", " << scaleY << " winner " << scale;
+
+	Log(LOG_INFO) << "Screen::setMode(): scales after clamp: " << scaleX << ", " << scaleY << " winner " << scale;
 
 	int scaledWidth = scale * _baseWidth;
 	int scaledHeight = scale * _baseHeight * pixelRatioY; // this breaks the integer ratio but what you can do
@@ -489,13 +532,17 @@ void Screen::setMode(ScreenMode mode)
 	Log(LOG_INFO) << "Screen::setMode(): scaled size " << scaledWidth << "x" << scaledHeight
 				  << ", target size " << target_width << "x" << target_height;
 
+	_scaleX = (double) scaledWidth / _baseWidth;
+	_scaleY = (double) scaledHeight / _baseHeight;
+	Log(LOG_INFO) << "Screen::setMode(): final scales: " << _scaleX << ", " << _scaleY;
+
 	_leftBlackBand = ( target_width - scaledWidth)/2;
 	_topBlackBand = ( target_height - scaledHeight)/2;
 	outRect.x = _leftBlackBand;
 	outRect.y = _topBlackBand;
 	outRect.w = scaledWidth;
 	outRect.h = scaledHeight;
-	_renderer->setOutputRect(&outRect);
+	_renderer->setOutputRect(_screenTexture, &outRect);
 	_resizeAccountedFor = true;
 }
 
@@ -534,4 +581,5 @@ void Screen::setWindowGrab(int grab)
 	// was : Breaks stuff. Hard. FIXME: why? what?
 	SDL_SetWindowGrab(_window, grab ? SDL_TRUE : SDL_FALSE);
 }
+
 }
