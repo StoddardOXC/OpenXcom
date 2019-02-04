@@ -277,15 +277,6 @@ void Screen::resetVideo(int width, int height)
 	if (Options::fullscreen) { window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP; }
 	if (Options::borderless) { window_flags |= SDL_WINDOW_BORDERLESS; }
 
-	/* Attempt to set scaling */
-	if (Options::useNearestScaler) {
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-	} else if (Options::useLinearScaler) {
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-	} else if (Options::useAnisotropicScaler) {
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-	}
-
 	int winX, winY;
 	if (Options::borderless) {
 		winX = SDL_WINDOWPOS_CENTERED;
