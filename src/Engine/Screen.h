@@ -54,6 +54,7 @@ private:
 	//SDL_Surface *_screen;
 	SDL_Window *_window;
 	Renderer *_renderer;
+	unsigned _screenTexture, _cursorTexture, _fpsTexture;
 	int _baseWidth, _baseHeight;
 	double _scaleX, _scaleY;
 	int _topBlackBand, _leftBlackBand;
@@ -66,7 +67,6 @@ private:
 	int _currentScaleType;
 	ScreenMode _currentScaleMode;
 	bool _resizeAccountedFor;
-	std::vector<Surface *> _blitList;
 
 public:
 	static const int ORIGINAL_WIDTH;
@@ -118,6 +118,8 @@ public:
 	void warpMouseRelative(int dx, int dy);
 	/// Set the window grabbing status
 	void setWindowGrab(int grab);
+	/// Draw the cursor and the fpsCounter
+	void drawCursorAndFPS(Surface  *cursor, Surface *fpsCounter);
 };
 
 }

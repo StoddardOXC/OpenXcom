@@ -109,4 +109,11 @@ void Cursor::draw()
 	unlock();
 }
 
+void Cursor::setX(int x) {
+	Surface::setX(x);
+}
+/// Sets Y
+void Cursor::setY(int y) {
+	Surface::setY(y);
+}
 }

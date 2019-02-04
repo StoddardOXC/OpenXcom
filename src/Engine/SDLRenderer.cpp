@@ -1,7 +1,6 @@
 
 
 
-#include <assert.h>
 #include <SDL.h>
 #include <SDL_pnglite.h>
 #include "SDLRenderer.h"
@@ -12,90 +11,66 @@
 namespace OpenXcom
 {
 
-SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _renderer(NULL), _texture(NULL), _format(SDL_PIXELFORMAT_ARGB8888), _surface(0), _screenshotFilename()
+RenderItem::RenderItem() : _surface(0), _texture(0), _srcRect(), _dstRect(), _visible(false) { }  // not needed at all I suspect.
+
+RenderItem::~RenderItem()
 {
-	listSDLRendererDrivers();
-	_renderer = SDL_CreateRenderer(window, -1, flags);
-	_srcRect.x = _srcRect.y = _srcRect.w = _srcRect.h = 0;
-	_dstRect.x = _dstRect.y = _dstRect.w = _dstRect.h = 0;
-	if (_renderer == NULL)
-	{
-		Log(LOG_FATAL) << "[SDLRenderer] Couldn't create renderer; error message: " << SDL_GetError();
-		throw(Exception(SDL_GetError()));
-	}
-	Log(LOG_INFO) << "[SDLRenderer] Renderer created";
-	const char *scaleHint = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
-	if (!scaleHint)
-	{
-		_scaleHint = "nearest";
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, _scaleHint.c_str());
-	}
-	else
-	{
-		_scaleHint = scaleHint;
-	}
-	SDL_RendererInfo info;
-	SDL_GetRendererInfo(_renderer, &info);
-	Log(LOG_INFO) << "[SDLRenderer] Created new SDLRenderer, using " << info.name;
-	Log(LOG_INFO) << "[SDLRenderer] Current scaler is " << _scaleHint;
-	for (Uint32 j = 0; j < info.num_texture_formats; ++j) {
-		Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
-	}
-	_format = info.texture_formats[0];
-	Uint32 r, g, b, a;
-	if (!SDL_PixelFormatEnumToMasks(_format, &_format_bpp, &r, &g, &b, &a)) {
-		Log(LOG_FATAL) << "[SDLRenderer] Couldn't get bpp for "
-		<< SDL_GetPixelFormatName(_format) << ": " << SDL_GetError();
-		throw(Exception(SDL_GetError()));
-	}
+	if (_surface) { SDL_FreeSurface(_surface); }
+	if (_texture) { SDL_DestroyTexture(_texture); }
 }
 
-void SDLRenderer::setInternalRect(SDL_Rect *srcRect)
+void RenderItem::setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int bpp, Uint32 format, bool blend)
 {
-	// Internal rectangle should not have any X or Y offset.
-	assert(srcRect->x == 0 && srcRect->y == 0);
+	if (srcRect == NULL) {
+		_visible = false;
+		return;
+	}
+	if (srcRect->w == _srcRect.w && srcRect->h ==_srcRect.h) {
+		return;
+	}
 
 	if (_texture) { SDL_DestroyTexture(_texture); }
 	if (_surface) { SDL_FreeSurface(_surface); }
 
-	_texture = SDL_CreateTexture(_renderer, _format,
+	_texture = SDL_CreateTexture( renderer, format,
 					SDL_TEXTUREACCESS_STREAMING,
 					srcRect->w, srcRect->h);
-	int bpp;
-	Uint32 r, g, b, a;
-	SDL_PixelFormatEnumToMasks(_format, &bpp, &r, &g, &b, &a);
-	_surface = SDL_CreateRGBSurfaceWithFormat(0, srcRect->w, srcRect->h, bpp, _format);
+	_surface = SDL_CreateRGBSurfaceWithFormat(0, srcRect->w, srcRect->h, bpp, format );
 	SDL_SetSurfaceBlendMode(_surface, SDL_BLENDMODE_NONE);
+	SDL_FillRect(_surface, NULL, 0);
 
 	if (_texture == NULL || _surface == NULL) {
 		throw Exception(SDL_GetError());
 	}
-
+	SDL_SetTextureBlendMode(_texture, blend ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE);
 	_srcRect.w = srcRect->w;
 	_srcRect.h = srcRect->h;
 	Log(LOG_INFO) << "[SDLRenderer] setInternalRect(): Texture is now "
-		<< _srcRect.w << "x" << _srcRect.h << " " << SDL_GetPixelFormatName(_format);
+		<< _srcRect.w << "x" << _srcRect.h << " " << SDL_GetPixelFormatName( format );
 }
 
-void SDLRenderer::setOutputRect(SDL_Rect *dstRect)
+void RenderItem::setOutputRect(SDL_Rect *dstRect)
 {
+	if (dstRect == NULL) {
+		_visible = false;
+		return;
+	}
 	_dstRect.x = dstRect->x;
 	_dstRect.y = dstRect->y;
 	_dstRect.w = dstRect->w;
 	_dstRect.h = dstRect->h;
-	Log(LOG_INFO) << "[SDLRenderer] setOutputRect(): Output "
-		<< _dstRect.w << "x" << _dstRect.h << " at " << _dstRect.x << "x" << _dstRect.y;
+	//Log(LOG_INFO) << "[SDLRenderer] setOutputRect(): Output "
+	//	<< _dstRect.w << "x" << _dstRect.h << " at " << _dstRect.x << "x" << _dstRect.y;
 }
 
-
-SDLRenderer::~SDLRenderer(void)
+void RenderItem::updateTexture(SDL_Surface *surface)
 {
-	SDL_DestroyTexture(_texture);
-	SDL_DestroyRenderer(_renderer);
-}
-
-void SDLRenderer::flip(SDL_Surface *srcSurface)
-{
+	if (surface == NULL || _texture == NULL) {
+		_visible = false;
+		return;
+	} else {
+		_visible = true;
+	}
 #if 0
 	Log(LOG_INFO) << "[SDLRenderer] src: "<<srcSurface->w<<"x"<<srcSurface->h<<" "
 		<< SDL_GetPixelFormatName(srcSurface->format->format)
@@ -103,13 +78,13 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 		<< " dstR: "<<_dstRect.w <<"x"<<_dstRect.h;
 #endif
 
-	//SDL_SetSurfaceBlendMode(srcSurface, SDL_BLENDMODE_NONE);
-	if (SDL_BlitSurface(srcSurface, NULL, _surface, NULL)) {
+	//SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_NONE);
+	if (SDL_BlitSurface(surface, NULL, _surface, NULL)) {
 		SDL_BlendMode srcBM, dstBM;
-		SDL_GetSurfaceBlendMode(srcSurface, &srcBM);
+		SDL_GetSurfaceBlendMode(surface, &srcBM);
 		SDL_GetSurfaceBlendMode(_surface, &dstBM);
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_BlitSurface(): " << SDL_GetError();
-		Log(LOG_ERROR) << " src pf: " << SDL_GetPixelFormatName(srcSurface->format->format)
+		Log(LOG_ERROR) << " src pf: " << SDL_GetPixelFormatName(surface->format->format)
 			<< " BM: " << srcBM
 			<< " dst pf: " << SDL_GetPixelFormatName(_surface->format->format)
 			<< " BM: " << (int) dstBM;
@@ -122,30 +97,119 @@ void SDLRenderer::flip(SDL_Surface *srcSurface)
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_UpdateTexture(): " << SDL_GetError();
 		throw Exception(SDL_GetError());
 	}
+}
 
-	// flip starts here.
-	{
-		static size_t fc = 0;
-		fc += 1;
-		int shade = (fc % 512 > 255) ? 255 - fc % 512 : fc % 512;
-		SDL_SetRenderDrawColor(_renderer, shade, shade, shade, 255);
+SDLRenderer::SDLRenderer(SDL_Window *window, int driver, int filter): _window(window), _renderer(NULL),
+	_r(0), _g(0), _b(0), _a(255), _format(SDL_PIXELFORMAT_UNKNOWN), _screenshotFilename()
+{
+	std::string scaleHint;
+	switch (filter) {
+		case 1:
+			scaleHint = "linear";
+			break;
+		case 2:
+			scaleHint = "best";
+			break;
+		default:
+			scaleHint = "nearest";
 	}
+	// TODO: what it returns, why, and why don't we use SDL_SetHintWithPriority() etc etc.
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, scaleHint.c_str());
+	if (driver == -1) {
+		_renderer = SDL_CreateRenderer(window, -1, 0);
+	} else {
+		auto driverlist = listDrivers();
+		_format = driverlist.at(driver).pixelFormat;
+		_renderer = SDL_CreateRenderer(window, driverlist.at(driver).driverID, 0);
+	}
+	if (_renderer == NULL)
+	{
+		Log(LOG_FATAL) << "[SDLRenderer] Couldn't create renderer; error message: " << SDL_GetError();
+		throw(Exception(SDL_GetError()));
+	}
+	SDL_RendererInfo info;
+	SDL_GetRendererInfo(_renderer, &info);
+	if (_format == SDL_PIXELFORMAT_UNKNOWN) { _format = info.texture_formats[0]; }
+	Log(LOG_INFO) << "[SDLRenderer] Created new SDLRenderer, " << info.name <<
+			" scaleHint: " << scaleHint << " " << SDL_GetPixelFormatName(_format);
+
+	Uint32 r, g, b, a;
+	if (!SDL_PixelFormatEnumToMasks(_format, &_format_bpp, &r, &g, &b, &a)) {
+		Log(LOG_FATAL) << "[SDLRenderer] Couldn't get bpp for "
+		<< SDL_GetPixelFormatName(_format) << ": " << SDL_GetError();
+		throw(Exception(SDL_GetError()));
+	}
+}
+
+SDLRenderer::~SDLRenderer(void)
+{
+	SDL_DestroyRenderer(_renderer);
+}
+
+unsigned SDLRenderer::getTexture()
+{
+	_renderList.resize(_renderList.size() + 1);
+	return _renderList.size() - 1;
+}
+
+/**
+ * Sets up internal structures: an SDL_Surface for pixel format conversion
+ * and an SDL_Texture to update and render.
+ * @param item - texture id
+ * @param srcRect - size of the expected surfaces
+ * @param blend - whether to blit with or without alpha
+ */
+void SDLRenderer::setInternalRect(unsigned item, SDL_Rect *srcRect, bool blend)
+{
+	_renderList.at(item).setInternalRect(srcRect, _renderer, _format_bpp, _format, blend);
+}
+
+/**
+ * Sets the blit destination
+ * @param dstRect - blit destination in window coordinates
+ */
+void SDLRenderer::setOutputRect(unsigned item, SDL_Rect *dstRect)
+{
+	_renderList.at(item).setOutputRect(dstRect);
+}
+
+/**
+ * Updates pixel data
+ * @param surface - what to blit. Size must match what was set up in setInternalRect().
+ */
+void SDLRenderer::updateTexture(unsigned item, SDL_Surface *surface)
+{
+	_renderList.at(item).updateTexture(surface);
+}
+
+/**
+ * Performs the blits and presents the result.
+ * Also does the screenshot if one was requested.
+ */
+void SDLRenderer::flip()
+{
+	SDL_SetRenderDrawColor(_renderer, _r, _g, _b, _a);
 	if (SDL_RenderClear(_renderer)) {
 		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderClear(): " << SDL_GetError();
 		throw Exception(SDL_GetError());
 	}
 	// rendercopy does the scaling
-	if (SDL_RenderCopy(_renderer, _texture, NULL, &_dstRect)) {
-		Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderCopy(): " << SDL_GetError();
-		throw Exception(SDL_GetError());
+	for (auto& item: _renderList) {
+		if (!item.visible()) {
+			continue;
+		}
+		if (SDL_RenderCopy(_renderer, item.texture(), NULL, item.dstRect())) {
+			Log(LOG_ERROR)<< "[SDLRenderer] SDL_RenderCopy(): " << SDL_GetError();
+			throw Exception(SDL_GetError());
+		}
 	}
-	// the most honorable cursor should be rendercopied too. TODO.
 	SDL_RenderPresent(_renderer);
 	doScreenshot();
 }
 
-void SDLRenderer::listSDLRendererDrivers()
+const std::vector<RendererDriver> SDLRenderer::listDrivers()
 {
+	std::vector<RendererDriver> rv;
 	int numRenderDrivers = SDL_GetNumRenderDrivers();
 	Log(LOG_INFO) << "[SDLRenderer] Listing available rendering drivers:";
 	Log(LOG_INFO) << "[SDLRenderer]  Number of drivers: " << numRenderDrivers;
@@ -157,9 +221,21 @@ void SDLRenderer::listSDLRendererDrivers()
 		Log(LOG_INFO) << "[SDLRenderer]    Number of texture formats: " << info.num_texture_formats;
 		for (Uint32 j = 0; j < info.num_texture_formats; ++j)
 		{
-			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
+			auto pfname = SDL_GetPixelFormatName(info.texture_formats[j]);
+			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << pfname;
+			rv.push_back({ info.name, i, pfname, info.texture_formats[j]});
 		}
 	}
+	return rv;
+}
+
+const std::vector<RendererFilter> listFilters()
+{
+	std::vector<RendererFilter> rv;
+	rv.push_back({ "Nearest", 0});
+	rv.push_back({ "Linear", 1});
+	rv.push_back({ "Best", 2});
+	return rv;
 }
 
 /**
@@ -200,6 +276,9 @@ void SDLRenderer::doScreenshot() {
 
 void SDLRenderer::getOutputSize(int& w, int& h) const {
 	SDL_GetRendererOutputSize(_renderer, &w, &h);
+}
+void SDLRenderer::setClearColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
+	_r = r; _g = g; _b = b; _a = a;
 }
 
 }

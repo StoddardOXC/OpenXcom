@@ -507,8 +507,9 @@ void Game::run()
 				{
 					(*i)->blit();
 				}
-				_fpsCounter->blit(_screen->getSurface());
-				_cursor->blit(_screen->getSurface());
+				_screen->drawCursorAndFPS(
+					_cursor->getVisible() ? _cursor : NULL,
+					_fpsCounter->getVisible() ? _fpsCounter : NULL);
 				_screen->flip();
 			}
 		}
