@@ -106,7 +106,7 @@ void InteractiveSurface::setVisible(bool visible)
  */
 void InteractiveSurface::handle(Action *action, State *state)
 {
-	if (!_visible || _hidden)
+	if (!_visible || _hidden || action->isConsumed())
 		return;
 
 	action->setSender(this);

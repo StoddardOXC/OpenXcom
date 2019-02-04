@@ -37,6 +37,7 @@
 #include "../Interface/FpsCounter.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Mod/RuleInterface.h"
+#include "Action.h"
 
 namespace OpenXcom
 {
@@ -303,6 +304,10 @@ void State::think()
  */
 void State::handle(Action *action)
 {
+	if (action->isConsumed())
+	{
+		return;
+	}
 	if (!_modal)
 	{
 		for (std::vector<Surface*>::reverse_iterator i = _surfaces.rbegin(); i != _surfaces.rend(); ++i)
