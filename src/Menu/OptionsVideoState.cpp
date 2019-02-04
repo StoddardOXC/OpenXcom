@@ -212,13 +212,16 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	std::vector<std::string> filterNames;
 	filterNames.push_back(tr("STR_DISABLED"));
 	filterNames.push_back("Linear");
-	filterNames.push_back("Anisotropic (disabled)");
+	filterNames.push_back("Anisotropic");
+#if 0
 	filterNames.push_back("xBRZ");
+#endif
 	_filters.push_back("");
 	_filters.push_back("");
 	_filters.push_back("");
 	_filters.push_back("");
 
+#if 0
 #ifndef __NO_OPENGL
 	std::vector<std::string> filters;
 	for (auto f: FileMap::filterFiles(FileMap::getVFolderContents(GL_FOLDER), GL_EXT)) { filters.push_back(f); }
@@ -232,8 +235,10 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 		_filters.push_back(path);
 	}
 #endif
+#endif
 
 	size_t selFilter = 0;
+#if 0
 	if (Screen::useOpenGL())
 	{
 #ifndef __NO_OPENGL
@@ -248,7 +253,9 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 		}
 #endif
 	}
-	else if (Options::useLinearScaler)
+	else
+#endif
+	if (Options::useLinearScaler)
 	{
 		selFilter = 1;
 	}
@@ -256,10 +263,12 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	{
 		selFilter = 2;
 	}
+#if 0
 	else if (Options::useXBRZFilter)
 	{
 		selFilter = 3;
 	}
+#endif
 
 	_txtFilter->setText(tr("STR_DISPLAY_FILTER"));
 
