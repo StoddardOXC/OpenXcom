@@ -693,7 +693,7 @@ void Inventory::blit(SDL_Surface *surface)
 void Inventory::mouseOver(Action *action, State *state)
 {
 	_selection->setX(action->getRelativeXMouse() - _selection->getWidth()/2);
-	_selection->setY(action->getRelativeXMouse() - _selection->getHeight()/2);
+	_selection->setY(action->getRelativeYMouse() - _selection->getHeight()/2);
 
 	if (_selUnit == 0)
 		return;
