@@ -299,50 +299,6 @@ void Screen::screenshot(const std::string &filename)
 }
 
 /**
- * Check whether a 32bpp scaler has been selected.
- * @return if it is enabled with a compatible resolution.
- */
-bool Screen::use32bitScaler()
-{
-	int w = Options::displayWidth;
-	int h = Options::displayHeight;
-	int baseW = Options::baseXResolution;
-	int baseH = Options::baseYResolution;
-	int maxScale = 0;
-
-	if (Options::useHQXFilter)
-	{
-		maxScale = 4;
-	}
-	else if (Options::useXBRZFilter)
-	{
-		maxScale = 6;
-	}
-
-	for (int i = 2; i <= maxScale; i++)
-	{
-		if (w == baseW * i && h == baseH * i)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-/**
- * Check if OpenGL is enabled.
- * @return if it is enabled.
- */
-bool Screen::useOpenGL()
-{
-#ifdef __NO_OPENGL
-	return false;
-#else
-	return Options::useOpenGL;
-#endif
-}
-
-/**
  * Gets the Horizontal offset from the mid-point of the screen, in pixels.
  * More like - get X coordinate of the top left corner of the original
  * 320x200 screen on the current screen, because it might be bigger.

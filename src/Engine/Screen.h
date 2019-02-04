@@ -66,6 +66,7 @@ private:
 	int _currentScaleType;
 	ScreenMode _currentScaleMode;
 	bool _resizeAccountedFor;
+	std::vector<Surface *> _blitList;
 
 public:
 	static const int ORIGINAL_WIDTH;
@@ -83,6 +84,8 @@ public:
 	SDL_Surface *getSurface();
 	/// Handles keyboard events.
 	void handle(Action *action);
+	/// Sets up a blit of a surface at screen coordinates given by it (cursor, fps)
+	void blit(Surface *surface);
 	/// Renders the screen onto the game window.
 	void flip();
 	/// Clears the screen.
@@ -105,10 +108,6 @@ public:
 	void resetVideo(int width, int height);
 	/// Takes a screenshot.
 	void screenshot(const std::string &filename);
-	/// Checks whether a 32bit scaler is requested and works for the selected resolution
-	static bool use32bitScaler();
-	/// Checks whether OpenGL output is requested
-	static bool useOpenGL();
 	/// Get the pointer for our current window
 	SDL_Window *getWindow() const;
 	/// Make an Action
