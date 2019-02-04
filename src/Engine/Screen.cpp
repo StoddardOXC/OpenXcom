@@ -491,11 +491,13 @@ void Screen::setMode(ScreenMode mode)
 		outRect.w = target_width;
 		outRect.h = target_height;
 		_renderer->setOutputRect(_screenTexture, &outRect);
-		_scaleX = target_width / _baseWidth;
-		_scaleY = target_height / _baseHeight;
+		_scaleX = (double) target_width / _baseWidth;
+		_scaleY = (double) target_height / _baseHeight;
 		_leftBlackBand = 0;
 		_topBlackBand = 0;
+		Log(LOG_INFO) << "Screen::setMode(): Options::keepAspectRatio false.";
 		Log(LOG_INFO) << "Screen::setMode(): scaled size " << target_width << "x" << target_height << ", no letterboxing.";
+		Log(LOG_INFO) << "Screen::setMode(): final scales " << _scaleX << ", " << _scaleY;
 		_resizeAccountedFor = true;
 		return;
 	}
