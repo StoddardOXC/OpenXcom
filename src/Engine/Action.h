@@ -32,7 +32,6 @@ class InteractiveSurface;
  */
 class Action
 {
-	friend class Screen; // factory-construction only, in Screen.
 private:
 	const SDL_Event *_ev;
 	double _scaleX, _scaleY;
@@ -41,6 +40,7 @@ private:
 	int _mouseButton;
 	InteractiveSurface *_sender;
 protected:
+	friend class Screen; // factory-construction only, in Screen::makeAction()
 	/// Creates an action with given event data.
 	Action(const SDL_Event* ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand);
 public:
@@ -92,6 +92,8 @@ public:
 	float getMultigestureDDist() const;
 	/// Marks action / event as consumed.
 	void setConsumed(void);
+	/// Returns if it is.
+	bool isConsumed(void) const;
 	/// Sets as if we just pressed a button. This stuff in InteractiveSurface needs to be FIXME-ed
 	void setMouseButton(int button);
 
