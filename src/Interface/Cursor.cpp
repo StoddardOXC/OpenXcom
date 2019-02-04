@@ -17,7 +17,6 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Cursor.h"
-#include <cmath>
 #include <SDL.h>
 #include "../Engine/Action.h"
 #include "../Engine/Options.h"
@@ -28,8 +27,6 @@ namespace OpenXcom
 /**
  * Sets up a cursor with the specified size and position
  * and hides the system cursor.
- * @note The size and position don't really matter since
- * it's a 9x13 shape, they're just there for inheritance.
  * @param width Width in pixels.
  * @param height Height in pixels.
  * @param x X position in pixels.
@@ -112,7 +109,7 @@ void Cursor::draw()
 void Cursor::setX(int x) {
 	Surface::setX(x);
 }
-/// Sets Y
+
 void Cursor::setY(int y) {
 	Surface::setY(y);
 }
