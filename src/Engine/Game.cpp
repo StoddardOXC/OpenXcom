@@ -497,7 +497,7 @@ void Game::run()
 
 		// Calculate how long we are to sleep
 		Uint32 idleTime = 0;
-		if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
+		if (Options::FPS > 0)
 		{
 			// Uint32 milliseconds do wrap around in about 49.7 days
 			Uint32 timeFrameEnded = SDL_GetTicks();

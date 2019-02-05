@@ -5,14 +5,15 @@
 OPT int displayWidth, displayHeight, maxFrameSkip, baseXResolution, baseYResolution, baseXGeoscape, baseYGeoscape, baseXBattlescape, baseYBattlescape,
 	soundVolume, musicVolume, uiVolume, audioSampleRate, audioBitDepth, audioChunkSize, pauseMode, windowedModePositionX, windowedModePositionY, FPS, FPSInactive,
 	changeValueByMouseWheel, dragScrollTimeTolerance, dragScrollPixelTolerance, mousewheelSpeed, autosaveFrequency;
-OPT bool fullscreen, asyncBlit, playIntro, useScaleFilter, useHQXFilter, useXBRZFilter, useOpenGL, checkOpenGLErrors, vSyncForOpenGL, useOpenGLSmoothing,
+OPT bool fullscreen, asyncBlit, playIntro,
 	autosave, allowResize, borderless, debug, debugUi, fpsCounter, newSeedOnLoad, keepAspectRatio, nonSquarePixelRatio,
-	cursorInBlackBandsInFullscreen, cursorInBlackBandsInWindow, cursorInBlackBandsInBorderlessWindow, maximizeInfoScreens, musicAlwaysLoop, StereoSound, verboseLogging, soldierDiaries, touchEnabled,
+	maximizeInfoScreens, musicAlwaysLoop, StereoSound, verboseLogging, soldierDiaries, touchEnabled,
 	rootWindowedMode, rawScreenShots, lazyLoadResources, listVFSContents, embeddedOnly;
 // SDL2 scalers
 OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler, integerRatioScaling;
+OPT bool integerRatioScaling;
 
-OPT std::string language, useOpenGLShader;
+OPT std::string language, renderDriverSDL, renderFilterSDL;
 OPT KeyboardType keyboardMode;
 OPT SaveSort saveOrder;
 OPT MusicFormat preferredMusic;
@@ -86,10 +87,9 @@ OPT int longPressDuration;
 OPT bool showCursor;
 
 // Flags and other stuff that don't need OptionInfo's.
-OPT bool mute, reload, newOpenGL, newScaleFilter, newHQXFilter, newXBRZFilter, newRootWindowedMode, newFullscreen, newAllowResize, newBorderless;
+OPT bool mute, reload, newRootWindowedMode, newFullscreen, newAllowResize, newBorderless, newKeepAspectRatio, newNonSquarePixelRatio;
 OPT int newDisplayWidth, newDisplayHeight, newBattlescapeScale, newGeoscapeScale, newWindowedModePositionX, newWindowedModePositionY;
-OPT bool newNearestScaler, newLinearScaler, newAnisotropicScaler;
-OPT std::string newOpenGLShader;
+OPT std::string newRenderDriverSDL, newRenderFilterSDL;
 OPT std::vector< std::pair<std::string, bool> > mods; // ordered list of available mods (lowest priority to highest) and whether they are active
 OPT SoundFormat currentSound;
 OPT std::string systemLocale;

@@ -29,24 +29,33 @@ void RenderItem::setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int 
 		return;
 	}
 
-	if (_texture) { SDL_DestroyTexture(_texture); }
 	if (_surface) { SDL_FreeSurface(_surface); }
-
-	_texture = SDL_CreateTexture( renderer, format,
-					SDL_TEXTUREACCESS_STREAMING,
-					srcRect->w, srcRect->h);
 	_surface = SDL_CreateRGBSurfaceWithFormat(0, srcRect->w, srcRect->h, bpp, format );
 	SDL_SetSurfaceBlendMode(_surface, SDL_BLENDMODE_NONE);
 	SDL_FillRect(_surface, NULL, 0);
 
-	if (_texture == NULL || _surface == NULL) {
+	if (_surface == NULL) {
 		throw Exception(SDL_GetError());
 	}
-	SDL_SetTextureBlendMode(_texture, blend ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE);
+	_format = format;
+	_blend = blend;
 	_srcRect.w = srcRect->w;
 	_srcRect.h = srcRect->h;
+	recreateTexture(renderer);
+
 	Log(LOG_INFO) << "[SDLRenderer] setInternalRect(): Texture is now "
 		<< _srcRect.w << "x" << _srcRect.h << " " << SDL_GetPixelFormatName( format );
+}
+
+void RenderItem::recreateTexture(SDL_Renderer *renderer)
+{
+	if (!_surface) { return; }
+	if (_texture) { SDL_DestroyTexture(_texture); }
+	_texture = SDL_CreateTexture(renderer, _format, SDL_TEXTUREACCESS_STREAMING, _srcRect.w, _srcRect.h);
+	if (_texture == NULL) {
+		throw Exception(SDL_GetError());
+	}
+	SDL_SetTextureBlendMode(_texture, _blend ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE);
 }
 
 void RenderItem::setOutputRect(SDL_Rect *dstRect)
@@ -99,29 +108,71 @@ void RenderItem::updateTexture(SDL_Surface *surface)
 	}
 }
 
-SDLRenderer::SDLRenderer(SDL_Window *window, int driver, int filter): _window(window), _renderer(NULL),
-	_r(0), _g(0), _b(0), _a(255), _format(SDL_PIXELFORMAT_UNKNOWN), _screenshotFilename()
+const std::vector<std::string> SDLRenderer::listFilters()
 {
-	std::string scaleHint;
-	switch (filter) {
-		case 1:
-			scaleHint = "linear";
-			break;
-		case 2:
-			scaleHint = "best";
-			break;
-		default:
-			scaleHint = "nearest";
+	std::vector<std::string> rv;
+	rv.push_back("Nearest");
+	rv.push_back("Linear");
+	rv.push_back("Best");
+	return rv;
+}
+
+static std::string map_filter_name(const std::string& filtername)
+{
+	if (filtername == "Best") {
+		return std::string("best");
+	} else if (filtername == "Linear") {
+		return std::string("linear");
+	} else {
+		return std::string("nearest");
 	}
+}
+
+const std::vector<std::string> SDLRenderer::listDrivers()
+{
+	std::vector<std::string> rv;
+	int numRenderDrivers = SDL_GetNumRenderDrivers();
+	Log(LOG_INFO) << "[SDLRenderer] Listing available rendering drivers:";
+	Log(LOG_INFO) << "[SDLRenderer]  Number of drivers: " << numRenderDrivers;
+	for (int i = 0; i < numRenderDrivers; ++i) {
+		SDL_RendererInfo info;
+		SDL_GetRenderDriverInfo(i, &info);
+		std::string rdname = "SDL2 ";
+		rdname += info.name;
+		rv.push_back(rdname);
+		Log(LOG_INFO) << "[SDLRenderer]  Driver " << i << ": " << rdname;
+		Log(LOG_INFO) << "[SDLRenderer]    Number of texture formats: " << info.num_texture_formats;
+		for (Uint32 j = 0; j < info.num_texture_formats; ++j) {
+			std::string pfname = SDL_GetPixelFormatName(info.texture_formats[j]);
+			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << pfname;
+		}
+	}
+	return rv;
+}
+
+static int map_driver_name(const std::string& driver)
+{
+	if (driver.size() < 4) { return -1; } // no SDL2  prefix
+	std::string unprefixed(driver.c_str() + 4);
+	int numRenderDrivers = SDL_GetNumRenderDrivers();
+	for (int i = 0; i < numRenderDrivers; ++i) {
+		SDL_RendererInfo info;
+		SDL_GetRenderDriverInfo(i, &info);
+		if (unprefixed == std::string(info.name)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+SDLRenderer::SDLRenderer(SDL_Window *window, const std::string& driver, const std::string& filter):
+	_window(window), _renderer(NULL), _r(0), _g(0), _b(0), _a(255), _format(SDL_PIXELFORMAT_UNKNOWN),
+	_screenshotFilename()
+{
+	std::string scaleHint = map_filter_name(filter);
 	// TODO: what it returns, why, and why don't we use SDL_SetHintWithPriority() etc etc.
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, scaleHint.c_str());
-	if (driver == -1) {
-		_renderer = SDL_CreateRenderer(window, -1, 0);
-	} else {
-		auto driverlist = listDrivers();
-		_format = driverlist.at(driver).pixelFormat;
-		_renderer = SDL_CreateRenderer(window, driverlist.at(driver).driverID, 0);
-	}
+	_renderer = SDL_CreateRenderer(window, map_driver_name(driver), 0);
 	if (_renderer == NULL)
 	{
 		Log(LOG_FATAL) << "[SDLRenderer] Couldn't create renderer; error message: " << SDL_GetError();
@@ -207,37 +258,6 @@ void SDLRenderer::flip()
 	doScreenshot();
 }
 
-const std::vector<RendererDriver> SDLRenderer::listDrivers()
-{
-	std::vector<RendererDriver> rv;
-	int numRenderDrivers = SDL_GetNumRenderDrivers();
-	Log(LOG_INFO) << "[SDLRenderer] Listing available rendering drivers:";
-	Log(LOG_INFO) << "[SDLRenderer]  Number of drivers: " << numRenderDrivers;
-	for (int i = 0; i < numRenderDrivers; ++i)
-	{
-		SDL_RendererInfo info;
-		SDL_GetRenderDriverInfo(i, &info);
-		Log(LOG_INFO) << "[SDLRenderer]  Driver " << i << ": " << info.name;
-		Log(LOG_INFO) << "[SDLRenderer]    Number of texture formats: " << info.num_texture_formats;
-		for (Uint32 j = 0; j < info.num_texture_formats; ++j)
-		{
-			auto pfname = SDL_GetPixelFormatName(info.texture_formats[j]);
-			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << pfname;
-			rv.push_back({ info.name, i, pfname, info.texture_formats[j]});
-		}
-	}
-	return rv;
-}
-
-const std::vector<RendererFilter> listFilters()
-{
-	std::vector<RendererFilter> rv;
-	rv.push_back({ "Nearest", 0});
-	rv.push_back({ "Linear", 1});
-	rv.push_back({ "Best", 2});
-	return rv;
-}
-
 /**
  * Sets a filename for the next screenshot.
  * Actual screenshotting is done during the next flip().
@@ -279,6 +299,11 @@ void SDLRenderer::getOutputSize(int& w, int& h) const {
 }
 void SDLRenderer::setClearColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
 	_r = r; _g = g; _b = b; _a = a;
+}
+void SDLRenderer::setFilter(const std::string& filter) {
+	// this is applied in SDL_CreateTexture(), so recreate them.
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, map_filter_name(filter).c_str());
+	for (auto& ri: _renderList) { ri.recreateTexture(_renderer); }
 }
 
 }

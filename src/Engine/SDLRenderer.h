@@ -19,12 +19,15 @@ struct RenderItem {
 	SDL_Rect _srcRect;
 	SDL_Rect _dstRect;
 	bool _visible;
+	Uint32 _format;
+	bool _blend;
 
 	RenderItem();
 	~RenderItem();
 	void setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int bpp, Uint32 format, bool blend);
 	void setOutputRect(SDL_Rect *dstRect);
 	void updateTexture(SDL_Surface *surface);
+	void recreateTexture(SDL_Renderer *renderer);
 	bool visible() const { return _visible; };
 	SDL_Texture *texture() { return _texture; }
 	SDL_Rect *dstRect() { return &_dstRect; }
@@ -34,7 +37,6 @@ class SDLRenderer :
 	public Renderer
 {
 private:
-	static const RendererType _rendererType = RENDERER_SDL2;
 	SDL_Window *_window;
 	SDL_Renderer *_renderer;
 	std::string _scaleHint;
@@ -47,7 +49,7 @@ private:
 	std::string _screenshotFilename; // empty = no screenshot this frame.
 	void doScreenshot(void);
 public:
-	SDLRenderer(SDL_Window *window, int driver, int filter);
+	SDLRenderer(SDL_Window *window, const std::string& driver, const std::string& filter);
 	~SDLRenderer(void);
 	/// ala glGetTexture()
 	unsigned getTexture() override;
@@ -60,11 +62,11 @@ public:
 	/// Blits the contents of RenderItems to the screen.
 	void flip() override;
 	void screenshot(const std::string &filename) override;
-	RendererType getRendererType() const override { return _rendererType; };
 	void getOutputSize(int& w, int& h) const override;
 	void setClearColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) override;
-	static const std::vector<RendererDriver> listDrivers();
-	static const std::vector<RendererFilter> listFilters();
+	void setFilter(const std::string& filter) override;
+	static const std::vector<std::string> listDrivers();
+	static const std::vector<std::string> listFilters();
 };
 
 }

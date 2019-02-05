@@ -10,33 +10,21 @@
 #include <SDL.h>
 #include <string>
 
+/* overall concept:
+ *
+ * A Renderer has one or more drivers and one or more filters.
+ * These are orthogonal, as in every driver supports every filter.
+ *
+ * If this is not possible, create another Renderer subclass.
+ *
+ */
+
 namespace OpenXcom
 {
-
-enum RendererType
-{
-	RENDERER_SDL2,
-	RENDERER_OPENGL
-};
-
-struct RendererDriver
-{
-	std::string driverName;
-	int driverID;
-	std::string pixelFormatName;
-	Uint32 pixelFormat;
-};
-
-struct RendererFilter
-{
-	std::string filterName;
-	int filterID;
-};
 
 class Renderer
 {
 public:
-	Renderer(void);
 	virtual ~Renderer(void);
 	/// ala glGetTexture()
 	virtual unsigned getTexture() = 0;
@@ -50,13 +38,12 @@ public:
 	virtual void flip() = 0;
 	/// Saves a screenshot to filename.
 	virtual void screenshot(const std::string &filename) = 0;
-	/// Returns the renderer type.
-	virtual RendererType getRendererType() const = 0;
 	/// Returns the output size, real pixels
 	virtual void getOutputSize(int& w, int& h) const = 0;
 	/// Sets the clear color
 	virtual void setClearColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) = 0;
-	/// Gets the whatever drivers the renderer has (and pixformats: TBD if worth it)
+	/// Sets a filter, this should be possible without recreating the renderer.
+	virtual void setFilter(const std::string& filter) = 0;
 
 };
 }
