@@ -438,7 +438,7 @@ en-US:
 #UfopaediaSelectState.cpp
   STR_NOT_AWARDED_YET: "Not awarded yet"
 #New OptionsVideoState stuff
-  STR_DISPLAY_DRIVER: "Display driver"
+  STR_DISPLAY_DRIVER: "Display Driver"
   STR_DISPLAY_DRIVER_DESC: "teh renderer and also what method is uses, eh?"
   STR_LETTERBOXED_DESC: "How to preserve aspect ratio: fully, ignore that the pixels were not square, or not at all."
   STR_LETTERBOXED_1_20: "Original pixels"
