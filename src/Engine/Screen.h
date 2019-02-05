@@ -102,8 +102,6 @@ public:
 	int getWidth() const;
 	/// Gets the screen's height, logical pixels.
 	int getHeight() const;
-	/// Resets the screen display. Does nothing.
-	void resetDisplay(bool resetVideo = true);
 	/// Actually resets the video stuff.
 	void resetVideo(int width, int height);
 	/// Takes a screenshot.

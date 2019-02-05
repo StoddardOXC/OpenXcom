@@ -61,38 +61,21 @@ bool _loadLastSaveExpended = false;
 void create()
 {
 	if (!_info.empty()) { _info.clear(); }
-#ifdef DINGOO
-	_info.push_back(OptionInfo("displayWidth", &displayWidth, Screen::ORIGINAL_WIDTH));
-	_info.push_back(OptionInfo("displayHeight", &displayHeight, Screen::ORIGINAL_HEIGHT));
-	_info.push_back(OptionInfo("fullscreen", &fullscreen, true));
-	_info.push_back(OptionInfo("asyncBlit", &asyncBlit, false));
-	_info.push_back(OptionInfo("keyboardMode", (int*)&keyboardMode, KEYBOARD_OFF));
-#else
-	_info.push_back(OptionInfo("displayWidth", &displayWidth, Screen::ORIGINAL_WIDTH*2));
-	_info.push_back(OptionInfo("displayHeight", &displayHeight, Screen::ORIGINAL_HEIGHT*2));
+	_info.push_back(OptionInfo("displayWidth", &displayWidth, 720));
+	_info.push_back(OptionInfo("displayHeight", &displayHeight, 480));
 	_info.push_back(OptionInfo("fullscreen", &fullscreen, false));
-	_info.push_back(OptionInfo("asyncBlit", &asyncBlit, true));
 	_info.push_back(OptionInfo("keyboardMode", (int*)&keyboardMode, KEYBOARD_ON));
-#endif
-
-#ifdef __MOBILE__
 	_info.push_back(OptionInfo("maxFrameSkip", &maxFrameSkip, 0, "STR_FRAMESKIP", "STR_GENERAL"));
-#else
-	_info.push_back(OptionInfo("maxFrameSkip", &maxFrameSkip, 0));
-#endif
 	_info.push_back(OptionInfo("traceAI", &traceAI, false));
 	_info.push_back(OptionInfo("verboseLogging", &verboseLogging, false));
 	_info.push_back(OptionInfo("listVFSContents", &listVFSContents, false));
 	_info.push_back(OptionInfo("embeddedOnly", &embeddedOnly, true));
 	_info.push_back(OptionInfo("StereoSound", &StereoSound, true));
-	//_info.push_back(OptionInfo("baseXResolution", &baseXResolution, Screen::ORIGINAL_WIDTH));
-	//_info.push_back(OptionInfo("baseYResolution", &baseYResolution, Screen::ORIGINAL_HEIGHT));
-	//_info.push_back(OptionInfo("baseXGeoscape", &baseXGeoscape, Screen::ORIGINAL_WIDTH));
-	//_info.push_back(OptionInfo("baseYGeoscape", &baseYGeoscape, Screen::ORIGINAL_HEIGHT));
-	//_info.push_back(OptionInfo("baseXBattlescape", &baseXBattlescape, Screen::ORIGINAL_WIDTH));
-	//_info.push_back(OptionInfo("baseYBattlescape", &baseYBattlescape, Screen::ORIGINAL_HEIGHT));
 	_info.push_back(OptionInfo("geoscapeScale", &geoscapeScale, 0));
 	_info.push_back(OptionInfo("battlescapeScale", &battlescapeScale, 0));
+#if 0 
+	WTF is password?
+<<<<<<< HEAD
 	_info.push_back(OptionInfo("useScaleFilter", &useScaleFilter, false));
 	_info.push_back(OptionInfo("useHQXFilter", &useHQXFilter, false));
 	_info.push_back(OptionInfo("useXBRZFilter", &useXBRZFilter, false));
@@ -102,6 +85,10 @@ void create()
 	//_info.push_back(OptionInfo("vSyncForOpenGL", &vSyncForOpenGL, true));
 	_info.push_back(OptionInfo("useOpenGLSmoothing", &useOpenGLSmoothing, true));
 	_info.push_back(OptionInfo("password", &password, "secret"));
+=======
+#endif
+	_info.push_back(OptionInfo("renderDriverSDL", &renderDriverSDL, ""));
+	_info.push_back(OptionInfo("renderFilterSDL", &renderFilterSDL, ""));
 	_info.push_back(OptionInfo("debug", &debug, false));
 	_info.push_back(OptionInfo("debugUi", &debugUi, false));
 	_info.push_back(OptionInfo("soundVolume", &soundVolume, 2*(MIX_MAX_VOLUME/3)));
@@ -150,9 +137,6 @@ void create()
 	_info.push_back(OptionInfo("keepAspectRatio", &keepAspectRatio, true));
 	_info.push_back(OptionInfo("integerRatioScaling", &integerRatioScaling, false));
 	_info.push_back(OptionInfo("nonSquarePixelRatio", &nonSquarePixelRatio, false));
-	_info.push_back(OptionInfo("cursorInBlackBandsInFullscreen", &cursorInBlackBandsInFullscreen, false));
-	_info.push_back(OptionInfo("cursorInBlackBandsInWindow", &cursorInBlackBandsInWindow, true));
-	_info.push_back(OptionInfo("cursorInBlackBandsInBorderlessWindow", &cursorInBlackBandsInBorderlessWindow, false));
 	_info.push_back(OptionInfo("saveOrder", (int*)&saveOrder, SORT_DATE_DESC));
 	_info.push_back(OptionInfo("geoClockSpeed", &geoClockSpeed, 80));
 	_info.push_back(OptionInfo("dogfightSpeed", &dogfightSpeed, 30));
@@ -987,44 +971,49 @@ void setFolders()
  */
 void updateOptions()
 {
+	// Make sure we've got something to save to
+	if (!CrossPlatform::folderExists(_configFolder)) {
+		if (!CrossPlatform::createFolder(_configFolder)) {
+			Log(LOG_ERROR) << "failed to create _configFolder " << _configFolder;
+			throw Exception("failed to create _configFolder " +  _configFolder);
+		}
+	}
 	// Load existing option
-	if (CrossPlatform::folderExists(_configFolder))
-	{
-		if (CrossPlatform::fileExists(_configFolder + "options-sdl2.cfg"))
-		{
+	if (CrossPlatform::folderExists(_configFolder)) {
+		if (CrossPlatform::fileExists(_configFolder + "options-sdl2.cfg")) {
 			load();
 #ifndef EMBED_ASSETS
 			Options::embeddedOnly = false;
 #endif
-		}
-		else
-		{
+		} else {
 			save();
 		}
 	}
-	// Create config folder and save option
-	else
-	{
-		CrossPlatform::createFolder(_configFolder);
+	if (!load()) {
 		save();
 	}
-
 	// now apply options set on the command line, overriding defaults and those loaded from config file
-	//if (!_commandLine.empty())
 	for (std::vector<OptionInfo>::iterator i = _info.begin(); i != _info.end(); ++i)
 	{
 		i->load(_commandLine, true);
 	}
 }
 
+static const std::string OPTIONS_FILENAME = "sdl2options";
+
 /**
  * Loads options from a YAML file.
  * @param filename YAML filename.
  * @return Was the loading successful?
  */
-bool load(const std::string &filename)
+bool load()
 {
-	std::string s = _configFolder + filename + ".cfg";
+	std::string s = _configFolder + OPTIONS_FILENAME + ".cfg";
+	if (!CrossPlatform::fileExists(s)) {
+		Log(LOG_DEBUG) << "Options::load('" << OPTIONS_FILENAME << "'): " << s << " does not exist.";
+		return false;
+	}
+	Log(LOG_DEBUG) << "Options::load('" << OPTIONS_FILENAME << "'): reading " << s;
 	try
 	{
 		YAML::Node doc = YAML::Load(*CrossPlatform::readFile(s));
@@ -1109,7 +1098,7 @@ void writeNode(const YAML::Node& node, YAML::Emitter& emitter)
  * @param filename YAML filename.
  * @return Was the saving successful?
  */
-bool save(const std::string &filename)
+bool save()
 {
 	YAML::Emitter out;
 	try
@@ -1136,12 +1125,13 @@ bool save(const std::string &filename)
 		Log(LOG_WARNING) << e.what();
 		return false;
 	}
-	std::string filepath = _configFolder + filename + ".cfg";
+	std::string filepath = _configFolder + OPTIONS_FILENAME + ".cfg";
 	std::string data(out.c_str());
+	Log(LOG_DEBUG) << "Options::save('" << OPTIONS_FILENAME << "'): writing " << filepath;
 
 	if (!CrossPlatform::writeFile(filepath, data + "\n" ))
 	{
-		Log(LOG_WARNING) << "Failed to save " << filepath;
+		Log(LOG_WARNING) << "Options::save('" << OPTIONS_FILENAME << "'): failed to write " << filepath;
 		return false;
 	}
 	return true;
@@ -1250,20 +1240,16 @@ void backupDisplay()
 	Options::newDisplayHeight = Options::displayHeight;
 	Options::newBattlescapeScale = Options::battlescapeScale;
 	Options::newGeoscapeScale = Options::geoscapeScale;
-	Options::newOpenGL = Options::useOpenGL;
-	Options::newScaleFilter = Options::useScaleFilter;
-	Options::newHQXFilter = Options::useHQXFilter;
-	Options::newOpenGLShader = Options::useOpenGLShader;
-	Options::newXBRZFilter = Options::useXBRZFilter;
 	Options::newRootWindowedMode = Options::rootWindowedMode;
 	Options::newWindowedModePositionX = Options::windowedModePositionX;
 	Options::newWindowedModePositionY = Options::windowedModePositionY;
 	Options::newFullscreen = Options::fullscreen;
 	Options::newAllowResize = Options::allowResize;
 	Options::newBorderless = Options::borderless;
-	Options::newNearestScaler = Options::useNearestScaler;
-	Options::newLinearScaler = Options::useLinearScaler;
-	Options::newAnisotropicScaler = Options::useAnisotropicScaler;
+	Options::newRenderDriverSDL = Options:: newRenderDriverSDL;
+	Options::renderFilterSDL = Options::newRenderFilterSDL;
+	Options::keepAspectRatio = Options::newKeepAspectRatio;
+	Options::nonSquarePixelRatio = Options::newNonSquarePixelRatio;
 }
 
 /**
@@ -1274,22 +1260,18 @@ void switchDisplay()
 {
 	std::swap(displayWidth, newDisplayWidth);
 	std::swap(displayHeight, newDisplayHeight);
-	std::swap(useOpenGL, newOpenGL);
-	std::swap(useScaleFilter, newScaleFilter);
 	std::swap(battlescapeScale, newBattlescapeScale);
 	std::swap(geoscapeScale, newGeoscapeScale);
-	std::swap(useHQXFilter, newHQXFilter);
-	std::swap(useOpenGLShader, newOpenGLShader);
-	std::swap(useXBRZFilter, newXBRZFilter);
 	std::swap(rootWindowedMode, newRootWindowedMode);
 	std::swap(windowedModePositionX, newWindowedModePositionX);
 	std::swap(windowedModePositionY, newWindowedModePositionY);
 	std::swap(fullscreen, newFullscreen);
 	std::swap(allowResize, newAllowResize);
 	std::swap(borderless, newBorderless);
-	std::swap(useNearestScaler, newNearestScaler);
-	std::swap(useLinearScaler, newLinearScaler);
-	std::swap(useAnisotropicScaler, newAnisotropicScaler);
+	std::swap(renderDriverSDL, newRenderDriverSDL);
+	std::swap(renderFilterSDL, newRenderFilterSDL);
+	std::swap(keepAspectRatio, newKeepAspectRatio);
+	std::swap(nonSquarePixelRatio, newNonSquarePixelRatio);
 }
 
 void setUserFolder(const std::string &userFolder)

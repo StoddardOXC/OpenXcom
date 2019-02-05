@@ -31,6 +31,7 @@
 #include "../Interface/ComboBox.h"
 #include "../Engine/Game.h"
 #include "SetWindowedRootState.h"
+#include "../Engine/SDLRenderer.h"
 
 namespace OpenXcom
 {
@@ -44,38 +45,48 @@ const std::string OptionsVideoState::GL_STRING = "*";
  * @param game Pointer to the core game.
  * @param origin Game section that originated this state.
  */
-OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(origin)
+OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(origin), _driversSDL(), _filtersSDL()
 {
 	setCategory(_btnVideo);
 
 	// Create objects
 	_displaySurface = new InteractiveSurface(110, 32, 94, 18);
-	_txtDisplayResolution = new Text(114, 9, 94, 8);
-	_txtDisplayWidth = new TextEdit(this, 40, 17, 94, 26);
-	_txtDisplayX = new Text(16, 17, 132, 26);
-	_txtDisplayHeight = new TextEdit(this, 40, 17, 144, 26);
-	_btnDisplayResolutionUp = new ArrowButton(ARROW_BIG_UP, 14, 14, 186, 18);
-	_btnDisplayResolutionDown = new ArrowButton(ARROW_BIG_DOWN, 14, 14, 186, 36);
 
-	_txtLanguage = new Text(114, 9, 94, 52);
-	_cbxLanguage = new ComboBox(this, 104, 16, 94, 62);
+	// left column
+	int cy = 8;
+	_txtDisplayResolution = new Text(114, 9, 94, cy);
+	_txtDisplayWidth = new TextEdit(this, 40, 17, 94, cy + 12);
+	_txtDisplayX = new Text(16, 17, 132, cy + 12);
+	_txtDisplayHeight = new TextEdit(this, 40, 17, 144, cy + 12);
+	_btnDisplayResolutionUp = new ArrowButton(ARROW_BIG_UP, 14, 14, 186, cy += 3 );
+	_btnDisplayResolutionDown = new ArrowButton(ARROW_BIG_DOWN, 14, 14, 186, cy += 14);
 
-	_txtFilter = new Text(114, 9, 206, 52);
-	_cbxFilter = new ComboBox(this, 104, 16, 206, 62);
+	cy = 23;
+	_txtLanguage = new Text(114, 9, 94, cy += 14);
+	_cbxLanguage = new ComboBox(this, 104, 16, 94, cy += 9 + 1);
 
-	_txtMode = new Text(114, 9, 206, 22);
-	_cbxDisplayMode = new ComboBox(this, 104, 16, 206, 32);
+	_txtGeoScale = new Text(114, 9, 94, cy += 16 + 3);
+	_cbxGeoScale = new ComboBox(this, 104, 16, 94, cy += 9 + 1);
 
-	_txtGeoScale = new Text(114, 9, 94, 82);
-	_cbxGeoScale = new ComboBox(this, 104, 16, 94, 92);
+	_txtBattleScale = new Text(114, 9, 94, cy += 16 + 3);
+	_cbxBattleScale = new ComboBox(this, 104, 16, 94, cy += 9 + 1);
 
-	_txtBattleScale = new Text(114, 9, 94, 112);
-	_cbxBattleScale = new ComboBox(this, 104, 16, 94, 122);
+	_cbxLetterbox = new ComboBox(this, 104, 16, 94, cy += 16 + 2 + 5);
 
-	_txtOptions = new Text(114, 9, 206, 82);
-	_btnLetterbox = new ToggleTextButton(104, 16, 206, 92);
-	_btnLockMouse = new ToggleTextButton(104, 16, 206, 110);
-	_btnRootWindowedMode = new ToggleTextButton(104, 16, 206, 128);
+	// right column
+	cy = 8;
+	_txtMode = new Text(114, 9, 206, cy);
+	_cbxDisplayMode = new ComboBox(this, 104, 16, 206, cy += 9 + 1);
+
+	_txtDriver = new Text(114, 9, 206, cy += 16 + 3);
+	_cbxDriver = new ComboBox(this, 104, 16, 206, cy += 9 + 1);
+
+	_txtFilter = new Text(114, 9, 206, cy += 16 + 3);
+	_cbxFilter = new ComboBox(this, 104, 16, 206, cy += 9 + 1);
+
+	_txtOptions = new Text(114, 9, 206, cy += 16 + 3);
+	_btnLockMouse = new ToggleTextButton(104, 16, 206, cy += 9 + 1);
+	_btnRootWindowedMode = new ToggleTextButton(104, 16, 206, cy += 16 + 1);
 
 	/* TODO: add current mode */
 	/* Get available fullscreen modes */
@@ -115,16 +126,19 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	add(_btnDisplayResolutionDown, "button", "videoMenu");
 
 	add(_txtLanguage, "text", "videoMenu");
+	add(_txtDriver, "text", "videoMenu");
 	add(_txtFilter, "text", "videoMenu");
 
 	add(_txtMode, "text", "videoMenu");
 
 	add(_txtOptions, "text", "videoMenu");
-	add(_btnLetterbox, "button", "videoMenu");
+	add(_cbxLetterbox, "button", "videoMenu");
 	add(_btnLockMouse, "button", "videoMenu");
 	add(_btnRootWindowedMode, "button", "videoMenu");
 
 	add(_cbxFilter, "button", "videoMenu");
+	add(_cbxDriver, "button", "videoMenu");
+
 	add(_cbxDisplayMode, "button", "videoMenu");
 
 	add(_txtBattleScale, "text", "videoMenu");
@@ -170,12 +184,25 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 
 	_txtOptions->setText(tr("STR_DISPLAY_OPTIONS"));
 
-	_btnLetterbox->setText(tr("STR_LETTERBOXED"));
-	_btnLetterbox->setPressed(Options::keepAspectRatio);
-	_btnLetterbox->onMouseClick((ActionHandler)&OptionsVideoState::btnLetterboxClick);
-	_btnLetterbox->setTooltip("STR_LETTERBOXED_DESC");
-	_btnLetterbox->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
-	_btnLetterbox->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
+	std::vector<std::string> boxingChoices = {
+		tr("STR_LETTERBOXED_1_20"),
+		tr("STR_LETTERBOXED_1_00"),
+		tr("STR_LETTERBOXED_NONE")
+	};
+	_cbxLetterbox->setOptions(boxingChoices);
+	if (Options::keepAspectRatio) {
+		if (Options::nonSquarePixelRatio) {
+			_cbxLetterbox->setSelected(0);
+		} else {
+			_cbxLetterbox->setSelected(1);
+		}
+	} else {
+		_cbxLetterbox->setSelected(2);
+	}
+	_cbxLetterbox->setTooltip("STR_LETTERBOXED_DESC");
+	_cbxLetterbox->onChange((ActionHandler)&OptionsVideoState::cbxLetterboxChange);
+	_cbxLetterbox->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
+	_cbxLetterbox->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
 
 	_btnLockMouse->setText(tr("STR_LOCK_MOUSE"));
 	_btnLockMouse->setPressed(Options::captureMouse);
@@ -209,76 +236,40 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	_cbxLanguage->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
 	_cbxLanguage->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
 
-	std::vector<std::string> filterNames;
-	filterNames.push_back(tr("STR_DISABLED"));
-	filterNames.push_back("Linear");
-	filterNames.push_back("Anisotropic");
-#if 0
-	filterNames.push_back("xBRZ");
-#endif
-	_filters.push_back("");
-	_filters.push_back("");
-	_filters.push_back("");
-	_filters.push_back("");
-
-#if 0
-#ifndef __NO_OPENGL
-	std::vector<std::string> filters;
-	for (auto f: FileMap::filterFiles(FileMap::getVFolderContents(GL_FOLDER), GL_EXT)) { filters.push_back(f); }
-	std::sort(filters.begin(), filters.end(), Unicode::naturalCompare);
-	for (auto i = filters.begin(); i != filters.end(); ++i)
-	{
-		std::string file = (*i);
-		std::string path = GL_FOLDER + file;
-		std::string name = file.substr(0, file.length() - GL_EXT.length() - 1) + GL_STRING;
-		filterNames.push_back(ucWords(name));
-		_filters.push_back(path);
-	}
-#endif
-#endif
-
-	size_t selFilter = 0;
-#if 0
-	if (Screen::useOpenGL())
-	{
-#ifndef __NO_OPENGL
-		std::string path = Options::useOpenGLShader;
-		for (size_t i = 0; i < _filters.size(); ++i)
-		{
-			if (_filters[i] == path)
-			{
-				selFilter = i;
-				break;
-			}
+	// first comes the driver.
+	_txtDriver->setText(tr("STR_DISPLAY_DRIVER"));
+	// TODO: this all to be reworked when the GL3 renderer gets written.
+	// And we assume the order doesn't change between invocations,
+	// but for SDL2 filters it's always true.
+	_driversSDL = SDLRenderer::listDrivers();
+	_cbxDriver->setOptions(_driversSDL);
+	int i = 0;
+	for (const auto& driverName: _driversSDL) {
+		if (driverName == Options::renderDriverSDL) {
+			_cbxDriver->setSelected(i);
 		}
-#endif
+		i += 1;
 	}
-	else
-#endif
-	if (Options::useLinearScaler)
-	{
-		selFilter = 1;
-	}
-	else if (Options::useAnisotropicScaler)
-	{
-		selFilter = 2;
-	}
-#if 0
-	else if (Options::useXBRZFilter)
-	{
-		selFilter = 3;
-	}
-#endif
+	_cbxDriver->onChange((ActionHandler)&OptionsVideoState::cbxDriverChange);
+	_cbxDriver->setTooltip("STR_DISPLAY_DRIVER_DESC");
+	_cbxDriver->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
+	_cbxDriver->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
 
+	// then the filter
 	_txtFilter->setText(tr("STR_DISPLAY_FILTER"));
-
-	_cbxFilter->setOptions(filterNames);
-	_cbxFilter->setSelected(selFilter);
+	_filtersSDL = SDLRenderer::listFilters();
+	_cbxFilter->setOptions(_filtersSDL);
+	i = 0;
+	for (const auto& filterName: _filtersSDL) {
+		if (filterName == Options::renderFilterSDL) {
+			_cbxFilter->setSelected(i);
+		}
+		i += 1;
+	}
 	_cbxFilter->onChange((ActionHandler)&OptionsVideoState::cbxFilterChange);
 	_cbxFilter->setTooltip("STR_DISPLAY_FILTER_DESC");
 	_cbxFilter->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
 	_cbxFilter->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
-
 
 	std::vector<std::string> displayModes;
 	displayModes.push_back(tr("STR_WINDOWED"));
@@ -473,50 +464,21 @@ void OptionsVideoState::cbxLanguageChange(Action *)
 }
 
 /**
+ * Changes the Driver options.
+ * @param action Pointer to an action.
+ */
+void OptionsVideoState::cbxDriverChange(Action *)
+{
+	Options::renderDriverSDL = _driversSDL[_cbxDriver->getSelected()];
+}
+
+/**
  * Changes the Filter options.
  * @param action Pointer to an action.
  */
 void OptionsVideoState::cbxFilterChange(Action *)
 {
-	switch (_cbxFilter->getSelected())
-	{
-	case 0:
-		Options::newOpenGL = false;
-		Options::newNearestScaler = true;
-		Options::newLinearScaler = false;
-		Options::newAnisotropicScaler = false;
-        Options::newXBRZFilter = false;
-		break;
-	case 1:
-		Options::newOpenGL = false;
-		Options::newNearestScaler = false;
-		Options::newLinearScaler = true;
-		Options::newAnisotropicScaler = false;
-        Options::newXBRZFilter = false;
-		break;
-	case 2:
-		Options::newOpenGL = false;
-		Options::newNearestScaler = false;
-		Options::newLinearScaler = false;
-		Options::newAnisotropicScaler = true;
-        Options::newXBRZFilter = false;
-		break;
-    case 3:
-		Options::newOpenGL = false;
-		Options::newNearestScaler = true;
-		Options::newLinearScaler = false;
-		Options::newAnisotropicScaler = false;
-		Options::newXBRZFilter = true;
-		break;
-	default:
-		Options::newOpenGL = true;
-		Options::newNearestScaler = false;
-		Options::newLinearScaler = false;
-		Options::newAnisotropicScaler = false;
-		Options::newXBRZFilter = false;
-		Options::newOpenGLShader = _filters[_cbxFilter->getSelected()];
-		break;
-	}
+	Options::renderFilterSDL = _filtersSDL[_cbxFilter->getSelected()];
 }
 
 /**
@@ -556,9 +518,24 @@ void OptionsVideoState::updateDisplayMode(Action *)
  * Changes the Letterboxing option.
  * @param action Pointer to an action.
  */
-void OptionsVideoState::btnLetterboxClick(Action *)
+void OptionsVideoState::cbxLetterboxChange(Action *)
 {
-	Options::keepAspectRatio = _btnLetterbox->getPressed();
+	switch(_cbxLetterbox->getSelected()) {
+	case 0:
+		Options::keepAspectRatio = true;
+		Options::nonSquarePixelRatio = true;
+		break;
+	case 1:
+		Options::keepAspectRatio = true;
+		Options::nonSquarePixelRatio = false;
+		break;
+	case 2:
+		Options::keepAspectRatio = false;
+		Options::nonSquarePixelRatio = false;
+		break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -568,6 +545,7 @@ void OptionsVideoState::btnLetterboxClick(Action *)
 void OptionsVideoState::btnLockMouseClick(Action *)
 {
 	// Don't do that! Breaks stuff hard.
+	// FIXME what is supposed to be going on here?
 	Options::captureMouse = _btnLockMouse->getPressed();
 	//SDL_SetRelativeMouseMode((Options::captureMouse)?SDL_TRUE:SDL_FALSE); //because a typecast is not enough
 }

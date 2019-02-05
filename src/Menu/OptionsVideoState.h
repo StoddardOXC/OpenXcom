@@ -47,15 +47,15 @@ private:
 	TextEdit *_txtDisplayWidth, *_txtDisplayHeight;
 	ArrowButton *_btnDisplayResolutionUp, *_btnDisplayResolutionDown;
 
-	Text *_txtLanguage, *_txtFilter, *_txtGeoScale, *_txtBattleScale;
-	ComboBox *_cbxLanguage, *_cbxFilter, *_cbxDisplayMode, *_cbxGeoScale, *_cbxBattleScale;
+	Text *_txtLanguage, *_txtDriver, *_txtFilter, *_txtGeoScale, *_txtBattleScale;
+	ComboBox *_cbxLanguage,*_cbxDriver,  *_cbxFilter, *_cbxDisplayMode, *_cbxGeoScale, *_cbxBattleScale, *_cbxLetterbox;
 	Text *_txtMode;
 	Text *_txtOptions;
-	ToggleTextButton *_btnLetterbox, *_btnLockMouse, *_btnRootWindowedMode;
+	ToggleTextButton *_btnLockMouse, *_btnRootWindowedMode;
 
 	std::vector<SDL_DisplayMode> _res;
 	int _resCurrent;
-	std::vector<std::string> _langs, _filters;
+	std::vector<std::string> _langs, _driversSDL, _filtersSDL;
 
 	std::string ucWords(std::string str);
 	void updateDisplayResolution();
@@ -74,12 +74,14 @@ public:
 	void txtDisplayHeightChange(Action *action);
 	/// Handler for changing the Language combobox.
 	void cbxLanguageChange(Action *action);
+	/// Handler for changing the Driver combobox.
+	void cbxDriverChange(Action *action);
 	/// Handler for changing the Filter combobox.
 	void cbxFilterChange(Action *action);
 	/// Handler for clicking the Display Mode combobox.
 	void updateDisplayMode(Action *action);
 	/// Handler for clicking the Letterboxed button.
-	void btnLetterboxClick(Action *action);
+	void cbxLetterboxChange(Action *action);
 	/// Handler for clicking the Lock Mouse button.
 	void btnLockMouseClick(Action *action);
 	/// Handler for clicking the Root Window Pos button.

@@ -226,27 +226,42 @@ void OptionsBaseState::btnOkClick(Action *)
 	_game->getScreen()->setWindowGrab(Options::captureMouse);
 	CrossPlatform::setSystemUI();
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
+
+	// Confirm any video options changes
+	if (Options::displayWidth != Options::newDisplayWidth ||
+		Options::displayHeight != Options::newDisplayHeight ||
+		Options::keepAspectRatio != Options::newKeepAspectRatio ||
+		Options::nonSquarePixelRatio != Options::newNonSquarePixelRatio ||
+		Options::renderDriverSDL != Options::newRenderDriverSDL ||
+		Options::renderFilterSDL != Options::newRenderFilterSDL ||
+		Options::fullscreen != Options::newFullscreen ||
+		Options::borderless != Options::newBorderless ||
+		Options::allowResize != Options::newAllowResize)
+	{
+		/* for now just reset it all.
+		if (Options::renderDriverSDL != Options::newRenderDriverSDL) {
+			_game->getScreen()->resetVideo(Options::displayWidth, Options::displayHeight);
+		} else {
+			if (Options::renderFilterSDL != Options::newRenderFilterSDL) {
+				_game->getScreen()->resetFilter();
+			}
+			_game->getScreen()->resetScale();
+		} */
+		// this recreates both window and renderer.
+		_game->getScreen()->resetVideo(Options::displayWidth, Options::displayHeight);
+		_game->pushState(new OptionsConfirmState(_origin));
+	}
+
+	// hmm. this will trigger a reload even if video options' changes were rejected. hmm.
+	// or will it? yep. but the alternative will then to not trigger a reload when the modset
+	// is modified ... hmm. need sumthin new here.
 	if (Options::reload && _origin == OPT_MENU)
 	{
 		_game->setState(new StartState);
 	}
 	else
 	{
-		// Confirm any video options changes
-		if (Options::displayWidth != Options::newDisplayWidth ||
-			Options::displayHeight != Options::newDisplayHeight ||
-			Options::useOpenGL != Options::newOpenGL ||
-			Options::useNearestScaler != Options::newNearestScaler ||
-			Options::useLinearScaler != Options::newLinearScaler ||
-			Options::useAnisotropicScaler != Options::newAnisotropicScaler ||
-			Options::useOpenGLShader != Options::newOpenGLShader)
-		{
-			_game->pushState(new OptionsConfirmState(_origin));
-		}
-		else
-		{
-			restart(_origin);
-		}
+		restart(_origin);
 	}
 }
 

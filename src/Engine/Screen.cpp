@@ -297,7 +297,7 @@ void Screen::resetVideo(int width, int height)
 	}
 	Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
 
-	_renderer = new SDLRenderer(_window, -1, 0);
+	_renderer = new SDLRenderer(_window, Options::renderDriverSDL, Options::renderFilterSDL);
 
 	if (!_renderer)	{
 		Log(LOG_ERROR) << SDL_GetError();
@@ -312,15 +312,6 @@ void Screen::resetVideo(int width, int height)
 	// fix up scaling.
 	_resizeAccountedFor = false;
 	setMode(_currentScaleMode);
-}
-
-/**
- * Resets the screen surfaces based on the current display options,
- * as they don't automatically take effect.
- * @param resetVideo Reset display surface.
- */
-void Screen::resetDisplay(bool resetVideo)
-{
 }
 
 /**
@@ -464,6 +455,8 @@ void Screen::setMode(ScreenMode mode)
 	if (_baseWidth < ORIGINAL_WIDTH) { _baseWidth  = ORIGINAL_WIDTH; }
 	if (_baseHeight < ORIGINAL_HEIGHT) { _baseHeight  = ORIGINAL_HEIGHT; }
 
+	Log(LOG_INFO) << "Screen::setMode(): logical size " << _baseWidth << "x" << _baseHeight;
+
 	// set the source rect for the renderer
 	SDL_Rect baseRect;
 	baseRect.x = baseRect.y = 0;
@@ -474,8 +467,6 @@ void Screen::setMode(ScreenMode mode)
 	std::tie(_buffer, _surface) = Surface::NewPair8Bit(_baseWidth, _baseHeight);
 	SDL_SetPaletteColors(_surface->format->palette, deferredPalette, 0, 256);
 	SDL_SetColorKey(_surface.get(), 0, 0); // turn off color key! FIXME: probably not needed.
-
-	Log(LOG_INFO) << "Screen::setMode(): logical size " << _baseWidth << "x" << _baseHeight;
 
 	// Having determined the logical screen size (srcRect/internalRect) we can now
 	// calculate scaling factors and dstRect / outputRect
@@ -503,25 +494,17 @@ void Screen::setMode(ScreenMode mode)
 	}
 
 	// now we're letterboxing.
-	// first determine which of width or height will fit the window
-
 	double pixelRatioY = Options::nonSquarePixelRatio ? 1.2 : 1.0;
 	double scaleX = target_width / (_baseWidth * 1.0);
 	double scaleY = target_height / (_baseHeight * pixelRatioY);
-	double scale;
+	double scale = scaleX < scaleY ? scaleX : scaleY;
 
-	if (scaleX < scaleY) { // width wins
-		scale = scaleX;
-	} else { // height wins
-		scale = scaleY;
-	}
-	Log(LOG_INFO) << "Screen::setMode(): scales " << scaleX << ", " << scaleY << " winner " << scale;
+	Log(LOG_INFO) << "Screen::setMode(): pxRY=" << pixelRatioY << " scales " << scaleX << ", " << scaleY << " winner " << scale;
 	// now would be the time to clamp it down to an integer.
 	if (Options::integerRatioScaling) {
 		scale = floor(scale);
+		Log(LOG_INFO) << "Screen::setMode(): scale after clamp: " << scale;
 	}
-
-	Log(LOG_INFO) << "Screen::setMode(): scales after clamp: " << scaleX << ", " << scaleY << " winner " << scale;
 
 	int scaledWidth = scale * _baseWidth;
 	int scaledHeight = scale * _baseHeight * pixelRatioY; // this breaks the integer ratio but what you can do
@@ -533,8 +516,8 @@ void Screen::setMode(ScreenMode mode)
 	_scaleY = (double) scaledHeight / _baseHeight;
 	Log(LOG_INFO) << "Screen::setMode(): final scales: " << _scaleX << ", " << _scaleY;
 
-	_leftBlackBand = ( target_width - scaledWidth)/2;
-	_topBlackBand = ( target_height - scaledHeight)/2;
+	_leftBlackBand = (target_width - scaledWidth)/2;
+	_topBlackBand = (target_height - scaledHeight)/2;
 	outRect.x = _leftBlackBand;
 	outRect.y = _topBlackBand;
 	outRect.w = scaledWidth;
