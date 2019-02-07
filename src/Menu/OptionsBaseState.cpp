@@ -228,19 +228,9 @@ void OptionsBaseState::btnOkClick(Action *)
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 
 	// Confirm any video options changes
-	if (Options::displayWidth != Options::newDisplayWidth ||
-		Options::displayHeight != Options::newDisplayHeight ||
-		Options::keepAspectRatio != Options::newKeepAspectRatio ||
-		Options::nonSquarePixelRatio != Options::newNonSquarePixelRatio ||
-		Options::renderDriverSDL != Options::newRenderDriverSDL ||
-		Options::renderFilterSDL != Options::newRenderFilterSDL ||
-		Options::fullscreen != Options::newFullscreen ||
-		Options::borderless != Options::newBorderless ||
-		Options::allowResize != Options::newAllowResize)
+	if (Options::displayOptionsChanged())
 	{
-		/* 	for now just reset it all.
-			this recreates both window and renderer. */
-		Options::switchDisplay();
+		/* 	for now just reset it all. this recreates both window and renderer. */
 		_game->getScreen()->resetVideo();
 		Log(LOG_INFO) << "Pushed OptionsConfirmState.";
 		_game->pushState(new OptionsConfirmState(_origin));
