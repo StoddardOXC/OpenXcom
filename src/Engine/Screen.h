@@ -67,13 +67,14 @@ private:
 	int _currentScaleType;
 	ScreenMode _currentScaleMode;
 	bool _resizeAccountedFor;
+	std::string _title;
 
 public:
 	static const int ORIGINAL_WIDTH;
 	static const int ORIGINAL_HEIGHT;
 
 	/// Creates a new display screen.
-	Screen();
+	Screen(const std::string& title);
 	/// Cleans up the display screen.
 	~Screen();
 	/// Get horizontal offset.
@@ -103,7 +104,7 @@ public:
 	/// Gets the screen's height, logical pixels.
 	int getHeight() const;
 	/// Actually resets the video stuff.
-	void resetVideo(int width, int height);
+	void resetVideo();
 	/// Takes a screenshot.
 	void screenshot(const std::string &filename);
 	/// Get the pointer for our current window
