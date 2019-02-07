@@ -54,6 +54,7 @@ namespace OpenXcom
 ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(action)
 {
 	_screen = false;
+	_screenMode = SC_BATTLESCAPE;
 
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);

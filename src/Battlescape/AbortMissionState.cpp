@@ -43,6 +43,7 @@ namespace OpenXcom
  */
 AbortMissionState::AbortMissionState(SavedBattleGame *battleGame, BattlescapeState *state) : _battleGame(battleGame), _state(state), _inEntrance(0), _inExit(0), _outside(0)
 {
+	_screenMode = SC_BATTLESCAPE;
 	// Create objects
 	_screen = false;
 	_window = new Window(this, 320, 144, 0, 0);
@@ -129,11 +130,11 @@ AbortMissionState::AbortMissionState(SavedBattleGame *battleGame, BattlescapeSta
 	_txtInEntrance->setHighContrast(true);
 	if (craft)
 	{
-		_txtInEntrance->setText(tr("STR_UNITS_IN_CRAFT", _inEntrance));		
+		_txtInEntrance->setText(tr("STR_UNITS_IN_CRAFT", _inEntrance));
 	}
 	else
 	{
-		_txtInEntrance->setText(tr("STR_UNITS_IN_ENTRANCE", _inEntrance));		
+		_txtInEntrance->setText(tr("STR_UNITS_IN_ENTRANCE", _inEntrance));
 	}
 
 	_txtInExit->setBig();
