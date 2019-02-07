@@ -1246,10 +1246,30 @@ void backupDisplay()
 	Options::newFullscreen = Options::fullscreen;
 	Options::newAllowResize = Options::allowResize;
 	Options::newBorderless = Options::borderless;
-	Options::newRenderDriverSDL = Options:: newRenderDriverSDL;
-	Options::renderFilterSDL = Options::newRenderFilterSDL;
-	Options::keepAspectRatio = Options::newKeepAspectRatio;
-	Options::nonSquarePixelRatio = Options::newNonSquarePixelRatio;
+	Options::newRenderDriverSDL = Options::renderDriverSDL;
+	Options::newRenderFilterSDL = Options::renderFilterSDL;
+	Options::newKeepAspectRatio = Options::keepAspectRatio;
+	Options::newNonSquarePixelRatio = Options::nonSquarePixelRatio;
+}
+
+bool displayOptionsChanged()
+{
+	return (
+			Options::newDisplayWidth != Options::displayWidth
+		 || Options::newDisplayHeight != Options::displayHeight
+		 || Options::newBattlescapeScale != Options::battlescapeScale
+		 || Options::newGeoscapeScale != Options::geoscapeScale
+		 || Options::newRootWindowedMode != Options::rootWindowedMode
+		 || Options::newWindowedModePositionX != Options::windowedModePositionX
+		 || Options::newWindowedModePositionY != Options::windowedModePositionY
+		 || Options::newFullscreen != Options::fullscreen
+		 || Options::newAllowResize != Options::allowResize
+		 || Options::newBorderless != Options::borderless
+		 || Options::newRenderDriverSDL != Options::renderDriverSDL
+		 || Options::newRenderFilterSDL != Options::renderFilterSDL
+		 || Options::newKeepAspectRatio != Options::keepAspectRatio
+		 || Options::newNonSquarePixelRatio != Options::nonSquarePixelRatio
+	);
 }
 
 /**

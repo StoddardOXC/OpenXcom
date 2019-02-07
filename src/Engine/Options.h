@@ -111,6 +111,8 @@ namespace Options
 	void switchDisplay();
 	/// Is the password correct?
 	bool isPasswordCorrect();
+	/// If new display options were set
+	bool displayOptionsChanged();
 	/// returns the id of the active master mod
 	std::string getActiveMaster();
 	/// Gets the map of mod ids to mod infos
