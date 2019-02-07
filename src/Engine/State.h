@@ -125,6 +125,7 @@ public:
 	virtual void recenter(int dX, int dY);
 	/// Returns the pointer to the game object
 	static Game *getGame();
+	/// Returns declared screen/scale mode for this state
 	virtual ScreenMode getScreenMode() const;
 };
 
