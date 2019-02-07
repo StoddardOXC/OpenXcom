@@ -75,7 +75,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 	Unicode::getUtf8Locale();
 
 	// Create display
-	_screen = new Screen();
+	_screen = new Screen(title);
 
 	// Actually, you can create a window icon only after the screen is here
 	CrossPlatform::setWindowIcon(IDI_ICON1, "openxcom.png", _screen->getWindow());

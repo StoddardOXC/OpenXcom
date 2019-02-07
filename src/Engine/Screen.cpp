@@ -48,16 +48,17 @@ const int Screen::ORIGINAL_HEIGHT = 200;
  * Initializes a new display screen for the game to render contents to.
  * The screen is set up based on the current options.
  */
-Screen::Screen() : _window(NULL), _renderer(NULL),
+Screen::Screen(const std::string& title) : _window(NULL), _renderer(NULL),
 	_screenTexture(UINT_MAX), _cursorTexture(UINT_MAX), _fpsTexture(UINT_MAX),
 	_baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0),
 	_topBlackBand(0), _leftBlackBand(0), deferredPalette{},
 	_numColors(0), _firstColor(0), _pushPalette(false),
 	_buffer(), _surface(),
 	_screenshotFilename(),
-	_currentScaleType(SCALE_SCREEN), _currentScaleMode(SC_STARTSTATE), _resizeAccountedFor(false)
+	_currentScaleType(SCALE_SCREEN), _currentScaleMode(SC_STARTSTATE), _resizeAccountedFor(false),
+	_title(title)
 {
-	resetVideo(Options::displayWidth, Options::displayHeight);
+	resetVideo();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
 
@@ -102,7 +103,7 @@ void Screen::handle(Action *action)
 	if (action->getType() == SDL_KEYDOWN && action->getKeycode() == SDLK_RETURN && (SDL_GetModState() & KMOD_ALT) != 0)
 	{
 		Options::fullscreen = !Options::fullscreen;
-		resetVideo(Options::displayWidth, Options::displayHeight);
+		resetVideo();
 	}
 	else if (action->getType() == SDL_KEYDOWN && action->getKeycode() == Options::keyScreenshot)
 	{
@@ -266,9 +267,9 @@ int Screen::getHeight() const
 /**
  * Recreates video: both renderer and the window
  */
-void Screen::resetVideo(int width, int height)
+void Screen::resetVideo()
 {
-	Log(LOG_INFO) << "Screen::resetVideo(" << width << ", " << height << ")";
+	Log(LOG_INFO) << "Screen::resetVideo()";
 	if (_renderer) { delete _renderer; }
 	if (_window) { SDL_DestroyWindow(_window); }
 
@@ -289,7 +290,8 @@ void Screen::resetVideo(int width, int height)
 		winY = SDL_WINDOWPOS_UNDEFINED;
 	}
 
-	_window = SDL_CreateWindow("OpenXcom Extended SDL2", winX, winY, width, height, window_flags);
+	int width = Options::displayWidth, height = Options::displayHeight;
+	_window = SDL_CreateWindow(_title.c_str(), winX, winY, width, height, window_flags);
 
 	if (_window == NULL) {
 		Log(LOG_ERROR) << SDL_GetError();
@@ -403,7 +405,9 @@ void Screen::setMode(ScreenMode mode)
 	// the type from above determines logical game screen size.
 	int target_width, target_height;
 	_renderer->getOutputSize(target_width, target_height);
-	Log(LOG_INFO) << "Screen::setMode(): output size " << target_width << "x" << target_height;
+	Log(LOG_INFO) << "Screen::setMode(): output size " << target_width << "x" << target_height <<
+	 " nonSquare=" << Options::nonSquarePixelRatio << " keepAspect=" << Options::keepAspectRatio;
+
 	Options::displayWidth = target_width;   //FIXME: those obnoxious globals..
 	Options::displayHeight = target_height;
 

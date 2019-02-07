@@ -107,13 +107,14 @@ int main(int argc, char *argv[])
 	std::set_terminate(exceptionLogger);
 #endif
 #endif
+	std::ostringstream title;
+	title << "OpenXcom " << OPENXCOM_VERSION_SHORT << OPENXCOM_VERSION_GIT;
+	Log(LOG_INFO) << title.str();
 
 	CrossPlatform::getErrorDialog();
 	CrossPlatform::processArgs(argc, argv);
 	if (!Options::init())
 		return EXIT_SUCCESS;
-	std::ostringstream title;
-	title << "OpenXcom " << OPENXCOM_VERSION_SHORT << OPENXCOM_VERSION_GIT;
 	Options::baseXResolution = Options::displayWidth;
 	Options::baseYResolution = Options::displayHeight;
 
