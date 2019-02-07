@@ -41,7 +41,7 @@ namespace OpenXcom
  */
 MiniMapState::MiniMapState (Camera * camera, SavedBattleGame * battleGame)
 {
-	_screenMode = SC_BATTLESCAPE;
+	_screenMode = SC_INFOSCREEN;
 	_bg = new Surface(320, 200);
 	_miniMapView = new MiniMapView(221, 148, 48, 16, _game, camera, battleGame);
 	_btnLvlUp = new BattlescapeButton(18, 20, 24, 62);

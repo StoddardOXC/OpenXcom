@@ -364,6 +364,10 @@ void Screen::updateScale(int& dX, int& dY)
  */
 void Screen::setMode(ScreenMode mode)
 {
+	if (mode == SC_INHERITED) {
+		Log(LOG_FATAL) << "Screen::setMode(SC_INHERITED)";
+		throw(Exception("Screen::setMode(SC_INHERITED)"));
+	}
 	if (_resizeAccountedFor && _currentScaleMode == mode) {
 		return;
 	}
@@ -376,6 +380,7 @@ void Screen::setMode(ScreenMode mode)
 		case SC_INTRO:
 			type = SCALE_ORIGINAL;
 			break;
+		case SC_MAINMENU:
 		case SC_GEOSCAPE:
 			type = Options::geoscapeScale;
 			break;

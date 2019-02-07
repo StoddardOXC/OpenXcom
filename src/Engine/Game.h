@@ -20,6 +20,7 @@
 #include <list>
 #include <string>
 #include <SDL.h>
+#include "Screen.h"
 
 namespace OpenXcom
 {
@@ -56,6 +57,8 @@ private:
 	int _timeUntilNextFrame;
 	static const double VOLUME_GRADIENT;
 
+	/// Gets effective screen/scale mode
+	ScreenMode getCurrentScreenMode() const;
 public:
 	/// Creates a new game and initializes SDL.
 	Game(const std::string &title);

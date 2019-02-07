@@ -600,6 +600,45 @@ double Game::volumeExponent(int volume)
 }
 
 /**
+ * Returns the display screen used by the game.
+ * @return Pointer to the screen.
+ */
+Screen *Game::getScreen() const
+{
+	return _screen;
+}
+
+/**
+ * Returns the mouse cursor used by the game.
+ * @return Pointer to the cursor.
+ */
+Cursor *Game::getCursor() const
+{
+	return _cursor;
+}
+
+/**
+ * Returns the FpsCounter used by the game.
+ * @return Pointer to the FpsCounter.
+ */
+FpsCounter *Game::getFpsCounter() const
+{
+	return _fpsCounter;
+}
+
+ScreenMode Game::getCurrentScreenMode() const
+{
+	ScreenMode rv;
+	for (auto state: _states) {
+		auto state_sm = state->getScreenMode();
+		if (state_sm != SC_INHERITED) {
+			rv = state_sm;
+		}
+	}
+	return rv;
+}
+
+/**
  * Pops all the states currently in stack and pushes in the new state.
  * A shortcut for cleaning up all the old states when they're not necessary
  * like in one-way transitions.
@@ -614,6 +653,7 @@ void Game::setState(State *state)
 	}
 	pushState(state);
 	_init = false;
+	// in this case the state MUST declare its screen/scale mode.
 	_screen->setMode(state->getScreenMode());
 }
 
@@ -626,7 +666,7 @@ void Game::pushState(State *state)
 {
 	_states.push_back(state);
 	_init = false;
-	_screen->setMode(state->getScreenMode());
+	_screen->setMode(getCurrentScreenMode());
 }
 
 /**
@@ -640,7 +680,7 @@ void Game::popState()
 	_deleted.push_back(_states.back());
 	_states.pop_back();
 	_init = false;
-	_screen->setMode(_states.back()->getScreenMode());
+	_screen->setMode(getCurrentScreenMode());
 }
 
 /**

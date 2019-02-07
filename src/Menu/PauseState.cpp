@@ -50,12 +50,10 @@ PauseState::PauseState(OptionsOrigin origin) : _origin(origin)
 	if (_origin == OPT_GEOSCAPE)
 	{
 		x = 20;
-		_screenMode = SC_GEOSCAPE;
 	}
 	else
 	{
 		x = 52;
-		_screenMode = SC_BATTLESCAPE;
 	}
 
 	// Create objects

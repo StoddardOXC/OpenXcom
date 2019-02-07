@@ -40,9 +40,10 @@
 namespace OpenXcom
 {
 
+<<<<<<< HEAD
 GoToMainMenuState::GoToMainMenuState(bool updateCheck) : _updateCheck(updateCheck)
 {
-	// empty
+	_screenMode = SC_MAINMENU;
 }
 
 GoToMainMenuState::~GoToMainMenuState()
@@ -64,7 +65,7 @@ MainMenuState::MainMenuState(bool updateCheck)
 #ifdef _WIN32
 	_debugInVisualStudio = false;
 #endif
-
+	_screenMode = SC_MAINMENU;
 	// Create objects
 	_window = new Window(this, 256, 160, 32, 20, POPUP_BOTH);
 	_btnNewGame = new TextButton(92, 20, 64, 90);
