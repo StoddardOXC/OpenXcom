@@ -29,6 +29,8 @@
 #include "../Engine/Timer.h"
 #include "../Engine/Screen.h"
 #include "../Savegame/SavedGame.h"
+#include "../Menu/StartState.h"
+#include "../Menu/OptionsVideoState.h"
 
 namespace OpenXcom
 {
@@ -122,13 +124,21 @@ void OptionsConfirmState::countdown()
 }
 
 /**
- * Goes back to the Main Menu.
+ * Saves options, goes back to the origin.
  * @param action Pointer to an action.
  */
 void OptionsConfirmState::btnYesClick(Action *)
 {
+	Options::save();
 	_game->popState();
-	OptionsBaseState::restart(_origin);
+	if (Options::reload && _origin == OPT_MENU)
+	{
+		_game->setState(new StartState);
+	}
+	else
+	{
+		OptionsBaseState::restart(_origin);
+	}
 }
 
 /**
@@ -137,10 +147,12 @@ void OptionsConfirmState::btnYesClick(Action *)
  */
 void OptionsConfirmState::btnNoClick(Action *)
 {
-	Options::switchDisplay();
-	Options::save();
-	_game->popState();
-	OptionsBaseState::restart(_origin);
+	Options::switchDisplay(); 	//  reset video options back to previous set
+	_game->getScreen()->resetVideo(); // apply the previous set back
+	Options::save();			// save (this should not be needed, but it case something else was changed..)
+	_game->popState(); 			// pops this state
+	_game->popState(); 			// pops the old options state
+	_game->pushState(new OptionsVideoState(_origin)); // pushes the new options state
 }
 
 }

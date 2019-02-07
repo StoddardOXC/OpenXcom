@@ -436,7 +436,6 @@ void OptionsVideoState::txtDisplayHeightChange(Action *)
 	ss >> std::dec >> height;
 	Options::newDisplayHeight = height;
 	// Update resolution mode
-	// TODO: Rewrite this part so that it would use std::vector
 #if 0
 	if (_res.size() > 0)
 	{
@@ -469,7 +468,7 @@ void OptionsVideoState::cbxLanguageChange(Action *)
  */
 void OptionsVideoState::cbxDriverChange(Action *)
 {
-	Options::renderDriverSDL = _driversSDL[_cbxDriver->getSelected()];
+	Options::newRenderDriverSDL = _driversSDL[_cbxDriver->getSelected()];
 }
 
 /**
@@ -478,7 +477,7 @@ void OptionsVideoState::cbxDriverChange(Action *)
  */
 void OptionsVideoState::cbxFilterChange(Action *)
 {
-	Options::renderFilterSDL = _filtersSDL[_cbxFilter->getSelected()];
+	Options::newRenderFilterSDL = _filtersSDL[_cbxFilter->getSelected()];
 }
 
 /**
@@ -522,16 +521,16 @@ void OptionsVideoState::cbxLetterboxChange(Action *)
 {
 	switch(_cbxLetterbox->getSelected()) {
 	case 0:
-		Options::keepAspectRatio = true;
-		Options::nonSquarePixelRatio = true;
+		Options::newKeepAspectRatio = true;
+		Options::newNonSquarePixelRatio = true;
 		break;
 	case 1:
-		Options::keepAspectRatio = true;
-		Options::nonSquarePixelRatio = false;
+		Options::newKeepAspectRatio = true;
+		Options::newNonSquarePixelRatio = false;
 		break;
 	case 2:
-		Options::keepAspectRatio = false;
-		Options::nonSquarePixelRatio = false;
+		Options::newKeepAspectRatio = false;
+		Options::newNonSquarePixelRatio = false;
 		break;
 	default:
 		break;

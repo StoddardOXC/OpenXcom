@@ -238,18 +238,13 @@ void OptionsBaseState::btnOkClick(Action *)
 		Options::borderless != Options::newBorderless ||
 		Options::allowResize != Options::newAllowResize)
 	{
-		/* for now just reset it all.
-		if (Options::renderDriverSDL != Options::newRenderDriverSDL) {
-			_game->getScreen()->resetVideo(Options::displayWidth, Options::displayHeight);
-		} else {
-			if (Options::renderFilterSDL != Options::newRenderFilterSDL) {
-				_game->getScreen()->resetFilter();
-			}
-			_game->getScreen()->resetScale();
-		} */
-		// this recreates both window and renderer.
-		_game->getScreen()->resetVideo(Options::displayWidth, Options::displayHeight);
+		/* 	for now just reset it all.
+			this recreates both window and renderer. */
+		Options::switchDisplay();
+		_game->getScreen()->resetVideo();
+		Log(LOG_INFO) << "Pushed OptionsConfirmState.";
 		_game->pushState(new OptionsConfirmState(_origin));
+		return;
 	}
 
 	// hmm. this will trigger a reload even if video options' changes were rejected. hmm.
