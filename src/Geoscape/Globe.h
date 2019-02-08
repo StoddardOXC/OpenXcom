@@ -105,6 +105,29 @@ private:
 	void drawTarget(Target *target, Surface *surface);
 	/// Set up the radius of earth and stuff.
 	void setupRadii(int width, int height);
+	/// Converts polar coordinates to cartesian coordinates.
+	void polarToCart(double lon, double lat, double *x, double *y) const;
+	/// Converts polar coordinates to cartesian coordinates.
+	void polarToCart(double lon, double lat, Sint16 *x, Sint16 *y) const;
+	/// Caches visible globe polygons.
+	void cachePolygons();
+	/// Move the mouse back to where it started after we finish drag scrolling.
+	void stopScrolling(Action *action);
+	/// Draws the ocean of the globe.
+	void drawOcean();
+	/// Draws the land of the globe.
+	void drawLand();
+	/// Draws the shadow.
+	void drawShadow();
+	/// Draws the radar ranges of the globe.
+	void drawRadars();
+	/// Draws the flight paths of the globe.
+	void drawFlights();
+	/// Draws the country details of the globe.
+	void drawDetail();
+	/// Draws all the markers over the globe.
+	void drawMarkers();
+
 public:
 	static Uint8 OCEAN_COLOR;
 	static bool OCEAN_SHADING;
@@ -117,10 +140,6 @@ public:
 	Globe(Game* game, int cenX, int cenY, int width, int height, int x = 0, int y = 0);
 	/// Cleans up the globe.
 	~Globe();
-	/// Converts polar coordinates to cartesian coordinates.
-	void polarToCart(double lon, double lat, Sint16 *x, Sint16 *y) const;
-	/// Converts polar coordinates to cartesian coordinates.
-	void polarToCart(double lon, double lat, double *x, double *y) const;
 	/// Converts cartesian coordinates to polar coordinates. Returns false if conversion is not possible.
 	bool cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const;
 	/// Starts rotating the globe left.
@@ -161,8 +180,6 @@ public:
 	void toggleDetail();
 	/// Gets all the targets near a point on the globe.
 	std::vector<Target*> getTargets(int x, int y, bool craft, Craft *currentCraft) const;
-	/// Caches visible globe polygons.
-	void cachePolygons();
 	/// Sets the palette of the globe.
 	void setPalette(const SDL_Color *colors, int firstcolor = 0, int ncolors = 256) override;
 	/// Handles the timers.
@@ -173,20 +190,6 @@ public:
 	void rotate();
 	/// Draws the whole globe.
 	void draw() override;
-	/// Draws the ocean of the globe.
-	void drawOcean();
-	/// Draws the land of the globe.
-	void drawLand();
-	/// Draws the shadow.
-	void drawShadow();
-	/// Draws the radar ranges of the globe.
-	void drawRadars();
-	/// Draws the flight paths of the globe.
-	void drawFlights();
-	/// Draws the country details of the globe.
-	void drawDetail();
-	/// Draws all the markers over the globe.
-	void drawMarkers();
 	/// Blits the globe onto another surface.
 	void blit(SDL_Surface *surface) override;
 	/// Special handling for mouse hover.
@@ -213,8 +216,6 @@ public:
 	void toggleRadarLines();
 	/// Update the resolution settings, we just resized the window.
 	void resize();
-	/// Move the mouse back to where it started after we finish drag scrolling.
-	void stopScrolling(Action *action);
 	/// Special handling for multifinger gestures
 	void multiGesture(Action *action, State *state) override;
 };
