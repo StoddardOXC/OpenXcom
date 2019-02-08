@@ -230,16 +230,22 @@ void OptionsBaseState::btnOkClick(Action *)
 	// Confirm any video options changes
 	if (Options::displayOptionsChanged())
 	{
-		/* 	for now just reset it all. this recreates both window and renderer. */
+		/* the below is an ugly hack to recenter this state so that it
+		 * provides the background for the OptionsConfirmState.
+		 * ugly.
+		 */
+		auto dx = _game->getScreen()->getDX();
+		auto dy = _game->getScreen()->getDY();
 		_game->getScreen()->resetVideo();
+		dx = dx - _game->getScreen()->getDX();
+		dy = dy - _game->getScreen()->getDY();
+		recenter(-2*dx, -2*dy);
+
 		Log(LOG_INFO) << "Pushed OptionsConfirmState.";
 		_game->pushState(new OptionsConfirmState(_origin));
 		return;
 	}
 
-	// hmm. this will trigger a reload even if video options' changes were rejected. hmm.
-	// or will it? yep. but the alternative will then to not trigger a reload when the modset
-	// is modified ... hmm. need sumthin new here.
 	if (Options::reload && _origin == OPT_MENU)
 	{
 		_game->setState(new StartState);
