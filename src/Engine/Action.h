@@ -94,9 +94,6 @@ public:
 	void setConsumed(void);
 	/// Returns if it is.
 	bool isConsumed(void) const;
-	/// Sets as if we just pressed a button. This stuff in InteractiveSurface needs to be FIXME-ed
-	void setMouseButton(int button);
-
 };
 
 }
