@@ -419,6 +419,10 @@ if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
   # attempt to limit the executable size
   set_property ( SOURCE ${cxx_src} APPEND_STRING PROPERTY COMPILE_FLAGS -femit-struct-debug-reduced\ )
 endif ()
+if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+  # attempt to limit the executable size
+  add_definitions( -femit-struct-debug-reduced  )
+endif ()
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
   # C++ - only warnings
   # C and C++ warnings
@@ -468,6 +472,7 @@ if ( MSVC )
   endif ( FATAL_WARNING )
 endif ()
 
+
 if ( DUMP_CORE )
   set_property ( SOURCE main.cpp APPEND PROPERTY COMPILE_DEFINITIONS DUMP_CORE )
 endif ()
@@ -482,6 +487,7 @@ if ( EMBED_ASSETS )
                         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/standard" )
   add_custom_target ( zips DEPENDS "${CMAKE_BINARY_DIR}/common.zip" "${CMAKE_BINARY_DIR}/standard.zip" )
 endif ()
+
 
 if ( WIN32 )
   set ( application_type WIN32 )
@@ -544,23 +550,25 @@ endif ()
 
 add_executable ( openxcom  ${application_type} ${openxcom_src} ${openxcom_icon} )
 
+
 if ( EMBED_ASSETS )
   add_dependencies(openxcom zips)
 endif ()
 
-install ( TARGETS openxcom ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
+install ( TARGETS OpenXcomExSDL2 ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
+
 # Extra link flags for Windows. They need to be set before the SDL/YAML link flags, otherwise you will get strange link errors ('Undefined reference to WinMain@16')
 if ( WIN32 )
   set ( basic_windows_libs advapi32.lib shell32.lib shlwapi.lib wininet.lib urlmon.lib )
   if ( MINGW )
-    set ( basic_windows_libs ${basic_windows_libs} mingw32 -mwindows )
+    set ( basic_windows_libs ${basic_windows_libs} mingw32 -mwindows imagehlp)
     set ( static_flags  -static )
     set ( SDLMIXER_LIBRARY "${SDLMIXER_LIBRARY} -lwinmm" )
   endif ()
   if ( MSVC )
     set_target_properties ( openxcom PROPERTIES PREFIX ../ )
   endif ()
-  set ( system_libs ${basic_windows_libs} SDLmain ${static_flags} )
+  set ( system_libs ${basic_windows_libs} SDL2main ${static_flags} )
 endif ()
 
 # backtrace(3) requires libexecinfo on some *BSD systems
@@ -578,7 +586,7 @@ target_link_libraries ( openxcom ${system_libs} ${PKG_DEPS_LDFLAGS} ${WIN32_LIBS
 # Pack libraries into bundle and link executable appropriately
 if ( APPLE AND CREATE_BUNDLE )
   include ( PostprocessBundle )
-  postprocess_bundle ( openxcom ${bundle_path} )
+  postprocess_bundle ( OpenXcomExSDL2 ${bundle_path} )
 endif ()
 
 if ( NOT EMBED_ASSETS )
@@ -607,7 +615,7 @@ if ( WIN32 )
     file ( GLOB Windows_dll "${DEPS_DIR}/lib/Win32/*.dll" )
   endif()
   foreach ( dll ${Windows_dll} )
-    add_custom_command ( TARGET openxcom
+    add_custom_command ( TARGET OpenXcomExSDL2
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy ${dll} ${EXECUTABLE_OUTPUT_PATH}
 	  VERBATIM )
