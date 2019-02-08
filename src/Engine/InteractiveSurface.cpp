@@ -128,7 +128,6 @@ void InteractiveSurface::handle(Action *action, State *state)
 				{
 					if (isButtonPressed(i))
 					{
-						action->setMouseButton(i);
 						mousePress(action, state);
 					}
 				}
@@ -149,7 +148,6 @@ void InteractiveSurface::handle(Action *action, State *state)
 						{
 							setButtonPressed(i, false);
 						}
-						action->setMouseButton(i);
 						mouseRelease(action, state);
 					}
 				}
