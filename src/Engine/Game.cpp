@@ -177,12 +177,20 @@ void Game::run()
 			_states.back()->resetAll();
 
 			// Refresh mouse position
+			// FIXME: Get rid of this.
 			SDL_Event ev;
 			int x, y;
 			SDL_GetMouseState(&x, &y);
 			ev.type = SDL_MOUSEMOTION;
+			ev.motion.timestamp = SDL_GetTicks();
+			ev.motion.windowID = 0;
+			ev.motion.which = 0;
+			ev.motion.state = 0;
 			ev.motion.x = x;
 			ev.motion.y = y;
+			ev.motion.xrel = 0;
+			ev.motion.yrel = 0;
+
 			auto action = _screen->makeAction(&ev);
 			_states.back()->handle(action.get());
 		}
@@ -201,9 +209,19 @@ void Game::run()
 				isTouched = CrossPlatform::getPointerState(0, 0) > 0;
 				if (!isTouched)
 				{
+					// FIXME!!! GET RID OF THIS.
 					// NOTE: This code only sends ONE mousebuttonup event. May be a source of bugs.
 					// We shouldn't end up here, but whatever.
 					reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
+					reservedMUpEvent.button.timestamp = SDL_GetTicks();
+					reservedMUpEvent.button.windowID = 0;
+					reservedMUpEvent.button.which = 0;
+					reservedMUpEvent.button.button = 0;
+					reservedMUpEvent.button.state = SDL_RELEASED;
+					reservedMUpEvent.button.clicks = 1;
+					//reservedMUpEvent.button.x = 160;
+					//reservedMUpEvent.button.y = 100;
+
 					if (Options::logTouch)
 					{
 						Log(LOG_INFO) << "Sending fake mouseButtonUp event; event details: x: " << reservedMUpEvent.button.x << ", y: " << reservedMUpEvent.button.y;
