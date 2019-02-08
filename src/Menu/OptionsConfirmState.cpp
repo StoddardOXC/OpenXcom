@@ -152,7 +152,15 @@ void OptionsConfirmState::btnNoClick(Action *)
 	Options::save();			// save (this should not be needed, but it case something else was changed..)
 	_game->popState(); 			// pops this state
 	_game->popState(); 			// pops the old options state
-	_game->pushState(new OptionsVideoState(_origin)); // pushes the new options state
+	// if mods' options changes require a reload, do it anyway.
+	if (Options::reload && _origin == OPT_MENU)
+	{
+		_game->setState(new StartState);
+	}
+	else
+	{
+		_game->pushState(new OptionsVideoState(_origin)); // pushes the new options state
+	}
 }
 
 }
