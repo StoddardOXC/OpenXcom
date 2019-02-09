@@ -103,11 +103,12 @@ struct GlobeStaticData
 	 */
 	inline Cord circle_norm(double ox, double oy, double r, double x, double y)
 	{
+		const double yfactor = Options::getPixelYRatio();
 		const double limit = r*r;
 		const double norm = 1./r;
 		Cord ret;
 		ret.x = (x-ox);
-		ret.y = (y-oy);
+		ret.y = (y-oy) * yfactor;
 		const double temp = (ret.x)*(ret.x) + (ret.y)*(ret.y);
 		if (limit > temp)
 		{
@@ -385,16 +386,18 @@ Globe::~Globe()
  */
 void Globe::polarToCart(double lon, double lat, Sint16 *x, Sint16 *y) const
 {
+	const double yfactor = Options::getPixelYRatio();
 	// Orthographic projection
 	*x = _cenX + (Sint16)floor(_radius * cos(lat) * sin(lon - _cenLon));
-	*y = _cenY + (Sint16)floor(_radius * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon)));
+	*y = _cenY + (Sint16)floor((_radius * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon))) / yfactor);
 }
 
 void Globe::polarToCart(double lon, double lat, double *x, double *y) const
 {
+	const double yfactor = Options::getPixelYRatio();
 	// Orthographic projection
 	*x = _cenX + _radius * cos(lat) * sin(lon - _cenLon);
-	*y = _cenY + _radius * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon));
+	*y = _cenY + _radius * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon)) / yfactor;
 }
 
 
@@ -409,9 +412,11 @@ void Globe::polarToCart(double lon, double lat, double *x, double *y) const
  */
 	bool Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 {
+	const double yfactor = Options::getPixelYRatio();
 	// Orthographic projection
 	x -= _cenX;
 	y -= _cenY;
+	y *= yfactor;
 
 	double rho = sqrt((double)(x*x + y*y));
 	if (rho > _radius)
@@ -945,20 +950,18 @@ void Globe::draw()
 	drawDetail();
 }
 
-
 /**
  * Renders the ocean, shading it according to the time of day.
  */
 void Globe::drawOcean()
 {
+	Sint16 rx = _radius + 2; // +2 guarantees that land doesn't float up.
+	Sint16 ry = rx / Options::getPixelYRatio();
+
 	lock();
-	drawCircle(_cenX+1, _cenY, _radius+20, OCEAN_COLOR);
-//	ShaderDraw<Ocean>(ShaderSurface(this));
+	drawEllipse(_cenX, _cenY, rx, ry, OCEAN_COLOR);
 	unlock();
 }
-
-
-
 
 /**
  * Renders the land, taking all the visible world polygons
@@ -1036,7 +1039,6 @@ Cord Globe::getSunDirection(double lon, double lat) const
 	sun_direction *= norm;
 	return sun_direction;
 }
-
 
 void Globe::drawShadow()
 {
@@ -1805,6 +1807,7 @@ void Globe::mouseOver(Action *action, State *state)
 		if (Options::touchEnabled == false)
 		{
 			// We don't want to see the mouse-cursor jumping :)
+			// FIXME: maybe warp is missing here
 			action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		}
 
@@ -1814,6 +1817,7 @@ void Globe::mouseOver(Action *action, State *state)
 	if (Options::touchEnabled == false && _isMouseScrolling &&
 		(action->getAbsoluteXMouse() != _xBeforeMouseScrolling || action->getAbsoluteYMouse() != _yBeforeMouseScrolling))
 	{
+		// FIXME: maybe warp is missing here
 		action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	}
 	// Check for errors

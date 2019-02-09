@@ -1254,6 +1254,11 @@ void setConfFolder(const std::string &confFolder)
 	Log(LOG_INFO) << "Options::setConfFolder: config folder set to " << _configFolder;
 }
 
+double getPixelYRatio()
+{
+	return (Options::keepAspectRatio && Options::nonSquarePixelRatio) ? 1.2 : 1.0;
+}
+
 }
 
 }
