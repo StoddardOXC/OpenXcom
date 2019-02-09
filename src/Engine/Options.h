@@ -131,6 +131,8 @@ namespace Options
 	void setUserFolder(const std::string &userFolder);
 	/// Sets the config folder (should be called from Java)
 	void setConfFolder(const std::string &confFolder);
+	/// How to adjust globe or anything else circular for 1.2 pixel aspect ratio.
+	double getPixelYRatio();
 }
 
 }

@@ -777,6 +777,11 @@ void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
 	filledCircleColor(_surface.get(), x, y, r, Palette::getRGBA(getPalette(), color));
 }
 
+void Surface::drawEllipse(Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 color)
+{
+	filledEllipseColor(_surface.get(), x, y, rx, ry, Palette::getRGBA(getPalette(), color));
+}
+
 /**
  * Draws a filled polygon on the surface.
  * @param x Array of x coordinates.
