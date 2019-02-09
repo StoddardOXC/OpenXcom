@@ -61,6 +61,7 @@ Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBa
 		_mouseX = (mouseX - leftBlackBand) / scaleX;
 		_mouseY = (mouseY - topBlackBand) / scaleY;
 	}
+	if (_mouseButton < 0 ) { throw(Exception("_mouseButton < 0!")); }
 }
 
 Action::~Action()
