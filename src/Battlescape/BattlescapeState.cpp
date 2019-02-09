@@ -927,6 +927,7 @@ void BattlescapeState::mapOver(Action *action)
 
 			if (Options::touchEnabled == false)
 			{
+				// FIXME: maybe warp is missing here
 				action->setMousePosition(_cursorPosition.x, _cursorPosition.y);
 			}
 		}
