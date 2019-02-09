@@ -511,7 +511,7 @@ void SoldiersState::moveSoldierDown(Action *action, unsigned int row, bool max)
 		_base->getSoldiers()->at(row + 1) = s;
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
-			_game->warpMouseRelative(0, -8);
+			_game->warpMouseRelative(0, 8);
 		}
 		else
 		{
