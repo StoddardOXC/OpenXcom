@@ -40,8 +40,6 @@ class InteractiveSurface;
 class OptionsVideoState : public OptionsBaseState
 {
 private:
-	static const std::string GL_EXT, GL_FOLDER, GL_STRING;
-
 	InteractiveSurface *_displaySurface;
 	Text *_txtDisplayResolution, *_txtDisplayX;
 	TextEdit *_txtDisplayWidth, *_txtDisplayHeight;
@@ -55,10 +53,11 @@ private:
 
 	std::vector<SDL_DisplayMode> _res;
 	int _resCurrent;
-	std::vector<std::string> _langs, _driversSDL, _filtersSDL;
+	std::vector<std::string> _langs, _drivers, _filtersSDL, _filtersGL2;
 
 	std::string ucWords(std::string str);
 	void updateDisplayResolution();
+	void updateDisplayFilterCbx();
 public:
 	/// Creates the Options state.
 	OptionsVideoState(OptionsOrigin origin);

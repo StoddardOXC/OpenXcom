@@ -1,10 +1,11 @@
 /*
  * An implementation of a renderer using the SDL2 renderer infrastructure
  */
-#ifndef OPENXCOM_SDLRENDERER_H
-#define OPENXCOM_SDLRENDERER_H
+#ifndef OPENXCOM_GL2RENDERER_H
+#define OPENXCOM_GL2RENDERER_H
 
 #include <SDL.h>
+#include <SDL_opengl.h>
 #include "Renderer.h"
 #include <string>
 #include <vector>
@@ -13,44 +14,46 @@ namespace OpenXcom
 {
 
 
-struct RenderItemSDL {
+struct RenderItemGL2 {
 	SDL_Surface *_surface;
-	SDL_Texture *_texture;
+	GLuint _textureName;
 	SDL_Rect _srcRect;
 	SDL_Rect _dstRect;
 	bool _visible;
 	Uint32 _format;
 	bool _blend;
 
-	RenderItemSDL();
-	~RenderItemSDL();
-	void setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int bpp, Uint32 format, bool blend);
+	RenderItemGL2();
+	~RenderItemGL2();
+	void setInternalRect(SDL_Rect *srcRect, int bpp, Uint32 format, bool blend);
 	void setOutputRect(SDL_Rect *dstRect);
 	void updateTexture(SDL_Surface *surface);
-	void recreateTexture(SDL_Renderer *renderer);
+	void recreateTexture();
 	bool visible() const { return _visible; };
-	SDL_Texture *texture() { return _texture; }
-	SDL_Rect *dstRect() { return &_dstRect; }
+	GLuint texture() { return _textureName; }
+	const SDL_Rect *dstRect() { return &_dstRect; }
 };
 
-class SDLRenderer :
-	public Renderer
+class GL2Renderer : public Renderer
 {
 private:
 	SDL_Window *_window;
-	SDL_Renderer *_renderer;
-	std::string _scaleHint;
+	SDL_GLContext _glContext;
 	Uint8 _r, _g, _b, _a;
 	Uint32 _format;
 	int _format_bpp; // to be deprecated in some future SDL.
 
-	std::vector<RenderItemSDL> _renderList;
+	std::vector<RenderItemGL2> _renderList;
 
 	std::string _screenshotFilename; // empty = no screenshot this frame.
 	void doScreenshot(void);
+
 public:
-	SDLRenderer(SDL_Window *window, const std::string& driver, const std::string& filter);
-	~SDLRenderer(void);
+	static std::string ucWords(std::string str);
+	static const std::string GL_EXT, GL_FOLDER, GL_STRING;
+
+	GL2Renderer(SDL_Window *window);
+	~GL2Renderer(void);
 	/// ala glGetTexture()
 	unsigned getTexture() override;
 	/// Where in the window to blit the surface on flip.

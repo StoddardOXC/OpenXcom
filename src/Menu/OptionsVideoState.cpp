@@ -32,20 +32,17 @@
 #include "../Engine/Game.h"
 #include "SetWindowedRootState.h"
 #include "../Engine/SDLRenderer.h"
+#include "../Engine/GL2Renderer.h"
 
 namespace OpenXcom
 {
-
-const std::string OptionsVideoState::GL_EXT = "OpenGL.shader";
-const std::string OptionsVideoState::GL_FOLDER = "Shaders/";
-const std::string OptionsVideoState::GL_STRING = "*";
 
 /**
  * Initializes all the elements in the Video Options screen.
  * @param game Pointer to the core game.
  * @param origin Game section that originated this state.
  */
-OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(origin), _driversSDL(), _filtersSDL()
+OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(origin), _drivers(), _filtersSDL(), _filtersGL2()
 {
 	setCategory(_btnVideo);
 
@@ -241,11 +238,14 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	// TODO: this all to be reworked when the GL3 renderer gets written.
 	// And we assume the order doesn't change between invocations,
 	// but for SDL2 filters it's always true.
-	_driversSDL = SDLRenderer::listDrivers();
-	_cbxDriver->setOptions(_driversSDL);
+	_drivers = SDLRenderer::listDrivers();
+	for (const auto& gl2driver: GL2Renderer::listDrivers()) {
+		_drivers.push_back(gl2driver);
+	}
+	_cbxDriver->setOptions(_drivers);
 	int i = 0;
-	for (const auto& driverName: _driversSDL) {
-		if (driverName == Options::renderDriverSDL) {
+	for (const auto& driverName: _drivers) {
+		if (driverName == Options::renderDriver) {
 			_cbxDriver->setSelected(i);
 		}
 		i += 1;
@@ -258,14 +258,9 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	// then the filter
 	_txtFilter->setText(tr("STR_DISPLAY_FILTER"));
 	_filtersSDL = SDLRenderer::listFilters();
-	_cbxFilter->setOptions(_filtersSDL);
-	i = 0;
-	for (const auto& filterName: _filtersSDL) {
-		if (filterName == Options::renderFilterSDL) {
-			_cbxFilter->setSelected(i);
-		}
-		i += 1;
-	}
+	_filtersGL2 = GL2Renderer::listFilters();
+
+	updateDisplayFilterCbx();
 	_cbxFilter->onChange((ActionHandler)&OptionsVideoState::cbxFilterChange);
 	_cbxFilter->setTooltip("STR_DISPLAY_FILTER_DESC");
 	_cbxFilter->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
@@ -336,6 +331,35 @@ OptionsVideoState::~OptionsVideoState()
 {
 
 }
+
+/**
+ * What it says on the tin
+ */
+void OptionsVideoState::updateDisplayFilterCbx()
+{
+	size_t i;
+	Log(LOG_INFO)<< "updateDisplayFilterCbx() : " << _drivers[_cbxDriver->getSelected()];
+	if (_drivers[_cbxDriver->getSelected()] == "GL2") {
+		_cbxFilter->setOptions(_filtersGL2);
+		i = 0;
+		for (const auto& filterName: _filtersGL2) {
+			if (filterName == Options::renderFilterGL2) {
+				_cbxFilter->setSelected(i);
+			}
+			i += 1;
+		}
+	} else {
+		_cbxFilter->setOptions(_filtersSDL);
+		i = 0;
+		for (const auto& filterName: _filtersSDL) {
+			if (filterName == Options::renderFilterSDL) {
+				_cbxFilter->setSelected(i);
+			}
+			i += 1;
+		}
+	}
+}
+
 
 /**
  * Uppercases all the words in a string.
@@ -468,7 +492,9 @@ void OptionsVideoState::cbxLanguageChange(Action *)
  */
 void OptionsVideoState::cbxDriverChange(Action *)
 {
-	Options::newRenderDriverSDL = _driversSDL[_cbxDriver->getSelected()];
+	Log(LOG_INFO) << ":cbxDriverChange() -> " << _drivers[_cbxDriver->getSelected()];
+	Options::newRenderDriver = _drivers[_cbxDriver->getSelected()];
+	updateDisplayFilterCbx();
 }
 
 /**
@@ -477,7 +503,14 @@ void OptionsVideoState::cbxDriverChange(Action *)
  */
 void OptionsVideoState::cbxFilterChange(Action *)
 {
-	Options::newRenderFilterSDL = _filtersSDL[_cbxFilter->getSelected()];
+	if (_drivers[_cbxDriver->getSelected()] == "GL2") {
+
+		Options::newRenderFilterGL2 = _filtersGL2[_cbxFilter->getSelected()];
+		Log(LOG_INFO) << ":cbxFilterChange() -> GL2 " << _filtersGL2[_cbxDriver->getSelected()];
+	} else {
+		Options::newRenderFilterSDL = _filtersSDL[_cbxFilter->getSelected()];
+		Log(LOG_INFO) << ":cbxFilterChange() -> SDL " << _filtersSDL[_cbxDriver->getSelected()];
+	}
 }
 
 /**

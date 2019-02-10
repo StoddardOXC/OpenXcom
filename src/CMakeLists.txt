@@ -157,6 +157,7 @@ set ( engine_src
   Engine/Scalers/xbrz.cpp
   Engine/Screen.cpp
   Engine/Script.cpp
+  Engine/GL2Renderer.cpp
   Engine/SDLRenderer.cpp
   Engine/Sound.cpp
   Engine/SoundSet.cpp

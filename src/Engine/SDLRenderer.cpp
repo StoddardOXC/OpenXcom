@@ -11,15 +11,15 @@
 namespace OpenXcom
 {
 
-RenderItem::RenderItem() : _surface(0), _texture(0), _srcRect(), _dstRect(), _visible(false) { }  // not needed at all I suspect.
+RenderItemSDL::RenderItemSDL() : _surface(0), _texture(0), _srcRect(), _dstRect(), _visible(false) { }  // not needed at all I suspect.
 
-RenderItem::~RenderItem()
+RenderItemSDL::~RenderItemSDL()
 {
 	if (_surface) { SDL_FreeSurface(_surface); }
 	if (_texture) { SDL_DestroyTexture(_texture); }
 }
 
-void RenderItem::setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int bpp, Uint32 format, bool blend)
+void RenderItemSDL::setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int bpp, Uint32 format, bool blend)
 {
 	if (srcRect == NULL) {
 		_visible = false;
@@ -47,7 +47,7 @@ void RenderItem::setInternalRect(SDL_Rect *srcRect, SDL_Renderer *renderer, int 
 		<< _srcRect.w << "x" << _srcRect.h << " " << SDL_GetPixelFormatName( format );
 }
 
-void RenderItem::recreateTexture(SDL_Renderer *renderer)
+void RenderItemSDL::recreateTexture(SDL_Renderer *renderer)
 {
 	if (!_surface) { return; }
 	if (_texture) { SDL_DestroyTexture(_texture); }
@@ -58,7 +58,7 @@ void RenderItem::recreateTexture(SDL_Renderer *renderer)
 	SDL_SetTextureBlendMode(_texture, _blend ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE);
 }
 
-void RenderItem::setOutputRect(SDL_Rect *dstRect)
+void RenderItemSDL::setOutputRect(SDL_Rect *dstRect)
 {
 	if (dstRect == NULL) {
 		_visible = false;
@@ -72,7 +72,7 @@ void RenderItem::setOutputRect(SDL_Rect *dstRect)
 	//	<< _dstRect.w << "x" << _dstRect.h << " at " << _dstRect.x << "x" << _dstRect.y;
 }
 
-void RenderItem::updateTexture(SDL_Surface *surface)
+void RenderItemSDL::updateTexture(SDL_Surface *surface)
 {
 	if (surface == NULL || _texture == NULL) {
 		_visible = false;

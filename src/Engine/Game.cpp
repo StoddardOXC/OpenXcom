@@ -646,7 +646,7 @@ FpsCounter *Game::getFpsCounter() const
 
 ScreenMode Game::getCurrentScreenMode() const
 {
-	ScreenMode rv;
+	ScreenMode rv = SC_ORIGINAL;
 	for (auto state: _states) {
 		auto state_sm = state->getScreenMode();
 		if (state_sm != SC_INHERITED) {

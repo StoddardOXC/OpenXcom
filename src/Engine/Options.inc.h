@@ -14,7 +14,7 @@ OPT bool fullscreen, asyncBlit, playIntro,
 OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler, integerRatioScaling;
 OPT bool integerRatioScaling;
 
-OPT std::string language, renderDriverSDL, renderFilterSDL;
+OPT std::string language, renderDriver, renderFilterSDL, renderFilterGL2;
 OPT KeyboardType keyboardMode;
 OPT SaveSort saveOrder;
 OPT MusicFormat preferredMusic;
@@ -111,7 +111,7 @@ OPT bool showCursor;
 // Flags and other stuff that don't need OptionInfo's.
 OPT bool mute, reload, newRootWindowedMode, newFullscreen, newAllowResize, newBorderless, newKeepAspectRatio, newNonSquarePixelRatio;
 OPT int newDisplayWidth, newDisplayHeight, newBattlescapeScale, newGeoscapeScale, newWindowedModePositionX, newWindowedModePositionY;
-OPT std::string newRenderDriverSDL, newRenderFilterSDL;
+OPT std::string newRenderDriver, newRenderFilterSDL, newRenderFilterGL2;
 OPT std::vector< std::pair<std::string, bool> > mods; // ordered list of available mods (lowest priority to highest) and whether they are active
 OPT SoundFormat currentSound;
 OPT std::string systemLocale;
