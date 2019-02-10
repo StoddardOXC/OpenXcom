@@ -37,6 +37,7 @@
 #include "Timer.h"
 #include "Renderer.h"
 #include "SDLRenderer.h"
+#include "GL2Renderer.h"
 
 namespace OpenXcom
 {
@@ -299,7 +300,11 @@ void Screen::resetVideo()
 	}
 	Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
 
-	_renderer = new SDLRenderer(_window, Options::renderDriverSDL, Options::renderFilterSDL);
+	if (Options::renderDriver == "GL2") {
+		_renderer = NULL; // new GLRenderer(_window);
+	} else {
+		_renderer = new SDLRenderer(_window, Options::renderDriver, Options::renderFilterSDL);
+	}
 
 	if (!_renderer)	{
 		Log(LOG_ERROR) << SDL_GetError();

@@ -73,8 +73,9 @@ void create()
 	_info.push_back(OptionInfo("StereoSound", &StereoSound, true));
 	_info.push_back(OptionInfo("geoscapeScale", &geoscapeScale, 0));
 	_info.push_back(OptionInfo("battlescapeScale", &battlescapeScale, 0));
-	_info.push_back(OptionInfo("renderDriverSDL", &renderDriverSDL, ""));
-	_info.push_back(OptionInfo("renderFilterSDL", &renderFilterSDL, ""));
+	_info.push_back(OptionInfo("renderDriver", &renderDriver, "SDL software"));
+	_info.push_back(OptionInfo("renderFilterSDL", &renderFilterSDL, "Nearest"));
+	_info.push_back(OptionInfo("renderFilterGL2", &renderFilterGL2, "Nearest"));
 	_info.push_back(OptionInfo("debug", &debug, false));
 	_info.push_back(OptionInfo("debugUi", &debugUi, false));
 	_info.push_back(OptionInfo("soundVolume", &soundVolume, 2*(MIX_MAX_VOLUME/3)));
@@ -1194,8 +1195,9 @@ void backupDisplay()
 	Options::newFullscreen = Options::fullscreen;
 	Options::newAllowResize = Options::allowResize;
 	Options::newBorderless = Options::borderless;
-	Options::newRenderDriverSDL = Options::renderDriverSDL;
+	Options::newRenderDriver = Options::renderDriver;
 	Options::newRenderFilterSDL = Options::renderFilterSDL;
+	Options::newRenderFilterGL2 == Options::renderFilterGL2;
 	Options::newKeepAspectRatio = Options::keepAspectRatio;
 	Options::newNonSquarePixelRatio = Options::nonSquarePixelRatio;
 }
@@ -1213,8 +1215,9 @@ bool displayOptionsChanged()
 		 || Options::newFullscreen != Options::fullscreen
 		 || Options::newAllowResize != Options::allowResize
 		 || Options::newBorderless != Options::borderless
-		 || Options::newRenderDriverSDL != Options::renderDriverSDL
+		 || Options::newRenderDriver != Options::renderDriver
 		 || Options::newRenderFilterSDL != Options::renderFilterSDL
+		 || Options::newRenderFilterGL2 != Options::renderFilterGL2
 		 || Options::newKeepAspectRatio != Options::keepAspectRatio
 		 || Options::newNonSquarePixelRatio != Options::nonSquarePixelRatio
 	);
@@ -1236,8 +1239,9 @@ void switchDisplay()
 	std::swap(fullscreen, newFullscreen);
 	std::swap(allowResize, newAllowResize);
 	std::swap(borderless, newBorderless);
-	std::swap(renderDriverSDL, newRenderDriverSDL);
+	std::swap(renderDriver, newRenderDriver);
 	std::swap(renderFilterSDL, newRenderFilterSDL);
+	std::swap(newRenderFilterGL2, renderFilterGL2);
 	std::swap(keepAspectRatio, newKeepAspectRatio);
 	std::swap(nonSquarePixelRatio, newNonSquarePixelRatio);
 }
