@@ -298,7 +298,13 @@ void ComboBox::setDropdown(int options)
 {
 	int items = std::min(options, MAX_ITEMS);
 	int h = _button->getFont()->getHeight() + _button->getFont()->getSpacing();
-	int dy = (Options::baseYResolution - 200) / 2;
+#if 0 // FIXME: stretching combobox lists to the full screen height
+	// okay we don't have access to actual logical screen now
+	// so just skip this for the time being.
+	int dy = (_game->getScreen()->getHeight() - 200) / 2;
+#else
+	int dy = 0;
+#endif
 	while (_window->getY() + items * h + VERTICAL_MARGIN * 2 > 200 + dy)
 	{
 		items--;

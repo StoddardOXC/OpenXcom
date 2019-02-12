@@ -62,7 +62,7 @@ StartState::StartState() : _anim(0)
 	_font->loadTerminal();
 	_lang = new Language();
 
-	_text = new Text(Options::baseXResolution, Options::baseYResolution, 0, 0);
+	_text = new Text(_game->getScreen()->getWidth(), _game->getScreen()->getHeight(), 0, 0);
 	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
 	_timer = new Timer(150);
 
