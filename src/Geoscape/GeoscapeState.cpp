@@ -138,7 +138,7 @@ namespace OpenXcom
 GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomOutEffectDone(false), _minimizedDogfights(0), _slowdownCounter(0)
 {
 	_screenMode = SC_GEOSCAPE;
-	_game->getScreen()->setMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
+	_game->setScreenMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
 
 	int screenWidth = _game->getScreen()->getWidth();
 	int screenHeight = _game->getScreen()->getHeight();

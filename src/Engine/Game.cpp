@@ -43,6 +43,7 @@
 #include <algorithm>
 #include "../fallthrough.h"
 #include "State.h"
+#include "Timer.h"
 
 namespace OpenXcom
 {
@@ -392,10 +393,7 @@ void Game::run()
 							{
 								int dX = 0, dY = 0;
 								_screen->updateScale(dX, dY);
-								for (std::list<State*>::iterator i = _states.begin(); i != _states.end(); ++i)
-								{
-									(*i)->resize(dX, dY);
-								}
+								propagateResize(dX, dY);
 							}
 							break;
 						case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -453,33 +451,9 @@ void Game::run()
 				default:
 					auto action = _screen->makeAction(&_event);
 					_screen->handle(action.get());
+					handle(action.get());
 					_cursor->handle(action.get());
 					_fpsCounter->handle(action.get());
-					if (action->getType() == SDL_KEYDOWN)
-					{
-						// "ctrl-g" grab input
-						// (Since we're on Android, we're having no ctrl-g
-
-						if (action->getKeycode() == SDLK_g && (action->getKeymods() & KMOD_CTRL) != 0)
-						{
-							Options::captureMouse = !Options::captureMouse;
-							SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
-							SDL_SetWindowGrab(_screen->getWindow(), captureMouse);
-						}
-						else if (Options::debug)
-						{
-							if (action->getKeycode() == SDLK_t && (action->getKeymods() & KMOD_CTRL) != 0)
-							{
-								pushState(new TestState);
-							}
-							// "ctrl-u" debug UI
-							else if (action->getKeycode() == SDLK_u && (action->getKeymods() & KMOD_CTRL) != 0)
-							{
-								Options::debugUi = !Options::debugUi;
-								_states.back()->redrawText();
-							}
-						}
-					}
 					_states.back()->handle(action.get());
 					break;
 			}
@@ -672,9 +646,10 @@ void Game::setState(State *state)
 	pushState(state);
 	_init = false;
 	// in this case the state MUST declare its screen/scale mode.
-	// it also ends up fullscreen, but we don't care since
-	// it's the first in stack anyway.
-	_screen->setMode(state->getScreenMode());
+	// it also ends up fullscreen, but we don't care
+	// ignoring possible Screen resize since there's nothing to resize yet
+	int dX, dY;
+	_screen->setMode(state->getScreenMode(), dX, dY);
 	state->centerAllSurfaces();
 }
 
@@ -687,7 +662,7 @@ void Game::pushState(State *state)
 {
 	_states.push_back(state);
 	_init = false;
-	_screen->setMode(getCurrentScreenMode());
+	setScreenMode(getCurrentScreenMode()); // change in screen size is propagated
 	// this shifts all State's surfaces so that the State
 	// gets centered on the Screen - ofc if Screen is larger
 	// than SC_ORIGINAL. Which obviously only makes sense after
@@ -709,8 +684,87 @@ void Game::popState()
 	_deleted.push_back(_states.back());
 	_states.pop_back();
 	_init = false;
-	_screen->setMode(getCurrentScreenMode());
+	setScreenMode(getCurrentScreenMode()); // change in screen size is propagated
 }
+
+/**
+ * Notifies states that the screen size changed
+ * (not window size, mind)
+ */
+void Game::propagateResize(int dX, int dY)
+{
+	if (dX != 0 || dY != 0) {
+		for (const auto& s : _states) {
+			s->resize(dX, dY);
+		}
+	}
+}
+
+/**
+ * Handle slowdown and fullscreen toggle here.
+ * The fullscreen toggle requires resize propagation
+ * and the slowdown doesn't have anything to do with screen.
+ *
+ * Also the rest of hardcoded keypresses.
+ */
+void Game::handle(Action *action)
+{
+	if (action->isConsumed()) { return; }
+	if (action->getType() != SDL_KEYDOWN) { return; }
+	if (Options::debug)
+	{
+		if (action->getKeycode() == SDLK_F8) {
+			switch(Timer::gameSlowSpeed)
+			{
+				case 1: Timer::gameSlowSpeed = 5; break;
+				case 5: Timer::gameSlowSpeed = 15; break;
+				default: Timer::gameSlowSpeed = 1; break;
+			}
+			action->setConsumed();
+		}
+		else if (action->getKeycode() == SDLK_t && (action->getKeymods() & KMOD_CTRL) != 0)
+		{
+			pushState(new TestState);
+			action->setConsumed();
+		}
+		else if (action->getKeycode() == SDLK_u && (action->getKeymods() & KMOD_CTRL) != 0)
+		{	// "ctrl-u" debug UI
+			Options::debugUi = !Options::debugUi;
+			_states.back()->redrawText();
+			action->setConsumed();
+		}
+	}
+	if (action->getKeycode() == SDLK_RETURN && (SDL_GetModState() & KMOD_ALT) != 0)
+	{
+		Options::fullscreen = !Options::fullscreen;
+		resetVideo();
+		action->setConsumed();
+	}
+	else if (action->getKeycode() == SDLK_g && (action->getKeymods() & KMOD_CTRL) != 0)
+	{
+		// "ctrl-g" grab input
+		Options::captureMouse = !Options::captureMouse;
+		SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
+		SDL_SetWindowGrab(_screen->getWindow(), captureMouse);
+		action->setConsumed();
+	}
+}
+
+/// resets video according to Options and handles resize propagation.
+void Game::resetVideo()
+{
+	int dX, dY;
+	_screen->resetVideo(dX, dY);
+	propagateResize(dX, dY);
+}
+/// sets screenMode and handles resize propagation
+void Game::setScreenMode(ScreenMode mode)
+{
+	int dX, dY;
+	_screen->setMode(mode, dX, dY);
+	propagateResize(dX, dY);
+}
+
 
 /**
  * Sets a new saved game for the game to use.

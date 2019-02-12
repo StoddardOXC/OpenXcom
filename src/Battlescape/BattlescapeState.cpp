@@ -103,7 +103,7 @@ BattlescapeState::BattlescapeState() :
 	_swipeFromSoldier(false), _multiGestureProcess(false)
 {
 	_screenMode = SC_BATTLESCAPE;
-	_game->getScreen()->setMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
+	_game->setScreenMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
 
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 

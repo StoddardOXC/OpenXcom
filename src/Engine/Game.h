@@ -59,6 +59,10 @@ private:
 
 	/// Gets effective screen/scale mode
 	ScreenMode getCurrentScreenMode() const;
+	/// Propagates resize through the state stack
+	void propagateResize(int dX, int dY);
+	/// Handles fullscreen toggle and slowdown
+	void handle(Action *action);
 public:
 	/// Creates a new game and initializes SDL.
 	Game(const std::string &title);
@@ -108,6 +112,10 @@ public:
 	void setUpdateFlag(bool update) { _update = update; }
 	/// Returns the update flag.
 	bool getUpdateFlag() const { return _update; }
+	/// resets video according to Options and handles resize propagation.
+	void resetVideo();
+	/// sets screenMode and handles resize propagation
+	void setScreenMode(ScreenMode mode);
 	/// Warp the mouse (absolute Screen coordinates)
 	void warpMouse(int x, int y);
 	/// Warp the mouse (relative Screen coordinates)
