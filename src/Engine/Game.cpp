@@ -628,14 +628,8 @@ void Game::setState(State *state)
 		_deleted.push_back(_states.back());
 		_states.pop_back();
 	}
-	pushState(state);
-	_init = false;
 	// in this case the state MUST declare its screen/scale mode.
-	// it also ends up fullscreen, but we don't care
-	// ignoring possible Screen resize since there's nothing to resize yet
-	int dX, dY;
-	_screen->setMode(state->getScreenMode(), dX, dY);
-	state->centerAllSurfaces();
+	pushState(state);
 }
 
 /**
