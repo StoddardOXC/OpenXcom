@@ -230,17 +230,7 @@ void OptionsBaseState::btnOkClick(Action *)
 	// Confirm any video options changes
 	if (Options::displayOptionsChanged())
 	{
-		/* the below is an ugly hack to recenter this state so that it
-		 * provides the background for the OptionsConfirmState.
-		 * ugly.
-		 */
-		auto dx = _game->getScreen()->getDX();
-		auto dy = _game->getScreen()->getDY();
-		_game->getScreen()->resetVideo();
-		dx = dx - _game->getScreen()->getDX();
-		dy = dy - _game->getScreen()->getDY();
-		recenter(-2*dx, -2*dy);
-
+		_game->resetVideo();
 		Log(LOG_INFO) << "Pushed OptionsConfirmState.";
 		_game->pushState(new OptionsConfirmState(_origin));
 		return;

@@ -145,8 +145,8 @@ void OptionsConfirmState::btnYesClick(Action *)
  */
 void OptionsConfirmState::btnNoClick(Action *)
 {
-	Options::switchDisplay(); 	//  reset video options back to previous set
-	_game->getScreen()->resetVideo(); // apply the previous set back
+	Options::switchDisplay(); 	// reset video options back to previous set
+	_game->resetVideo(); 		// apply the previous options back.
 	Options::save();			// save (this should not be needed, but it case something else was changed..)
 	_game->popState(); 			// pops this state
 	_game->popState(); 			// pops the old options state

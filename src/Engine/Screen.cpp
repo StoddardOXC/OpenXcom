@@ -34,7 +34,6 @@
 #include "CrossPlatform.h"
 #include "FileMap.h"
 #include "Zoom.h"
-#include "Timer.h"
 #include "Renderer.h"
 #include "SDLRenderer.h"
 #include "GL2Renderer.h"
@@ -59,7 +58,8 @@ Screen::Screen(const std::string& title) : _window(NULL), _renderer(NULL),
 	_currentScaleType(SCALE_SCREEN), _currentScaleMode(SC_STARTSTATE), _resizeAccountedFor(false),
 	_title(title)
 {
-	resetVideo();
+	int dX, dY; // those are nowhere to propagate at the moment, so ignored.
+	resetVideo(dX, dY);
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
 
@@ -88,25 +88,7 @@ SDL_Surface *Screen::getSurface()
  */
 void Screen::handle(Action *action)
 {
-	if (Options::debug)
-	{
-		if (action->getType() == SDL_KEYDOWN && action->getKeycode() == SDLK_F8 && (action->getKeymods() & KMOD_ALT) != 0)
-		{
-			switch(Timer::gameSlowSpeed)
-			{
-				case 1: Timer::gameSlowSpeed = 5; break;
-				case 5: Timer::gameSlowSpeed = 15; break;
-				default: Timer::gameSlowSpeed = 1; break;
-			}
-		}
-	}
-
-	if (action->getType() == SDL_KEYDOWN && action->getKeycode() == SDLK_RETURN && (SDL_GetModState() & KMOD_ALT) != 0)
-	{
-		Options::fullscreen = !Options::fullscreen;
-		resetVideo();
-	}
-	else if (action->getType() == SDL_KEYDOWN && action->getKeycode() == Options::keyScreenshot)
+	if (action->getType() == SDL_KEYDOWN && action->getKeycode() == Options::keyScreenshot)
 	{
 		std::ostringstream ss;
 		int i = 0;
@@ -125,6 +107,7 @@ void Screen::handle(Action *action)
 			// unmodded shoots the whole window
 			_renderer->screenshot(ss.str());
 		}
+		action->setConsumed();
 		return;
 	}
 }
@@ -268,7 +251,7 @@ int Screen::getHeight() const
 /**
  * Recreates video: both renderer and the window
  */
-void Screen::resetVideo()
+void Screen::resetVideo(int& dX, int& dY)
 {
 	Log(LOG_INFO) << "Screen::resetVideo()";
 	if (_renderer) { delete _renderer; }
@@ -318,7 +301,7 @@ void Screen::resetVideo()
 
 	// fix up scaling.
 	_resizeAccountedFor = false;
-	setMode(_currentScaleMode);
+	setMode(_currentScaleMode, dX, dY);
 }
 
 /**
@@ -356,22 +339,27 @@ int Screen::getDY() const
  */
 void Screen::updateScale(int& dX, int& dY)
 {
-	dX = getWidth();
-	dY = getHeight();
 	_resizeAccountedFor = false;
-	setMode(_currentScaleMode);
-	dX = getWidth() - dX;
-	dY = getHeight() - dY;
+	setMode(_currentScaleMode, dX, dY);
 }
 
 /**
  * Depending on the mode this sets up scaling.
+ * @param mode - new mode
+ * @param dX   - change in Screen width, if any.
+ * @param dY   - change in Screen height, if any.
+ *
+ * Operation depends on whether the call was triggered by
+ * window resize event or video reset (_resizeAccountedFor == false)
+ * or by changes in State stack ( == true).
+ *
  */
-void Screen::setMode(ScreenMode mode)
+void Screen::setMode(ScreenMode mode, int& dX, int& dY)
 {
+	dX = 0; dY = 0;
 	if (mode == SC_INHERITED) {
-		// we can't handle this case here since it's popState()'s
-		// and friends job to find something explicit to set.
+		// we can't handle this case here since it's popState()
+		// and friends' job to find something explicit to set.
 		Log(LOG_FATAL) << "Screen::setMode(SC_INHERITED)";
 		throw(Exception("Screen::setMode(SC_INHERITED)"));
 	}
@@ -380,7 +368,7 @@ void Screen::setMode(ScreenMode mode)
 	}
 	_currentScaleMode = mode;
 	int type;
-	switch (mode) {
+	switch (_currentScaleMode) {
 		case SC_STARTSTATE:
 			type = SCALE_VGA80X25;
 			break;
@@ -414,6 +402,7 @@ void Screen::setMode(ScreenMode mode)
 	if (_resizeAccountedFor && type == _currentScaleType) {
 		return;
 	}
+	dX = _baseWidth; dY = _baseHeight;
 	_currentScaleType = type;
 	// the type from above determines logical game screen size.
 	int target_width, target_height;
@@ -473,6 +462,7 @@ void Screen::setMode(ScreenMode mode)
 	if (_baseHeight < ORIGINAL_HEIGHT) { _baseHeight  = ORIGINAL_HEIGHT; }
 
 	Log(LOG_INFO) << "Screen::setMode(): logical size " << _baseWidth << "x" << _baseHeight;
+	dX = _baseWidth - dX; dY = _baseHeight - dY;
 
 	// set the source rect for the renderer
 	SDL_Rect baseRect;
@@ -540,6 +530,7 @@ void Screen::setMode(ScreenMode mode)
 	outRect.w = scaledWidth;
 	outRect.h = scaledHeight;
 	_renderer->setOutputRect(_screenTexture, &outRect);
+
 	_resizeAccountedFor = true;
 }
 

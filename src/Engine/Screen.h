@@ -44,11 +44,14 @@ enum ScreenMode {
 
 /**
  * A display screen, handles rendering onto the game window.
- * In SDL a Screen is treated like a Surface, so this is just
- * a specialized version of a Surface with functionality more
- * relevant for display screens. Contains a Surface buffer
- * where all the contents are kept, so any filters or conversions
- * can be applied before rendering the screen.
+ *
+ * Responsible for all scaling calculations and setup.
+ *
+ * - owns the SDL_Window, does all its setup
+ * - contains the screen SDL_Surface that most everything else draws on
+ * - submits the surface to the Renderer, which is responsible
+ *   for filtering, scaling and showing it to the user.
+ * - all Actions are created from SDL_Events here
  */
 class Screen
 {
@@ -94,7 +97,7 @@ public:
 	/// Clears the screen.
 	void clear();
 	/// sets the screen mode - battlescape, geoscape, startscreen, bigmenu, intro, etc..
-	void setMode(ScreenMode mode);
+	void setMode(ScreenMode mode, int& dX, int& dY);
 	/// this is the new real updateScale - to be called on window resize / renderer recreation only.
 	void updateScale(int& dX, int& dY);
 	/// Sets the screen's 8bpp palette.
@@ -106,7 +109,7 @@ public:
 	/// Gets the screen's height, logical pixels.
 	int getHeight() const;
 	/// Actually resets the video stuff.
-	void resetVideo();
+	void resetVideo(int& dX, int& dY);
 	/// Takes a screenshot.
 	void screenshot(const std::string &filename);
 	/// Get the pointer for our current window
