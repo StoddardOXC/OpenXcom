@@ -426,14 +426,25 @@ LocalizedText State::tr(const std::string &id, SoldierGender gender) const
 }
 
 /**
- * centers all the surfaces on the screen.
+ * Centers all the surfaces on the screen.
+ * For this, overall State size in pixels is required.
+ * First surface in the stack is used for this.
+ * If there are no surfaces, this is a no-op.
  */
 void State::centerAllSurfaces()
 {
+	if (_surfaces.size() == 0) { return; }
+	int w0 = _surfaces[0]->getWidth();
+	int h0 = _surfaces[0]->getHeight();
+	int sw = _game->getScreen()->getWidth();
+	int sh = _game->getScreen()->getHeight();
+	int x0 = (sw - w0)/2;
+	int y0 = (sh - h0)/2;
+	Log(LOG_INFO)<<"State::centerAllSurfaces("<<this<<"): swh= "<<sw<<"x"<<sh<<" wh0="<<w0<<"x"<<h0<<" xy0="<<x0<<"x"<<y0;
 	for (std::vector<Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
 	{
-		(*i)->setX((*i)->getX() + _game->getScreen()->getDX());
-		(*i)->setY((*i)->getY() + _game->getScreen()->getDY());
+		(*i)->setX((*i)->getX() + x0);
+		(*i)->setY((*i)->getY() + y0);
 	}
 }
 
