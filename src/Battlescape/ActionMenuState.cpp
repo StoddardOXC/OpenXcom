@@ -69,7 +69,7 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
 #ifdef __MOBILE__
 	// Set an underlying InteractiveSurface to exit the menu
-	_outside = new InteractiveSurface(Options::baseXResolution, Options::baseYResolution, 0, 0);
+	_outside = new InteractiveSurface(_game->getScreen()->getWidth(), _game->getScreen()->getHeight(), 0, 0);
 	_outside->onMouseClick((ActionHandler)&ActionMenuState::outsideClick);
 	add(_outside);
 #endif

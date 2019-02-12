@@ -72,7 +72,7 @@ PrimeGrenadeState::PrimeGrenadeState(BattleAction *action, bool inInventoryView,
 		_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
 	}
 #ifdef __MOBILE__
-	_outside = new InteractiveSurface(Options::baseXResolution, Options::baseYResolution, 0, 0);
+	_outside = new InteractiveSurface(_game->getScreen()->getWidth(), _game->getScreen()->getHeight(), 0, 0);
 	_outside->onMouseClick((ActionHandler)&PrimeGrenadeState::outsideClick);
 	add(_outside);
 #endif

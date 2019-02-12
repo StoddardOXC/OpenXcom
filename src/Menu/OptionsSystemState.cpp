@@ -69,8 +69,6 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	add(_cbxSystemUI, "button", "systemMenu");
 	add(_cbxMouseMode, "button", "systemMenu");
 
-	centerAllSurfaces();
-
 	_txtLogDestination->setText(tr("STR_LOG_DESTINATION"));
 
 	_btnLogFile->setText(tr("STR_LOG_FILE"));

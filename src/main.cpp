@@ -115,8 +115,6 @@ int main(int argc, char *argv[])
 	CrossPlatform::processArgs(argc, argv);
 	if (!Options::init())
 		return EXIT_SUCCESS;
-	Options::baseXResolution = Options::displayWidth;
-	Options::baseYResolution = Options::displayHeight;
 
 	game = new Game(title.str());
 	State::setGamePtr(game);
