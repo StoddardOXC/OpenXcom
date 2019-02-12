@@ -67,8 +67,6 @@ AbandonGameState::AbandonGameState(OptionsOrigin origin) : _origin(origin)
 	add(_btnNo, "genericButton2", "geoscape");
 	add(_txtTitle, "genericText", "geoscape");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoscape");
 

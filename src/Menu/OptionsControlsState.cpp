@@ -50,8 +50,6 @@ OptionsControlsState::OptionsControlsState(OptionsOrigin origin) : OptionsBaseSt
 		add(_lstControls, "optionLists", "battlescape");
 	}
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_lstControls->setColumns(2, 152, 48);
 	_lstControls->setWordWrap(true);

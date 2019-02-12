@@ -111,8 +111,6 @@ BasescapeState::BasescapeState(Base *base, Globe *globe) : _base(base), _globe(g
 	add(_btnSell, "button", "basescape");
 	add(_btnGeoscape, "button", "basescape");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_view->setTexture(_game->getMod()->getSurfaceSet("BASEBITS.PCK"));
 	_view->onMouseClick((ActionHandler)&BasescapeState::viewLeftClick, SDL_BUTTON_LEFT);

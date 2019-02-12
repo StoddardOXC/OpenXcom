@@ -156,8 +156,6 @@ BaseInfoState::BaseInfoState(Base *base, BasescapeState *state) : _base(base), _
 	add(_numLongRange, "numbers", "baseInfo");
 	add(_barLongRange, "detectionBars", "baseInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	std::ostringstream ss;
 	if (Options::storageLimitsEnforced)

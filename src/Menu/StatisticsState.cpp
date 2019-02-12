@@ -65,8 +65,6 @@ StatisticsState::StatisticsState()
 	add(_txtTitle, "text", "endGameStatistics");
 	add(_lstStats, "list", "endGameStatistics");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "endGameStatistics");
 

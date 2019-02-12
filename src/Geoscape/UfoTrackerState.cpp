@@ -83,8 +83,6 @@ UfoTrackerState::UfoTrackerState(GeoscapeState *state, Globe *globe) : _state(st
 	add(_txtSpeed, "text2", "ufoTracker");
 	add(_lstObjects, "list", "ufoTracker");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "ufoTracker");
 

@@ -62,8 +62,6 @@ MissionDetectedState::MissionDetectedState(MissionSite *mission, GeoscapeState *
 	add(_txtTitle, "text", "terrorSite");
 	add(_txtCity, "text", "terrorSite");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_window->setBackground(_game->getMod()->getSurface(mission->getDeployment()->getAlertBackground()));
 

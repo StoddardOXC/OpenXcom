@@ -75,8 +75,6 @@ NewResearchListState::NewResearchListState(Base *base, bool sortByCost) : _base(
 	_colorNormal = _lstResearch->getColor();
 	_colorNew = Options::oxceHighlightNewTopicsHidden ? _lstResearch->getSecondaryColor() : _colorNormal;
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "selectNewResearch");
 

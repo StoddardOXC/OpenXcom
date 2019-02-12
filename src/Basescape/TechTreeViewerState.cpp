@@ -94,8 +94,6 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	add(_btnNew, "button", "techTreeViewer");
 	add(_btnOk, "button", "techTreeViewer");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "techTreeViewer");
 

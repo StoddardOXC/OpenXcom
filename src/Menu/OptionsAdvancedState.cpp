@@ -67,7 +67,6 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 		_greyedOutColor = _game->getMod()->getInterface("battlescape")->getElement("disabledUserOption")->color;
 		add(_lstOptions, "optionLists", "battlescape");
 	}
-	centerAllSurfaces();
 
 	// how much room do we need for YES/NO
 	Text text = Text(100, 9, 0, 0);

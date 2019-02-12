@@ -53,8 +53,6 @@ ConfirmLoadState::ConfirmLoadState(OptionsOrigin origin, const std::string &file
 	add(_btnNo, "confirmLoad", "saveMenus");
 	add(_txtText, "confirmLoad", "saveMenus");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "saveMenus");
 

@@ -51,8 +51,6 @@ ListLoadState::ListLoadState(OptionsOrigin origin) : ListGamesState(origin, 0, t
 
 	_btnOld->setText(tr("STR_ORIGINAL_XCOM"));
 	_btnOld->onMouseClick((ActionHandler)&ListLoadState::btnOldClick);
-
-	centerAllSurfaces();
 }
 
 /**

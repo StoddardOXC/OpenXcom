@@ -99,8 +99,6 @@ namespace OpenXcom
 		ss << tr("STR_CARGO_SPACE").arg(craft->getSoldiers()) << '\n';
 		ss << tr("STR_HWP_CAPACITY").arg(craft->getVehicles());
 		_txtStats->setText(ss.str());
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateTFTDCraft::~ArticleStateTFTDCraft()

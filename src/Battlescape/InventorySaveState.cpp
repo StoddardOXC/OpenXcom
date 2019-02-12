@@ -60,8 +60,6 @@ InventorySaveState::InventorySaveState(InventoryState *parent) : _parent(parent)
 	add(_btnSaveWithArmor, "messageWindowButtons", "battlescape");
 	add(_edtSave);
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_window->setHighContrast(true);
 	_window->setBackground(_game->getMod()->getSurface("TAC00.SCR"));

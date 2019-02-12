@@ -58,8 +58,6 @@ NewPossibleCraftState::NewPossibleCraftState(Base * base, const std::vector<Rule
 	add(_lstPossibilities, "text2", "geoNewCraft");
 	add(_txtCaveat, "text1", "geoNewCraft");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoNewCraft");
 

@@ -60,8 +60,6 @@ TechTreeSelectState::TechTreeSelectState(TechTreeViewerState *parent) : _parent(
 	add(_btnOk, "button", "techTreeSelect");
 	add(_lstTopics, "list", "techTreeSelect");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "techTreeSelect");
 

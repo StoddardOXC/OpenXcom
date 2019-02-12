@@ -37,8 +37,6 @@ OptionsNoAudioState::OptionsNoAudioState(OptionsOrigin origin) : OptionsBaseStat
 
 	add(_txtError, "text", "audioMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_txtError->setAlign(ALIGN_CENTER);
 	_txtError->setVerticalAlign(ALIGN_MIDDLE);

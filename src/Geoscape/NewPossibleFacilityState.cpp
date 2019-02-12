@@ -59,8 +59,6 @@ NewPossibleFacilityState::NewPossibleFacilityState(Base *base, Globe *globe, con
 	add(_lstPossibilities, "text2", "geoNewFacility");
 	add(_txtCaveat, "text1", "geoNewFacility");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoNewFacility");
 

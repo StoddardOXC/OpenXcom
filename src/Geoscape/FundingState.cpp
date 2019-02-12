@@ -62,8 +62,6 @@ FundingState::FundingState()
 	add(_txtChange, "text2", "fundingWindow");
 	add(_lstCountries, "list", "fundingWindow");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "fundingWindow");
 

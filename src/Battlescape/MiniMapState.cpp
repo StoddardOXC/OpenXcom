@@ -60,8 +60,8 @@ MiniMapState::MiniMapState (Camera * camera, SavedBattleGame * battleGame)
 	add(_btnOk, "buttonOK", "minimap", _bg);
 	add(_txtLevel, "textLevel", "minimap", _bg);
 
-	centerAllSurfaces();
-
+	//  FIXME: the below crudely determines
+	// if this is  a fullscreen state or not.
 	if (_game->getScreen()->getDY() > 50)
 	{
 		_screen = false;

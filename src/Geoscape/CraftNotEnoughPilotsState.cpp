@@ -53,8 +53,6 @@ CraftNotEnoughPilotsState::CraftNotEnoughPilotsState(Craft *craft) : _craft(craf
 	add(_btnAssignPilots, "button", "craftPilotError");
 	add(_txtMessage, "text1", "craftPilotError");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftPilotError");
 

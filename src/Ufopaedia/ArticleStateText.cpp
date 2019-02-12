@@ -45,8 +45,6 @@ namespace OpenXcom
 		add(_txtTitle);
 		add(_txtInfo);
 
-		centerAllSurfaces();
-
 		// Set up objects
 		_game->getMod()->getSurface("BACK10.SCR")->blitNShade(_bg, 0, 0);
 		_btnOk->setColor(Palette::blockOffset(5));

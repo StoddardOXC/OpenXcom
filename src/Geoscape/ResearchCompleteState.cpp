@@ -56,8 +56,6 @@ ResearchCompleteState::ResearchCompleteState(const RuleResearch *newResearch, co
 	add(_txtTitle, "text1", "geoResearchComplete");
 	add(_txtResearch, "text2", "geoResearchComplete");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoResearchComplete");
 

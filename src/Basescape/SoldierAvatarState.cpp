@@ -74,8 +74,6 @@ SoldierAvatarState::SoldierAvatarState(Base *base, size_t soldier) : _base(base)
 	add(_txtType, "text", "soldierAvatar");
 	add(_lstAvatar, "list", "soldierAvatar");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierAvatar");
 

@@ -56,8 +56,6 @@ LowFuelState::LowFuelState(Craft *craft, GeoscapeState *state) : _craft(craft), 
 	add(_txtTitle, "text", "lowFuel");
 	add(_txtMessage, "text", "lowFuel");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "lowFuel");
 

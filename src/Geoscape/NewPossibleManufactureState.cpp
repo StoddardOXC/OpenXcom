@@ -59,8 +59,6 @@ NewPossibleManufactureState::NewPossibleManufactureState(Base * base, const std:
 	add(_lstPossibilities, "text2", "geoManufacture");
 	add(_txtCaveat, "text1", "geoManufacture");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoManufacture");
 

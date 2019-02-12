@@ -71,8 +71,6 @@ CraftsState::CraftsState(Base *base) : _base(base)
 	add(_txtHwp, "text", "craftSelect");
 	add(_lstCrafts, "list", "craftSelect");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftSelect");
 

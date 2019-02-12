@@ -54,8 +54,6 @@ CommendationState::CommendationState(std::vector<Soldier*> soldiersMedalled)
 	add(_txtTitle, "heading", "commendations");
 	add(_lstSoldiers, "list", "commendations");
 
-	centerAllSurfaces();
-
 	// Set up object
 	setWindowBackground(_window, "commendations");
 

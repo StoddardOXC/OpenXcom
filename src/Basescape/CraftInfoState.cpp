@@ -136,8 +136,6 @@ CraftInfoState::CraftInfoState(Base *base, size_t craftId) : _base(base), _craft
 	add(_crew);
 	add(_equip);
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftInfo");
 

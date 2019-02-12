@@ -92,8 +92,6 @@ PurchaseState::PurchaseState(Base *base) : _base(base), _sel(0), _total(0), _pQt
 	add(_lstItems, "list", "buyMenu");
 	add(_cbxCategory, "text", "buyMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "buyMenu");
 

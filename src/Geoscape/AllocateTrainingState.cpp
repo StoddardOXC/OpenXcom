@@ -89,8 +89,6 @@ AllocateTrainingState::AllocateTrainingState(Base *base) : _sel(0), _base(base),
 	add(_cbxSortBy, "button", "allocateMartial");
 	add(_btnPlus, "button", "allocateMartial");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "allocateMartial");
 

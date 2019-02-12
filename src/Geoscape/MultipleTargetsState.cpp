@@ -78,8 +78,6 @@ MultipleTargetsState::MultipleTargetsState(std::vector<Target*> targets, Craft *
 			y += button->getHeight() + SPACING;
 		}
 		_btnTargets[0]->onKeyboardPress((ActionHandler)&MultipleTargetsState::btnCancelClick, Options::keyCancel);
-
-		centerAllSurfaces();
 	}
 }
 

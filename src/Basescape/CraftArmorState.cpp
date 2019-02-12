@@ -75,8 +75,6 @@ CraftArmorState::CraftArmorState(Base *base, size_t craft) : _base(base), _craft
 	add(_lstSoldiers, "list", "craftArmor");
 	add(_cbxSortBy, "button", "craftArmor");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftArmor");
 

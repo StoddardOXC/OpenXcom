@@ -51,8 +51,6 @@ ConfirmCydoniaState::ConfirmCydoniaState(Craft *craft) : _craft(craft)
 	add(_btnNo, "button", "confirmCydonia");
 	add(_txtMessage, "text", "confirmCydonia");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "confirmCydonia");
 

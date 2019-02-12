@@ -56,8 +56,6 @@ namespace OpenXcom
 		{
 			_lstInfo->setCellColor(i, 1, _listColor2);
 		}
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateTFTDUso::~ArticleStateTFTDUso()

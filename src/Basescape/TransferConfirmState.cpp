@@ -60,8 +60,6 @@ TransferConfirmState::TransferConfirmState(Base *base, TransferItemsState *state
 	add(_txtCost, "text", "transferConfirm");
 	add(_txtTotal, "text", "transferConfirm");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "transferConfirm");
 

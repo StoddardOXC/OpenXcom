@@ -128,8 +128,6 @@ void ManufactureInfoState::buildUi()
 	add(_btnStop, "button2", "manufactureInfo");
 	add(_btnSell, "button1", "manufactureInfo");
 
-	centerAllSurfaces();
-
 	setWindowBackground(_window, "manufactureInfo");
 
 	_txtTitle->setText(tr(_item ? _item->getName() : _production->getRules()->getName()));

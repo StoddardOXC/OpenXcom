@@ -105,8 +105,6 @@ CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) : _lstScroll(
 	add(_lstEquipment, "list", "craftEquipment");
 	add(_cbxFilterBy, "button", "craftEquipment");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftEquipment");
 

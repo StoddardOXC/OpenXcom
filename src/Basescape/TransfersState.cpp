@@ -61,8 +61,6 @@ TransfersState::TransfersState(Base *base) : _base(base)
 	add(_txtArrivalTime, "text", "transferInfo");
 	add(_lstTransfers, "list", "transferInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "transferInfo");
 

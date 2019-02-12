@@ -85,8 +85,6 @@ TrainingState::TrainingState()
 			}
 		}
 	}
-
-	centerAllSurfaces();
 }
 /**
  *

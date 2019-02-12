@@ -74,8 +74,6 @@ ResearchState::ResearchState(Base *base) : _base(base)
 	add(_txtProgress, "text", "researchMenu");
 	add(_lstResearch, "list", "researchMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "researchMenu");
 

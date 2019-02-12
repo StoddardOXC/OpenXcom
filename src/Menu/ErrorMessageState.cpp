@@ -77,8 +77,6 @@ void ErrorMessageState::create(const std::string &str, SDL_Color *palette, Uint8
 	add(_btnOk);
 	add(_txtMessage);
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_window->setColor(color);
 	_window->setBackground(_game->getMod()->getSurface(bg));

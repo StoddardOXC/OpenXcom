@@ -36,8 +36,6 @@ ChangeHeadquartersState::ChangeHeadquartersState(Base *base) : _base(base)
 	add(_txtTitle, "text", "changeHeadquarters");
 	add(_txtBase, "text", "changeHeadquarters");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "changeHeadquarters");
 

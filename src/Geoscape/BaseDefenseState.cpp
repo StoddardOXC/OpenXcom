@@ -78,8 +78,6 @@ BaseDefenseState::BaseDefenseState(Base *base, Ufo *ufo, GeoscapeState *state) :
 	add(_txtInit, "text", "baseDefense");
 	add(_lstDefenses, "text", "baseDefense");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "baseDefense");
 

@@ -53,8 +53,6 @@ CraftEquipmentLoadState::CraftEquipmentLoadState(CraftEquipmentState *parent) : 
 	add(_lstLoadout, "list", "craftEquipmentLoad");
 	add(_btnCancel, "button", "craftEquipmentLoad");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftEquipmentLoad");
 

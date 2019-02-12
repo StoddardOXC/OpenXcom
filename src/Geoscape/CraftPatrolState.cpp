@@ -57,8 +57,6 @@ CraftPatrolState::CraftPatrolState(Craft *craft, Globe *globe) : _craft(craft), 
 	add(_txtDestination, "text1", "craftPatrol");
 	add(_txtPatrolling, "text1", "craftPatrol");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftPatrol");
 

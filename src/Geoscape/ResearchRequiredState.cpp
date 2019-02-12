@@ -49,8 +49,6 @@ ResearchRequiredState::ResearchRequiredState(RuleItem *item)
 	add(_btnOk, "button", "geoResearchRequired");
 	add(_txtTitle, "text1", "geoResearchRequired");
 
-	centerAllSurfaces();
-
 	std::string weapon = item->getType();
 	std::string clip = item->getPrimaryCompatibleAmmo()->front()->getType();
 

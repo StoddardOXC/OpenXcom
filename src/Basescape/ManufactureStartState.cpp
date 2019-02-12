@@ -83,8 +83,6 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 
 	add(_btnStart, "button", "allocateManufacture");
 
-	centerAllSurfaces();
-
 	setWindowBackground(_window, "allocateManufacture");
 
 	_txtTitle->setText(tr(_item->getName()));

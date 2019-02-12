@@ -49,8 +49,6 @@ UfoLostState::UfoLostState(const std::string &id) : _id(id)
 	add(_btnOk, "button", "UFOLost");
 	add(_txtTitle, "text", "UFOLost");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "UFOLost");
 

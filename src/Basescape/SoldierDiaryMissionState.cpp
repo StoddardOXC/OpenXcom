@@ -77,8 +77,6 @@ SoldierDiaryMissionState::SoldierDiaryMissionState(Soldier *soldier, int rowEntr
 	add(_txtNoRecord, "text", "soldierDiaryMission");
 	add(_lstKills, "list", "soldierDiaryMission");
 
-	centerAllSurfaces();
-
 	// Set up object
 	setWindowBackground(_window, "soldierDiaryMission");
 

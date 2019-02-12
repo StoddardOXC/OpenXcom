@@ -57,8 +57,6 @@ ScannerState::ScannerState (BattleAction *action) : _action(action)
 	add(_scannerView);
 	add(_bg);
 
-	centerAllSurfaces();
-
 	_game->getMod()->getSurface("DETBORD.PCK")->blitNShade(_bg, 0, 0);
 	_game->getMod()->getSurface("DETBORD2.PCK")->blitNShade(_scan, 0, 0);
 	_bg->onMouseClick((ActionHandler)&ScannerState::exitClick);

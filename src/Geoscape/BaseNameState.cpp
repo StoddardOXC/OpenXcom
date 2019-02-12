@@ -82,7 +82,6 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first, bool fixedLoc
 #ifdef __MOBILE__
 	add(_btnCancel, "text", "baseNaming");
 #endif
-	centerAllSurfaces();
 
 	// Set up objects
 	setWindowBackground(_window, "baseNaming");

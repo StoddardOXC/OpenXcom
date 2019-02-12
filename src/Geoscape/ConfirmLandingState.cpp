@@ -75,8 +75,6 @@ ConfirmLandingState::ConfirmLandingState(Craft *craft, Texture *missionTexture, 
 	add(_txtBegin, "text", "confirmLanding");
 	add(_sprite);
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "confirmLanding");
 

@@ -73,8 +73,6 @@ ItemsArrivingState::ItemsArrivingState(GeoscapeState *state) : _state(state), _b
 	add(_txtDestination, "text1", "itemsArriving");
 	add(_lstTransfers, "text2", "itemsArriving");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "itemsArriving");
 

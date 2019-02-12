@@ -51,8 +51,6 @@ PlaceLiftState::PlaceLiftState(Base *base, Globe *globe, bool first) : _base(bas
 	add(_view, "baseView", "basescape");
 	add(_txtTitle, "text", "placeFacility");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_view->setTexture(_game->getMod()->getSurfaceSet("BASEBITS.PCK"));
 	_view->setBase(_base);

@@ -118,8 +118,6 @@ namespace OpenXcom
 		{
 			_lstStats2->setCellColor(i, 1, _listColor2);
 		}
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateTFTDVehicle::~ArticleStateTFTDVehicle()

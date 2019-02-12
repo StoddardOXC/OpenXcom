@@ -165,8 +165,6 @@ DebriefingState::DebriefingState() : _region(0), _country(0), _positiveScore(tru
 
 	add(_lstRecoveredItems, "list", "debriefing");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "debriefing");
 

@@ -237,8 +237,6 @@ SoldierInfoState::SoldierInfoState(Base *base, size_t soldierId) : _base(base), 
 	add(_numPsiSkill, "numbers", "soldierInfo");
 	add(_barPsiSkill, "barPsiSkill", "soldierInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_game->getMod()->getSurface("BACK06.SCR")->blitNShade(_bg, 0, 0);
 

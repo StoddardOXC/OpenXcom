@@ -83,8 +83,6 @@ ListLoadOriginalState::ListLoadOriginalState(OptionsOrigin origin) : _origin(ori
 		y += 14;
 	}
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "saveMenus");
 

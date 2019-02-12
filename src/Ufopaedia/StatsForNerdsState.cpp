@@ -155,8 +155,6 @@ void StatsForNerdsState::buildUI(bool debug, bool ids, bool defaults)
 	add(_btnNext, "button", "statsForNerds");
 	add(_cbxRelatedStuff, "comboBox", "statsForNerds");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "statsForNerds");
 

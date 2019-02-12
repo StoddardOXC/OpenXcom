@@ -108,8 +108,6 @@ void ResearchInfoState::buildUi()
 	add(_btnMore, "button1", "allocateResearch");
 	add(_btnLess, "button1", "allocateResearch");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "allocateResearch");
 

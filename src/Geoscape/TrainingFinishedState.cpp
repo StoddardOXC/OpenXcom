@@ -58,8 +58,6 @@ TrainingFinishedState::TrainingFinishedState(Base *base, const std::vector<Soldi
 	add(_txtTitle, "text1", "trainingFinished");
 	add(_lstPossibilities, "text2", "trainingFinished");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "trainingFinished");
 

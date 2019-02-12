@@ -97,8 +97,6 @@ SoldierArmorState::SoldierArmorState(Base *base, size_t soldier, SoldierArmorOri
 	add(_lstArmor, "list", "soldierArmor");
 	add(_sortName, "text", "soldierArmor");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierArmor");
 

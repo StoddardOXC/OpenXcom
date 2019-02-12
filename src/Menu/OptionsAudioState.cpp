@@ -91,8 +91,6 @@ OptionsAudioState::OptionsAudioState(OptionsOrigin origin) : OptionsBaseState(or
 	add(_txtOptions, "text", "audioMenu");
 	add(_btnBackgroundMute, "button", "audioMenu");
 
-	centerAllSurfaces();
-
 	// Set up object
 	_txtMusicVolume->setText(tr("STR_MUSIC_VOLUME"));
 

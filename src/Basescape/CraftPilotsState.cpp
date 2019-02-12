@@ -85,8 +85,6 @@ CraftPilotsState::CraftPilotsState(Base *base, size_t craft) : _base(base), _cra
 	add(_txtApproachSpeed, "text1", "craftPilots");
 	add(_txtApproachSpeedValue, "text2", "craftPilots");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftPilots");
 

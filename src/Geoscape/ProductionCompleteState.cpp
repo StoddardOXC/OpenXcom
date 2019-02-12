@@ -70,8 +70,6 @@ ProductionCompleteState::ProductionCompleteState(Base *base, const std::string &
 	add(_txtQuantity, "text1", "geoManufactureComplete");
 	add(_lstSummary, "list", "geoManufactureComplete");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoManufactureComplete");
 

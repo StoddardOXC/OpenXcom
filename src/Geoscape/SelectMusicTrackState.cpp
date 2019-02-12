@@ -64,8 +64,6 @@ SelectMusicTrackState::SelectMusicTrackState(SelectMusicTrackOrigin origin) : _o
 	add(_btnCancel, "button", "selectMusicTrack");
 	add(_lstTracks, "list", "selectMusicTrack");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "selectMusicTrack");
 

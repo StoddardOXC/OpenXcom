@@ -51,8 +51,6 @@ InventoryLoadState::InventoryLoadState(InventoryState *parent) : _parent(parent)
 	add(_lstLayout, "optionLists", "battlescape");
 	add(_btnCancel, "messageWindowButtons", "battlescape");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_window->setHighContrast(true);
 	_window->setBackground(_game->getMod()->getSurface("TAC00.SCR"));

@@ -113,8 +113,6 @@ UfoDetectedState::UfoDetectedState(Ufo *ufo, GeoscapeState *state, bool detected
 	// Set up objects
 	setWindowBackground(_window, "UFOInfo");
 
-	centerAllSurfaces();
-
 	_btnIntercept->setText(tr("STR_INTERCEPT"));
 	_btnIntercept->onMouseClick((ActionHandler)&UfoDetectedState::btnInterceptClick);
 

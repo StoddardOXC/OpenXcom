@@ -76,9 +76,7 @@ static const int _applyTemplateBtnY  = 113;
 InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bool noCraft) : _tu(tu), _noCraft(noCraft), _parent(parent), _base(base), _reloadUnit(false), _globalLayoutIndex(-1)
 {
 	_battleGame = _game->getSavedGame()->getSavedBattle();
-
-	_screenMode = _battleGame->isBaseCraftInventory() ? SC_BATTLESCAPE : SC_INFOSCREEN;
-
+	_screenMode = SC_INFOSCREEN;
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
 	_soldier = new Surface(320, 200, 0, 0);
@@ -140,10 +138,6 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	{
 		_txtTus->setY(_txtTus->getY() + 8);
 	}
-
-	centerAllSurfaces();
-
-
 
 	_txtName->setBig();
 	_txtName->setHighContrast(true);

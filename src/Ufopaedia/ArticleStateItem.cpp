@@ -409,7 +409,6 @@ namespace OpenXcom
 				break;
 			default: break;
 		}
-
 		// multi-page indicator
 		_txtArrows = new Text(32, 9, 280, 183);
 		add(_txtArrows);
@@ -419,8 +418,6 @@ namespace OpenXcom
 		if (_state->hasPrevArticlePage()) ss2 << "<<";
 		if (_state->hasNextArticlePage()) ss2 << " >>";
 		_txtArrows->setText(ss2.str());
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateItem::~ArticleStateItem()

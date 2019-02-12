@@ -672,7 +672,10 @@ void Game::setState(State *state)
 	pushState(state);
 	_init = false;
 	// in this case the state MUST declare its screen/scale mode.
+	// it also ends up fullscreen, but we don't care since
+	// it's the first in stack anyway.
 	_screen->setMode(state->getScreenMode());
+	state->centerAllSurfaces();
 }
 
 /**
@@ -685,6 +688,14 @@ void Game::pushState(State *state)
 	_states.push_back(state);
 	_init = false;
 	_screen->setMode(getCurrentScreenMode());
+	// this shifts all State's surfaces so that the State
+	// gets centered on the Screen - ofc if Screen is larger
+	// than SC_ORIGINAL. Which obviously only makes sense after
+	// setMode() call and since we now call it here, this call
+	// also ends up here.
+	state->centerAllSurfaces();
+	// TODO: would be nice to set State::_screen
+	// in case of SC_INFOSCREEN and maximizeinfoscreens
 }
 
 /**

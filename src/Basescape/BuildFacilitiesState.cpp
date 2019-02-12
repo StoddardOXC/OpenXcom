@@ -61,8 +61,6 @@ BuildFacilitiesState::BuildFacilitiesState(Base *base, State *state) : _base(bas
 	add(_txtTitle, "text", "selectFacility");
 	add(_lstFacilities, "list", "selectFacility");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "selectFacility");
 

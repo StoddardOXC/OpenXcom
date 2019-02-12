@@ -135,8 +135,6 @@ NewBattleState::NewBattleState() : _craft(0)
 	add(_cbxCraft, "button1", "newBattleMenu");
 	add(_cbxMission, "button1", "newBattleMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "newBattleMenu");
 

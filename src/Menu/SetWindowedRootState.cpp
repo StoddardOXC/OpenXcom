@@ -86,8 +86,6 @@ SetWindowedRootState::SetWindowedRootState(OptionsOrigin origin, OptionsVideoSta
 	_edtWindowedModePositionY->setText(wss2.str());
 	_edtWindowedModePositionY->setConstraint(TEC_NUMERIC);
 
-	centerAllSurfaces();
-
 	// Set up object
 	setWindowBackground(_window, "optionsMenu");
 

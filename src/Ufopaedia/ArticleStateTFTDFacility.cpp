@@ -73,8 +73,6 @@ namespace OpenXcom
 		ss << Unicode::formatFunding(facility->getMonthlyCost());
 		_lstInfo->addRow(2, tr("STR_MAINTENANCE_COST").c_str(), ss.str().c_str());
 		_lstInfo->setCellColor(row++, 1, _listColor2);
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateTFTDFacility::~ArticleStateTFTDFacility()
