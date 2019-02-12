@@ -59,8 +59,6 @@ AlienInventoryState::AlienInventoryState(BattleUnit *unit)
 	add(_btnArmor, "buttonOK", "inventory", _bg);
 	add(_inv);
 
-	centerAllSurfaces();
-
 	// Set up objects
 	Surface *tmp = _game->getMod()->getSurface("AlienInventory2", false);
 	if (!tmp || !unit->getGeoscapeSoldier())

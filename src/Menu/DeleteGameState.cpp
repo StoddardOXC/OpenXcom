@@ -57,8 +57,6 @@ DeleteGameState::DeleteGameState(OptionsOrigin origin, const std::string &save) 
 	add(_btnNo, "confirmDelete", "saveMenus");
 	add(_txtMessage, "confirmDelete", "saveMenus");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "saveMenus");
 

@@ -103,8 +103,6 @@ TestState::TestState()
 	add(_cbxPalette, "button1", "tests"); // add as last (display over all other components)
 	add(_cbxPaletteAction, "button1", "tests"); // add as last (display over all other components)
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "tests");
 

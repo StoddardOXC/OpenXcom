@@ -103,8 +103,6 @@ SoldierDiaryPerformanceState::SoldierDiaryPerformanceState(Base *base, size_t so
 		add(_commendationDecorations[i]);
 	}
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierDiaryPerformance");
 

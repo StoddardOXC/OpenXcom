@@ -105,8 +105,6 @@ SellState::SellState(Base *base, DebriefingState *debriefingState, OptionsOrigin
 	add(_lstItems, "list", "sellMenu");
 	add(_cbxCategory, "text", "sellMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "sellMenu");
 

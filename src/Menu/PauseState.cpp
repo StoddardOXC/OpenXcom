@@ -75,8 +75,6 @@ PauseState::PauseState(OptionsOrigin origin) : _origin(origin)
 	add(_btnCancel, "button", "pauseMenu");
 	add(_txtTitle, "text", "pauseMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "pauseMenu");
 

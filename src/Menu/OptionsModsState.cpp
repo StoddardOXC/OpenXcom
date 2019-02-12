@@ -66,8 +66,6 @@ OptionsModsState::OptionsModsState() : _curMasterIdx(0)
 
 	add(_cbxMasters, "button", "modsMenu");
 
-	centerAllSurfaces();
-
 	// how much room do we need for YES/NO
 	Text text = Text(100, 9, 0, 0);
 	text.initText(_game->getMod()->getFont("FONT_BIG"), _game->getMod()->getFont("FONT_SMALL"), _game->getLanguage());

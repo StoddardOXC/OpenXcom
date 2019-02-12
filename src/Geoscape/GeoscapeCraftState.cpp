@@ -110,8 +110,6 @@ GeoscapeCraftState::GeoscapeCraftState(Craft *craft, Globe *globe, Waypoint *way
 	add(_txtSoldier, "text3", "geoCraft");
 	add(_txtHWP, "text3", "geoCraft");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoCraft");
 

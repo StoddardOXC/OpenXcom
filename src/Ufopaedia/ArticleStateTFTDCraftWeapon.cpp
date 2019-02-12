@@ -85,7 +85,6 @@ namespace OpenXcom
 			_lstInfo->setCellColor(1, 1, _listColor2);
 		}
 
-		centerAllSurfaces();
 	}
 
 	ArticleStateTFTDCraftWeapon::~ArticleStateTFTDCraftWeapon()

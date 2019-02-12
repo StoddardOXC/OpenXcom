@@ -82,8 +82,6 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base), _sho
 	_colorHidden = _game->getMod()->getInterface("selectNewManufacture")->getElement("listExtended")->color;
 	_colorFacilityRequired = _game->getMod()->getInterface("selectNewManufacture")->getElement("listExtended")->color2;
 
-	centerAllSurfaces();
-
 	setWindowBackground(_window, "selectNewManufacture");
 
 	_txtTitle->setText(tr("STR_PRODUCTION_ITEMS"));

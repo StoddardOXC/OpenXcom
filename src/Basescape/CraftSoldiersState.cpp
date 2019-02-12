@@ -86,8 +86,6 @@ CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft)
 
 	_otherCraftColor = _game->getMod()->getInterface("craftSoldiers")->getElement("otherCraft")->color;
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftSoldiers");
 

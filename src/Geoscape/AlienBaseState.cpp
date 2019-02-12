@@ -55,9 +55,6 @@ AlienBaseState::AlienBaseState(AlienBase *base, GeoscapeState *state) : _state(s
 	add(_btnOk, "text", "alienBase");
 	add(_txtTitle, "button", "alienBase");
 
-	centerAllSurfaces();
-
-
 	// Set up objects
 	setWindowBackground(_window, "alienBase");
 

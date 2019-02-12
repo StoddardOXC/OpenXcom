@@ -67,7 +67,7 @@ ConfirmEndMissionState::ConfirmEndMissionState(SavedBattleGame *battleGame, int 
 
 	_txtTitle->setBig();
 	_txtTitle->setHighContrast(true);
-	_txtTitle->setText(tr("STR_MISSION_OVER"));		
+	_txtTitle->setText(tr("STR_MISSION_OVER"));
 
 	_txtWounded->setBig();
 	_txtWounded->setHighContrast(true);
@@ -88,8 +88,6 @@ ConfirmEndMissionState::ConfirmEndMissionState(SavedBattleGame *battleGame, int 
 	_btnCancel->onMouseClick((ActionHandler)&ConfirmEndMissionState::btnCancelClick);
 	_btnCancel->onKeyboardPress((ActionHandler)&ConfirmEndMissionState::btnCancelClick, Options::keyCancel);
 	_btnCancel->onKeyboardPress((ActionHandler)&ConfirmEndMissionState::btnCancelClick, Options::keyBattleAbort);
-
-	centerAllSurfaces();
 }
 
 /**

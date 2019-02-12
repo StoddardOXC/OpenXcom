@@ -102,8 +102,6 @@ namespace OpenXcom
 		_lstInfo = new TextList(310, 64, 10, 68);
 		add(_lstInfo);
 
-		centerAllSurfaces();
-
 		_lstInfo->setColor(Palette::blockOffset(8)+5);
 		_lstInfo->setColumns(2, 200, 110);
 //		_lstInfo->setCondensed(true);

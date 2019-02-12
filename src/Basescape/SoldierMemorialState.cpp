@@ -69,8 +69,6 @@ SoldierMemorialState::SoldierMemorialState()
 	add(_txtLost, "text", "soldierMemorial");
 	add(_lstSoldiers, "list", "soldierMemorial");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierMemorial");
 

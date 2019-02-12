@@ -67,8 +67,6 @@ GlobalResearchState::GlobalResearchState(bool openedFromBasescape) : _openedFrom
 	add(_txtProgress, "text", "globalResearchMenu");
 	add(_lstResearch, "list", "globalResearchMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "globalResearchMenu");
 

@@ -96,8 +96,6 @@ SoldierTransformationState::SoldierTransformationState(RuleSoldierTransformation
 
 	add(_lstStatChanges, "list2", "soldierTransformation");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierTransformation");
 

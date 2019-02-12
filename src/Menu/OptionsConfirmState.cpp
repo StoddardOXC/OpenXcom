@@ -61,8 +61,6 @@ OptionsConfirmState::OptionsConfirmState(OptionsOrigin origin) : _origin(origin)
 	add(_txtTitle, "confirmVideo", "optionsMenu");
 	add(_txtTimer, "confirmVideo", "optionsMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "optionsMenu");
 

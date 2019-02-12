@@ -55,8 +55,6 @@ DogfightErrorState::DogfightErrorState(Craft *craft, const std::string &msg) : _
 	add(_txtCraft, "text", "dogfightInfo");
 	add(_txtMessage, "text", "dogfightInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "dogfightInfo");
 

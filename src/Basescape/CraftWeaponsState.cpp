@@ -71,8 +71,6 @@ CraftWeaponsState::CraftWeaponsState(Base *base, size_t craft, size_t weapon) : 
 	add(_lstWeapons, "list", "craftWeapons");
 	add(_txtCurrentWeapon, "text", "craftWeapons");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftWeapons");
 

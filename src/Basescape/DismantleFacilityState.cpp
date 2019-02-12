@@ -64,8 +64,6 @@ DismantleFacilityState::DismantleFacilityState(Base *base, BaseView *view, BaseF
 	add(_txtFacility, "text", "dismantleFacility");
 	add(_txtRefundValue, "text", "dismantleFacility");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "dismantleFacility");
 

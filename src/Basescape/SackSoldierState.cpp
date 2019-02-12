@@ -59,8 +59,6 @@ SackSoldierState::SackSoldierState(Base *base, size_t soldierId) : _base(base), 
 	add(_txtTitle, "text", "sackSoldier");
 	add(_txtSoldier, "text", "sackSoldier");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "sackSoldier");
 

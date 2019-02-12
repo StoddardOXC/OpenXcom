@@ -88,8 +88,6 @@ NewGameState::NewGameState()
 	add(_txtTitle, "text", "newGameMenu");
 	add(_txtIronman, "ironman", "newGameMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "newGameMenu");
 

@@ -84,8 +84,6 @@ OptionsAudioState::OptionsAudioState(OptionsOrigin origin) : OptionsBaseState(or
 	add(_cbxSoundFormat, "button", "audioMenu");
 	add(_cbxVideoFormat, "button", "audioMenu");
 
-	centerAllSurfaces();
-
 	// Set up object
 	_txtMusicVolume->setText(tr("STR_MUSIC_VOLUME"));
 

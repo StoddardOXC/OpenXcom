@@ -147,16 +147,6 @@ namespace OpenXcom
 		_txtInfo->setText(tr(defs->getTextForPage(_state->current_page)));
 
 		// all of the above are common to the TFTD articles.
-
-		if (defs->getType() == UFOPAEDIA_TYPE_TFTD)
-		{
-			// this command is contained in all the subtypes of this article,
-			// and probably shouldn't run until all surfaces are added.
-			// in the case of a simple image/title/text article,
-			// we're done adding surfaces for now.
-			centerAllSurfaces();
-		}
-
 	}
 
 	ArticleStateTFTD::~ArticleStateTFTD()

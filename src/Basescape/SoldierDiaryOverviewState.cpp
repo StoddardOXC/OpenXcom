@@ -100,8 +100,6 @@ SoldierDiaryOverviewState::SoldierDiaryOverviewState(Base *base, size_t soldierI
 	add(_txtDate, "text2", "soldierDiary");
 	add(_lstDiary, "list", "soldierDiary");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierDiary");
 

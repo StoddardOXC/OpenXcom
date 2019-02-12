@@ -52,8 +52,6 @@ TestPaletteState::TestPaletteState(const std::string &palette, PaletteActionType
 	add(_bg);
 	add(_btnCancel);
 
-	centerAllSurfaces();
-
 	_btnCancel->onMouseClick((ActionHandler)&TestPaletteState::btnCancelClick);
 	_btnCancel->onKeyboardPress((ActionHandler)&TestPaletteState::btnCancelClick, Options::keyCancel);
 

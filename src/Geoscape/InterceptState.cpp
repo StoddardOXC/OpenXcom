@@ -84,8 +84,6 @@ InterceptState::InterceptState(Globe *globe, Base *base, Target *target) : _glob
 	add(_txtWeapons, "text2", "intercept");
 	add(_lstCrafts, "list", "intercept");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "intercept");
 

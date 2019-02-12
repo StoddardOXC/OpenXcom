@@ -50,8 +50,6 @@ BaseDestroyedState::BaseDestroyedState(Base *base, bool missiles, bool partialDe
 	add(_btnOk, "button", "baseDestroyed");
 	add(_txtMessage, "text", "baseDestroyed");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "baseDestroyed");
 

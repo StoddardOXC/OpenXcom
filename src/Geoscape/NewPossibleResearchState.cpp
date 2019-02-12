@@ -58,8 +58,6 @@ NewPossibleResearchState::NewPossibleResearchState(Base * base, const std::vecto
 	add(_txtTitle, "text1", "geoResearch");
 	add(_lstPossibilities, "text2", "geoResearch");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoResearch");
 

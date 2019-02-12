@@ -58,8 +58,6 @@ ManufactureDependenciesTreeState::ManufactureDependenciesTreeState(const std::st
 	add(_btnOk, "button", "dependencyTree");
 	add(_lstTopics, "list", "dependencyTree");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "dependencyTree");
 

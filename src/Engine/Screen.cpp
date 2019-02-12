@@ -370,6 +370,8 @@ void Screen::updateScale(int& dX, int& dY)
 void Screen::setMode(ScreenMode mode)
 {
 	if (mode == SC_INHERITED) {
+		// we can't handle this case here since it's popState()'s
+		// and friends job to find something explicit to set.
 		Log(LOG_FATAL) << "Screen::setMode(SC_INHERITED)";
 		throw(Exception("Screen::setMode(SC_INHERITED)"));
 	}
@@ -396,6 +398,7 @@ void Screen::setMode(ScreenMode mode)
 			if (Options::maximizeInfoScreens) {
 				type = SCALE_ORIGINAL;
 			} else {
+				// else it is inherited. so nothing to do here.
 				return;
 			}
 			break;

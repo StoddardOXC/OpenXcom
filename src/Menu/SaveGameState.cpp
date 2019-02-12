@@ -111,8 +111,6 @@ void SaveGameState::buildUi(SDL_Color *palette)
 		add(_txtStatus, "textLoad", "geoscape");
 	}
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_txtStatus->setBig();
 	_txtStatus->setAlign(ALIGN_CENTER);

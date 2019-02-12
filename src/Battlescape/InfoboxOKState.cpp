@@ -51,8 +51,6 @@ InfoboxOKState::InfoboxOKState(const std::string &msg)
 	add(_btnOk, "infoBoxOKButton", "battlescape");
 	add(_txtTitle, "infoBoxOK", "battlescape");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_frame->setThickness(3);
 	_frame->setHighContrast(true);

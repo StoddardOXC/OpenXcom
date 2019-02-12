@@ -74,8 +74,6 @@ AllocatePsiTrainingState::AllocatePsiTrainingState(Base *base) : _sel(0), _base(
 	add(_lstSoldiers, "list", "allocatePsi");
 	add(_cbxSortBy, "button", "allocatePsi");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "allocatePsi");
 

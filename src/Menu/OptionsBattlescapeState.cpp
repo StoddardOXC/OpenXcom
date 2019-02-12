@@ -91,8 +91,6 @@ OptionsBattlescapeState::OptionsBattlescapeState(OptionsOrigin origin) : Options
 	add(_cbxEdgeScroll, "button", "battlescapeMenu");
 	add(_cbxDragScroll, "button", "battlescapeMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_txtEdgeScroll->setText(tr("STR_EDGE_SCROLL"));
 

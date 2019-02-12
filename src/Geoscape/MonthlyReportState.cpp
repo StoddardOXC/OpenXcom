@@ -85,8 +85,6 @@ MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(0), _ratingTota
 	add(_txtDesc, "text2", "monthlyReport");
 	add(_txtFailure, "text2", "monthlyReport");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "monthlyReport");
 

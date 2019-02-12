@@ -60,8 +60,6 @@ CraftEquipmentSaveState::CraftEquipmentSaveState(CraftEquipmentState *parent) : 
 	add(_btnSave, "button", "craftEquipmentSave");
 	add(_edtSave);
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftEquipmentSave");
 

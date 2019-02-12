@@ -142,8 +142,6 @@ namespace OpenXcom
 		}
 		ss << tr("STR_HWP_CAPACITY").arg(craft->getVehicles());
 		_txtStats->setText(ss.str());
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateCraft::~ArticleStateCraft()

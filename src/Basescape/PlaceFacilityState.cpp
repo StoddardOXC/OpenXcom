@@ -77,8 +77,6 @@ PlaceFacilityState::PlaceFacilityState(Base *base, RuleBaseFacility *rule, BaseF
 	add(_txtMaintenance, "text", "placeFacility");
 	add(_numMaintenance, "numbers", "placeFacility");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "placeFacility");
 

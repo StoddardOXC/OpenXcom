@@ -68,8 +68,6 @@ CraftPilotSelectState::CraftPilotSelectState(Base *base, size_t craft) : _base(b
 	add(_txtBravery, "text1", "craftPilotsSelect");
 	add(_lstPilot, "list", "craftPilotsSelect");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftPilotsSelect");
 

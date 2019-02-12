@@ -103,11 +103,7 @@ namespace OpenXcom
 			if (titleY < _window->getY()) titleY = _window->getY();
 			_txtTitle->setY(titleY);
 		}
-
-		centerAllSurfaces();
-
 		setWindowBackground(_window, "ufopaedia");
-
 		_txtTitle->setBig();
 		_txtTitle->setAlign(ALIGN_CENTER);
 		_txtTitle->setText(tr("STR_UFOPAEDIA"));

@@ -54,8 +54,6 @@ CommendationLateState::CommendationLateState(std::vector<Soldier*> soldiersMedal
 	add(_txtTitle, "text", "commendationsLate");
 	add(_lstSoldiers, "list", "commendationsLate");
 
-	centerAllSurfaces();
-
 	// Set up object
 	setWindowBackground(_window, "commendationsLate");
 
@@ -174,7 +172,7 @@ CommendationLateState::CommendationLateState(std::vector<Soldier*> soldiersMedal
 		_lstSoldiers->addRow(3, "", "", ""); // Separator
 		_commendationsNames.push_back("");
 		row++;
-	} // END SOLDIER LOOP    
+	} // END SOLDIER LOOP
 }
 
 /**

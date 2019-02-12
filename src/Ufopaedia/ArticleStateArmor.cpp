@@ -159,8 +159,6 @@ namespace OpenXcom
 		addStat("STR_MANA_POOL", armor->getStats()->mana, true);
 		addStat("STR_PSIONIC_STRENGTH", armor->getStats()->psiStrength, true);
 		addStat("STR_PSIONIC_SKILL", armor->getStats()->psiSkill, true);
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateArmor::~ArticleStateArmor()

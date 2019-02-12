@@ -78,7 +78,6 @@ namespace OpenXcom
 		_txtInfo->setWordWrap(true);
 		_txtInfo->setText(tr(defs->getTextForPage(_state->current_page)));
 
-		centerAllSurfaces();
 	}
 
 	ArticleStateTextImage::~ArticleStateTextImage()

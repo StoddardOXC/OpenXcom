@@ -64,8 +64,6 @@ CannotReequipState::CannotReequipState(std::vector<ReequipStat> missingItems, Ba
 	add(_txtCraft, "text", "cannotReequip");
 	add(_lstItems, "list", "cannotReequip");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "cannotReequip");
 

@@ -68,8 +68,6 @@ ConfirmDestinationState::ConfirmDestinationState(Craft *craft, Target *target) :
 	add(_btnCancel, "button", "confirmDestination");
 	add(_txtTarget, "text", "confirmDestination");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "confirmDestination");
 

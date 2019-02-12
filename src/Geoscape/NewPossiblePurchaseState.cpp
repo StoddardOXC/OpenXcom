@@ -58,8 +58,6 @@ NewPossiblePurchaseState::NewPossiblePurchaseState(Base * base, const std::vecto
 	add(_lstPossibilities, "text2", "geoNewItem");
 	add(_txtCaveat, "text1", "geoNewItem");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoNewItem");
 

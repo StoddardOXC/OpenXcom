@@ -63,8 +63,6 @@ SlideshowState::SlideshowState(const SlideshowHeader &slideshowHeader,
 		add(caption);
 	}
 
-	centerAllSurfaces();
-
 	int transitionSeconds = _slideshowHeader.transitionSeconds;
 	if (_slideshowSlides->front().transitionSeconds > 0)
 		transitionSeconds = _slideshowSlides->front().transitionSeconds;

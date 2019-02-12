@@ -66,8 +66,6 @@ TargetInfoState::TargetInfoState(Target *target, Globe *globe) : _target(target)
 	add(_txtTargetted, "text1", "targetInfo");
 	add(_txtFollowers, "text1", "targetInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "targetInfo");
 

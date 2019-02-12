@@ -58,8 +58,6 @@ PromotionsState::PromotionsState()
 	add(_txtBase, "text", "promotions");
 	add(_lstSoldiers, "list", "promotions");
 
-	centerAllSurfaces();
-
 	// Set up object
 	setWindowBackground(_window, "promotions");
 

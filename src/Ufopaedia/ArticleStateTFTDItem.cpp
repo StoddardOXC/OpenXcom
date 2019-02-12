@@ -177,8 +177,6 @@ namespace OpenXcom
 				break;
 			default: break;
 		}
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateTFTDItem::~ArticleStateTFTDItem()

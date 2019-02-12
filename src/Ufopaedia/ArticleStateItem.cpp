@@ -406,8 +406,6 @@ namespace OpenXcom
 				break;
 			default: break;
 		}
-
-		centerAllSurfaces();
 	}
 
 	ArticleStateItem::~ArticleStateItem()

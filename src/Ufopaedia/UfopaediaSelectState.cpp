@@ -67,8 +67,6 @@ namespace OpenXcom
 		_colorNormal = _lstSelection->getColor();
 		_colorNew = Options::oxceHighlightNewTopicsHidden ? _lstSelection->getSecondaryColor() : _colorNormal;
 
-		centerAllSurfaces();
-
 		setWindowBackground(_window, "ufopaedia");
 
 		_txtTitle->setBig();

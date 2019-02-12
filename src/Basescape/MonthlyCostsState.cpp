@@ -76,8 +76,6 @@ MonthlyCostsState::MonthlyCostsState(Base *base) : _base(base)
 	add(_txtMaintenance, "list", "costsInfo");
 	add(_lstTotal, "text2", "costsInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "costsInfo");
 

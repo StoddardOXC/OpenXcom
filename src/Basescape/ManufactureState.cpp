@@ -80,8 +80,6 @@ ManufactureState::ManufactureState(Base *base) : _base(base)
 	add(_txtTimeLeft, "text2", "manufactureMenu");
 	add(_lstManufacture, "list", "manufactureMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "manufactureMenu");
 

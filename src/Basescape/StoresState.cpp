@@ -155,8 +155,6 @@ StoresState::StoresState(Base *base) : _base(base)
 	add(_sortSize, "text", "storesInfo");
 	add(_sortSpaceUsed, "text", "storesInfo");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "storesInfo");
 

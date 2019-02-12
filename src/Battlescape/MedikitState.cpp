@@ -160,8 +160,6 @@ MedikitState::MedikitState (BattleUnit *targetUnit, BattleAction *action, TileEn
 	add(_partTxt, "textPart", "medikit", _bg);
 	add(_woundTxt, "numWounds", "medikit", _bg);
 
-	centerAllSurfaces();
-
 	Surface *backgroundSprite = 0;
 	if (!_item->getRules()->getMediKitCustomBackground().empty())
 	{

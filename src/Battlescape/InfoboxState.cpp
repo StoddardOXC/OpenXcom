@@ -47,8 +47,6 @@ InfoboxState::InfoboxState(const std::string &msg)
 	add(_frame, "infoBox", "battlescape");
 	add(_text, "infoBox", "battlescape");
 
-	centerAllSurfaces();
-
 	_frame->setHighContrast(true);
 	_frame->setThickness(9);
 

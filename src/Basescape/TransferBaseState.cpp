@@ -64,8 +64,6 @@ TransferBaseState::TransferBaseState(Base *base, DebriefingState *debriefingStat
 	add(_txtArea, "text", "transferBaseSelect");
 	add(_lstBases, "list", "transferBaseSelect");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "transferBaseSelect");
 

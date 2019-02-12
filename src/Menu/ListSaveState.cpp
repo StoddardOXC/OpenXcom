@@ -63,8 +63,6 @@ ListSaveState::ListSaveState(OptionsOrigin origin) : ListGamesState(origin, 1, f
 	_edtSave->setColor(_lstSaves->getSecondaryColor());
 	_edtSave->setVisible(false);
 	_edtSave->onKeyboardPress((ActionHandler)&ListSaveState::edtSaveKeyPress);
-
-	centerAllSurfaces();
 }
 
 /**

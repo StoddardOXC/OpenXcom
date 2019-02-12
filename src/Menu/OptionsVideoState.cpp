@@ -145,7 +145,6 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	add(_cbxGeoScale, "button", "videoMenu");
 
 	add(_cbxLanguage, "button", "videoMenu");
-	centerAllSurfaces();
 
 	// Set up objects
 	_txtDisplayResolution->setText(tr("STR_DISPLAY_RESOLUTION"));

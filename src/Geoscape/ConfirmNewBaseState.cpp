@@ -62,8 +62,6 @@ ConfirmNewBaseState::ConfirmNewBaseState(Base *base, Globe *globe) : _base(base)
 	add(_txtCost, "genericText", "geoscape");
 	add(_txtArea, "genericText", "geoscape");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "geoscape");
 

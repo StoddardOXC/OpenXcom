@@ -122,8 +122,6 @@ BriefingState::BriefingState(Craft *craft, Base *base, bool infoOnly) : _infoOnl
 	add(_txtCraft, "text", "briefing");
 	add(_txtBriefing, "text", "briefing");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&BriefingState::btnOkClick);

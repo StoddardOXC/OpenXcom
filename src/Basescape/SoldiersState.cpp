@@ -109,8 +109,6 @@ SoldiersState::SoldiersState(Base *base) : _base(base), _origSoldierOrder(*_base
 		add(_btnTraining, "button", "soldierList");
 	}
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierList");
 

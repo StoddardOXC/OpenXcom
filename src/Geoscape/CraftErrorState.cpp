@@ -53,8 +53,6 @@ CraftErrorState::CraftErrorState(GeoscapeState *state, const std::string &msg, b
 	add(_btnOk5Secs, "button", "craftError");
 	add(_txtMessage, "text1", "craftError");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "craftError");
 

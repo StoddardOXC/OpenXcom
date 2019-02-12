@@ -63,8 +63,6 @@ BriefingLightState::BriefingLightState(AlienDeployment *deployment)
 	add(_txtBriefing, "text", "briefing");
 	add(_txtArmors, "text", "briefing");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&BriefingLightState::btnOkClick);

@@ -91,8 +91,6 @@ MainMenuState::MainMenuState(bool updateCheck)
 	add(_txtUpdateInfo, "text", "mainMenu");
 	add(_txtTitle, "text", "mainMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "mainMenu");
 

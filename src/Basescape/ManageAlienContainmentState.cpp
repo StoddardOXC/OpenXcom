@@ -103,8 +103,6 @@ ManageAlienContainmentState::ManageAlienContainmentState(Base *base, int prisonT
 	add(_txtInterrogatedAliens, "text", "manageContainment");
 	add(_lstAliens, "list", "manageContainment");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "manageContainment");
 

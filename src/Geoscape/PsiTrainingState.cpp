@@ -80,8 +80,6 @@ PsiTrainingState::PsiTrainingState()
 			}
 		}
 	}
-
-	centerAllSurfaces();
 }
 
 /**
