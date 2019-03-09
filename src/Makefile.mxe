@@ -129,7 +129,7 @@ $(OBJDIR)%.o:: $(YAML_DIR)/src/contrib/%.cpp
 ../obj/OpenXcomEx.o: OpenXcomEx.s
 	( cd $(BINDIR)/common ; zip -r -FS ../common.zip . )
 	( cd $(BINDIR)/standard ; zip -r -FS ../standard.zip . )
-	( cd .. ; $(CC) -c -o obj/OpenXcomEx.o src/OpenXcomEx.s )
+	( cd .. ; $(CXX) -c -o obj/OpenXcomEx.o src/OpenXcomEx.s )
 
 $(OBJRES):$(RES)
 	$(RC) -o $@ $<
