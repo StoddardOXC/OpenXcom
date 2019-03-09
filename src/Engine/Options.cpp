@@ -580,14 +580,14 @@ bool init()
 // called from the dos screen state (StartState)
 void updateMods()
 {
-	bool embeddedOnly =  !Options::modStandardMods;
+	bool embeddedOnly = !Options::modStandardMods;
 	FileMap::clear(false, embeddedOnly);
 	SDL_RWops *rwops = CrossPlatform::getEmbeddedAsset("standard.zip");
 	if (rwops) {
 		Log(LOG_INFO) << "Scanning embedded standard mods...";
 		FileMap::scanModZipRW(rwops, "exe:standard.zip");
 	}
-	if (embeddedOnly) {
+	if (embeddedOnly && rwops) {
 		Log(LOG_INFO) << "Modding standard mods is disabled, set modStandardMods option in options.cfg to enable";
 	} else {
 		Log(LOG_INFO) << "Scanning standard mods in '" << getDataFolder() << "'...";
