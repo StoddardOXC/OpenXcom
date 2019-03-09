@@ -1471,8 +1471,22 @@ extern "C" {
 	extern uint8_t standard_zip[];
 	extern int standard_zip_size;
 }
+#elif defined(WIN32_STYLE_ASSETS)
+#include "../resource.h"
+static void *CommonZipAssetPtr = 0;
+static size_t CommonZipAssetSize = 0;
+static void *StandardZipAssetPtr = 0;
+static size_t StandardZipAssetSize = 0;
+static void *getWindowsResource(int res_id, size_t *size) {
+    HMODULE handle = GetModuleHandle(NULL);
+    HRSRC rc = FindResource(handle, MAKEINTRESOURCE(res_id), MAKEINTRESOURCE(10));
+	if (!rc) { return NULL; }
+    HGLOBAL rcData = LoadResource(handle, rc);
+	if (!rcData) { return NULL; }
+    *size = SizeofResource(handle, rc);
+    return LockResource(rcData);
+}
 #endif
-
 SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 	std::string log_ctx = "getEmbeddedAsset('" + assetName + "')";
 	if (assetName.size() == 0 || assetName[0] == '/') {
@@ -1481,21 +1495,37 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 	}
 #if defined(UNIX_STYLE_ASSETS)
 	if (assetName == "common.zip") {
-		Log(LOG_VERBOSE) << log_ctx << " returning common.zip, size=" << common_zip_size;
 		return SDL_RWFromConstMem(common_zip, common_zip_size);
 	} else if (assetName == "standard.zip") {
-		Log(LOG_VERBOSE) << log_ctx << " returning standard.zip, size=" << standard_zip_size;
 		return SDL_RWFromConstMem(standard_zip, standard_zip_size);
+	} else {
+		Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
+		return NULL;
 	}
-	return NULL;
+#elif defined(WIN32_STYLE_ASSETS)
+	int res_id;
+	if (assetName == "common.zip") {
+		if (!CommonZipAssetPtr) {
+			CommonZipAssetPtr = getWindowsResource(IDZ_COMMON_ZIP, &CommonZipAssetSize);
+		}
+		if (CommonZipAssetPtr) {
+			return SDL_RWFromConstMem(CommonZipAssetPtr, CommonZipAssetSize);
+		}
+	} else if (assetName == "standard.zip") {
+		if (!StandardZipAssetPtr) {
+			StandardZipAssetPtr = getWindowsResource(IDZ_STANDARD_ZIP, &StandardZipAssetSize);
+		}
+		if (StandardZipAssetPtr) {
+			return SDL_RWFromConstMem(StandardZipAssetPtr, StandardZipAssetSize);
+		}
+	} else {
+		Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
+		return NULL;
+	}
 #elif defined(ANDROID)
 	return SDL_RWFromFile(assetName, "rb");
-#elif defined(_MSC_VER)
-	return NULL;
-#elif defined(__APPLE__)
-	return NULL;
 #else
-# warning "wtf?"
+# warning "Asset embedding disabled."
 	return NULL;
 #endif
 }

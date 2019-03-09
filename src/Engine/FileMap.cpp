@@ -724,8 +724,10 @@ static bool mapExtResources(ModRecord *mrec, const std::string& basename, bool e
 	std::string log_ctx = "FileMap::mapExtResources(" + modId + ", " + basename + "): ";
 	bool mapped_anything = false;
 	std::string zipname = basename + ".zip";
-	SDL_RWops *embedded_rwops = CrossPlatform::getEmbeddedAsset(zipname);
-
+	SDL_RWops *embedded_rwops = NULL;
+	if (zipname == "common.zip" || zipname == "standard.zip") {
+		embedded_rwops = CrossPlatform::getEmbeddedAsset(zipname);
+	}
 	// first try finding a directory (ass-backwards since we got to push this into front re layers.
 	if (!embedded_rwops || ! embeddedOnly) {
 		std::string fullname = Options::getUserFolder() + basename;
