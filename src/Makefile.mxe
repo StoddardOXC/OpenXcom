@@ -57,7 +57,7 @@ else
 endif
 
 OBJRES = ../obj/OpenXcom_res.o
-OBJS = $(OBJRES) $(patsubst %.cpp, $(OBJDIR)%.o, $(notdir $(SRCS))) ../obj/miniz.o
+OBJS = $(OBJRES) $(patsubst %.cpp, $(OBJDIR)%.o, $(notdir $(SRCS))) ../obj/miniz.o ../obj/OpenXcomEx.o
 RES = ../src/OpenXcomEx.rc ../src/resource.h ../src/version.h ../res/windows/openxcomex.ico
 
 # Arch-specific settings
@@ -125,6 +125,11 @@ $(OBJDIR)%.o:: $(YAML_DIR)/src/contrib/%.cpp
 
 ../obj/miniz.o: ../libs/miniz/miniz.c
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+../obj/OpenXcomEx.o: OpenXcomEx.s
+	( cd $(BINDIR)/common ; zip -r -FS ../common.zip . )
+	( cd $(BINDIR)/standard ; zip -r -FS ../standard.zip . )
+	( cd .. ; $(CC) -c -o obj/OpenXcomEx.o src/OpenXcomEx.s )
 
 $(OBJRES):$(RES)
 	$(RC) -o $@ $<
