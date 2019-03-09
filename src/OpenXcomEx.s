@@ -1,15 +1,26 @@
-	.global common_zip
-	.global common_zip_size
-	.global standard_zip
-	.global standard_zip_size
 	.section .rodata
+	.global common_zip
+	.type common_zip, @object
+	.align 8
 common_zip:
 	.incbin "bin/common.zip"
-1:
+common_zip_end:
+
+	.global common_zip_size
+	.type common_zip_size, @object
+	.align 8
+common_zip_size:
+	.int common_zip_end - common_zip
+
+	.global standard_zip
+	.type standard_zip, @object
+	.align 8
 standard_zip:
 	.incbin "bin/standard.zip"
-2:
-common_zip_size:
-	.int 1b - common_zip
+standard_zip_end:
+
+	.global standard_zip_size
+	.type standard_zip_size, @object
+	.align 8
 standard_zip_size:
-	.int 2b - standard_zip
+	.int standard_zip_end - standard_zip
