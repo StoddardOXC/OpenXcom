@@ -124,7 +124,7 @@ $(OBJDIR)%.o:: $(YAML_DIR)/src/contrib/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 ../obj/miniz.o: ../libs/miniz/miniz.c
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -DMINIZ_NO_STDIO -c -o $@ $<
 
 ../obj/OpenXcomEx.o: OpenXcomEx.s
 	( cd $(BINDIR)/common ; zip -r -FS ../common.zip . )
