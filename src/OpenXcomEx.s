@@ -3,7 +3,7 @@
 	.type common_zip, @object
 	.align 8
 common_zip:
-	.incbin "bin/common.zip"
+	.incbin "common.zip"
 common_zip_end:
 
 	.global common_zip_size
@@ -16,7 +16,7 @@ common_zip_size:
 	.type standard_zip, @object
 	.align 8
 standard_zip:
-	.incbin "bin/standard.zip"
+	.incbin "standard.zip"
 standard_zip_end:
 
 	.global standard_zip_size

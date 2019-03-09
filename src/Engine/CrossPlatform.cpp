@@ -1498,12 +1498,8 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 		return SDL_RWFromConstMem(common_zip, common_zip_size);
 	} else if (assetName == "standard.zip") {
 		return SDL_RWFromConstMem(standard_zip, standard_zip_size);
-	} else {
-		Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
-		return NULL;
 	}
 #elif defined(WIN32_STYLE_ASSETS)
-	int res_id;
 	if (assetName == "common.zip") {
 		if (!CommonZipAssetPtr) {
 			CommonZipAssetPtr = getWindowsResource(IDZ_COMMON_ZIP, &CommonZipAssetSize);
@@ -1518,16 +1514,14 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 		if (StandardZipAssetPtr) {
 			return SDL_RWFromConstMem(StandardZipAssetPtr, StandardZipAssetSize);
 		}
-	} else {
-		Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
-		return NULL;
 	}
 #elif defined(ANDROID)
 	return SDL_RWFromFile(assetName, "rb");
 #else
 # warning "Asset embedding disabled."
-	return NULL;
 #endif
+	Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
+	return NULL;
 }
 
 }
