@@ -1515,13 +1515,17 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 			return SDL_RWFromConstMem(StandardZipAssetPtr, StandardZipAssetSize);
 		}
 	}
-#elif defined(ANDROID)
-	return SDL_RWFromFile(assetName, "rb");
+#elif defined(__MOBILE__)
+	SDL_RWops *rv = SDL_RWFromFile(assetName, "rb");
+	if (rv == NULL) {
+		Log(LOG_ERROR) << log_ctx << " embedded asset not found: "<< SDL_GetError();
+	}
+	return rv;
 #else
 # warning "Asset embedding disabled."
 	return NULL;
 #endif
-	Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
+	Log(LOG_ERROR) << log_ctx << " embedded asset not found";
 	return NULL;
 }
 
