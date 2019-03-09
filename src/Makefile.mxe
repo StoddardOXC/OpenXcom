@@ -91,7 +91,7 @@ $(OBJDIR)%.o:: Battlescape/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(OBJDIR)%.o:: Engine/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -DUNIX_STYLE_ASSETS -c -o $@ $<
 
 $(OBJDIR)%.o:: Engine/Scalers/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
