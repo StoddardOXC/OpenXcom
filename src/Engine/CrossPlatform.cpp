@@ -1519,6 +1519,7 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 	return SDL_RWFromFile(assetName, "rb");
 #else
 # warning "Asset embedding disabled."
+	return NULL;
 #endif
 	Log(LOG_ERROR) << log_ctx << " unknown embedded asset name " << assetName;
 	return NULL;
