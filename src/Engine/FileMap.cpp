@@ -283,6 +283,7 @@ static bool isRuleset(const std::string& fname) {
 
 typedef std::unordered_map<std::string, FileRecord> FileSet;
 static const NameSet emptySet;
+static mz_zip_archive *newZipContext(const std::string& log_ctx, SDL_RWops *rwops);
 
 struct VFSLayer {
 	std::string fullpath;				// the origin
@@ -290,16 +291,10 @@ struct VFSLayer {
 	std::vector<FileRecord> rulesets;  	// keeps FileRecord copies ala hard links
 	std::unordered_map<std::string, NameSet> vdirs;
 	bool mapped;		 				// once mapped all this is immutable
-	bool zip_open;		 				// was this loaded from a zip?
-	mz_zip_archive zip;  				// zip file handle lives here
 
 	VFSLayer(const std::string& path) : fullpath(path), resources(), rulesets(), vdirs(),
-										mapped(false), zip_open(false) { mz_zip_zero_struct(&zip); }
-	~VFSLayer(){
-		if (zip_open) {
-			mz_zip_reader_end_rwops(&zip);
-		}
-	}
+										mapped(false) { }
+	~VFSLayer() { }
 	const FileRecord *at(const std::string& relpath) {
 		auto crelpath = canonicalize(relpath);
 		auto it = resources.find(crelpath);
@@ -351,6 +346,35 @@ struct VFSLayer {
 	*/
 	bool mapZipFile(const std::string& zippath, const std::string& prefix, bool ignore_ruls = false) {
 		std::string log_ctx = "mapZipFile(" + zippath + ",  '" + prefix + "',  '" + (ignore_ruls ? "true" : "false") + "'): ";
+		SDL_RWops *rwops = SDL_RWFromFile(zippath.c_str(), "r");
+		if (!rwops) {
+			Log(LOG_WARNING) << log_ctx << "Ignoring zip '" << zippath << "': " << SDL_GetError();
+			return false;
+		}
+		return mapZipFileRW(rwops, zippath, prefix, ignore_ruls);
+	}
+	/** maps a zipped moddir from an SDL_RWops
+	* @param rwops - SDL_RWops with the zip data
+	* @param zipppath - the file path to associate this with
+	* @param prefix - prefix in the .zip in case there are multiple mods in a single .zip. Has to have the trailing slash.
+	* @param ignore_ruls - skip rulesets
+	* @return - did we map anything (false, i.e if failed to unzip)
+	*/
+	bool mapZipFileRW(SDL_RWops *rwops, const std::string& zippath, const std::string& prefix, bool ignore_ruls = false) {
+		std::string log_ctx = "mapZipFileRW(rwops, '" + zippath + "', '" + prefix + "',  '" + (ignore_ruls ? "true" : "false") + "'): ";
+		mz_zip_archive *zip = newZipContext(log_ctx, rwops);
+		if (!zip) { return false; }
+		return mapZip(zip, zippath, prefix, ignore_ruls);
+	}
+
+	/** maps a zipped moddir from filesystem
+	* @param zippath - the file path to associate this with
+	* @param prefix - prefix in the .zip in case there are multiple mods in a single .zip. Has to have the trailing slash.
+	* @param ignore_ruls - skip rulesets
+	* @return - did we map anything (false, i.e if failed to unzip)
+	*/
+	bool mapZip(mz_zip_archive *zip, const std::string& zippath, const std::string& prefix, bool ignore_ruls = false) {
+		std::string log_ctx = "mapZip(zip, '" + zippath + "', '" + prefix + "',  '" + (ignore_ruls ? "true" : "false") + "'): ";
 		if (mapped) {
 			auto err=  log_ctx + "Fatal: already mapped.";
 			Log(LOG_FATAL) << err;
@@ -369,16 +393,15 @@ struct VFSLayer {
 		}
 		mapped = true;
 		fullpath = zippath;
-		zip_open = true;
-		mz_uint filecount = mz_zip_reader_get_num_files(&zip);
+		mz_uint filecount = mz_zip_reader_get_num_files(zip);
 
 		FileRecord frec;
-		frec.zip = &zip;
+		frec.zip = zip;
 
 		mz_uint mapped_count = 0;
 		for (mz_uint fi = 0; fi < filecount; ++fi) {
 			mz_zip_archive_file_stat fistat;
-			mz_zip_reader_file_stat(&zip, fi, &fistat);
+			mz_zip_reader_file_stat(zip, fi, &fistat);
 
 			std::string fname = fistat.m_filename;
 			if (!sanitizeZipEntryName(fname)) {
@@ -595,9 +618,28 @@ struct VFS {
 static std::unordered_map<std::string, ModRecord *> ModsAvailable;
 static std::unordered_set<VFSLayer *> MappedVFSLayers; // owned here so we can have some sense of their lifetime
 												       // only the layers that get dropped on FileMap::clear()
+static std::vector<mz_zip_archive *> ZipContexts;	   // zip decompression contexts shared between layers that came from
+													   // the same .zip. this makes the whole thing very thread-unsafe
 static VFS TheVFS;
 
 const RSOrder &getRulesets() { return TheVFS.get_rulesets(); }
+
+static mz_zip_archive *newZipContext(const std::string& log_ctx, SDL_RWops *rwops) {
+	mz_zip_archive *zip = (mz_zip_archive *) SDL_malloc(sizeof(mz_zip_archive));
+	if (!zip) {
+		Log(LOG_FATAL) << log_ctx << ": " << SDL_GetError();
+		throw Exception("Out of memory");
+	}
+	if (!mz_zip_reader_init_rwops(zip, rwops)) {
+		// whoa, no opening the file
+		Log(LOG_WARNING) << log_ctx << "Ignoring zip: " << mz_zip_get_error_string(mz_zip_get_last_error(zip));
+		SDL_RWclose(rwops);
+		SDL_free(zip);
+		return NULL;
+	}
+	ZipContexts.push_back(zip);
+	return zip;
+}
 
 void clear(bool clearOnly) {
 	TheVFS.clear();
@@ -605,6 +647,8 @@ void clear(bool clearOnly) {
 	ModsAvailable.clear();
 	for (auto i : MappedVFSLayers ) { delete i; }
 	MappedVFSLayers.clear();
+	for (auto i : ZipContexts) { mz_zip_reader_end_rwops(i); SDL_free(i); }
+	ZipContexts.clear();
 	if (!clearOnly)
 	{
 		Log(LOG_VERBOSE) << "FileMap::clear(): mapping 'common'";
@@ -729,10 +773,10 @@ static bool mapExtResources(ModRecord *mrec, const std::string& basename) {
  * @param zipfname  - full path to the .zip_open
  * @param prefix    - prefix (subdir) in the .zip if any
  */
-static void mapZippedMod(const std::string& zipfname, const std::string& prefix) {
+static void mapZippedMod(mz_zip_archive *zip, const std::string& zipfname, const std::string& prefix) {
 	std::string log_ctx = "mapZippedMod(" + zipfname + ", '" + prefix + "'): ";
 	auto layer = new VFSLayer(zipfname + "/" + prefix);
-	if (!layer->mapZipFile(zipfname, prefix)) {
+	if (!layer->mapZip(zip, zipfname, prefix)) {
 		Log(LOG_WARNING) << log_ctx << "Failed to map, skipping.";
 		delete layer;
 		return;
@@ -768,27 +812,21 @@ static void mapZippedMod(const std::string& zipfname, const std::string& prefix)
 /** now this scans a zip of mods or of a single mod
  * @param fullpath - full path to the .zip.
  */
-void scanModZip(const std::string& fullpath) {
-	std::string log_ctx = "scanModZip(" + fullpath + "): ";
-	mz_zip_archive mzip;
-	mz_zip_zero_struct(&mzip);
+void scanModZipRW(SDL_RWops *rwops, const std::string& fullpath) {
+	std::string log_ctx = "scanModZipRW(rwops, " + fullpath + "): ";
+	mz_zip_archive *mzip = newZipContext(log_ctx, rwops);
 
-	if (!mz_zip_reader_init_rwops(&mzip, fullpath.c_str())) {
-		// whoa, no opening the file
-		Log(LOG_WARNING) << log_ctx << "Ignoring zip: can't open; path=" << fullpath;
-		return;
-	}
+	if (!mzip) { return; }
 	// check if this is maybe a zip of a single mod (metadata.yml at the top level)
-	if (mz_zip_reader_locate_file_v2(&mzip, "metadata.yml", NULL, 0, NULL)) {
+	if (mz_zip_reader_locate_file_v2(mzip, "metadata.yml", NULL, 0, NULL)) {
 		Log(LOG_VERBOSE) << log_ctx << "retrying as a single-mod .zip";
-		mapZippedMod(fullpath, "");
-		mz_zip_reader_end_rwops(&mzip);
+		mapZippedMod(mzip, fullpath, "");
 		return;
 	}
-	mz_uint filecount = mz_zip_reader_get_num_files(&mzip);
+	mz_uint filecount = mz_zip_reader_get_num_files(mzip);
 	for (mz_uint fi = 0; fi < filecount; ++fi) {
 		mz_zip_archive_file_stat fistat;
-		mz_zip_reader_file_stat(&mzip, fi, &fistat);
+		mz_zip_reader_file_stat(mzip, fi, &fistat);
 		std::string prefix = fistat.m_filename;
 		if (!sanitizeZipEntryName(prefix)) {
 			Log(LOG_WARNING) << "Bogus dirname " << hexDumpBogusData(prefix) << " in " << fullpath << ", ignoring.";
@@ -798,9 +836,8 @@ void scanModZip(const std::string& fullpath) {
 		if (!fistat.m_is_directory) { continue; } // skip files, we're only interested in toplevel dirs.
 		auto slashpos = prefix.find_first_of("/"); // miniz returns dirnames with trailing slashes
 		if (slashpos != prefix.size() - 1) { continue; } // not top-level: skip.
-		mapZippedMod(fullpath, prefix);
+		mapZippedMod(mzip, fullpath, prefix);
 	}
-	mz_zip_reader_end_rwops(&mzip);
 }
 /**
  * this scans a mod dir.
