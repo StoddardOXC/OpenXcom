@@ -565,7 +565,7 @@ struct ModRecord {
 	}
 };
 
-static bool mapExtResources(ModRecord *, const std::string&);
+static bool mapExtResources(ModRecord *, const std::string&, bool embeddedOnly);
 
 // the final VFS view is a set of layers too.
 struct VFS {
@@ -593,9 +593,9 @@ struct VFS {
 		// 	typedef std::vector<std::pair<std::string, std::vector<FileRecord *>>> RSOrder;
 		rsorder.push_back(std::make_pair(modId, rulesets));
 	}
-	void map_common() {
+	void map_common(bool embeddedOnly) {
 		auto mrec = new ModRecord("common");
-		if (!mapExtResources(mrec, "common")) {
+		if (!mapExtResources(mrec, "common", embeddedOnly)) {
 			Log(LOG_ERROR) << "VFS::map_common(): failed to map 'common'";
 			delete mrec;
 			return;
@@ -641,7 +641,7 @@ static mz_zip_archive *newZipContext(const std::string& log_ctx, SDL_RWops *rwop
 	return zip;
 }
 
-void clear(bool clearOnly) {
+void clear(bool clearOnly, bool embeddedOnly) {
 	TheVFS.clear();
 	for(auto i : ModsAvailable ) { delete i.second; }
 	ModsAvailable.clear();
@@ -652,7 +652,7 @@ void clear(bool clearOnly) {
 	if (!clearOnly)
 	{
 		Log(LOG_VERBOSE) << "FileMap::clear(): mapping 'common'";
-		TheVFS.map_common();
+		TheVFS.map_common(embeddedOnly);
 		if (LOG_VERBOSE <= Logger::reportingLevel()) {
 			TheVFS.dump(Logger().get(LOG_VERBOSE), "\nFileMap::clear():", Options::listVFSContents);
 		}
@@ -666,10 +666,10 @@ void clear(bool clearOnly) {
  * 		appear in the options screen. and with only a single master.
  * 		which nonetheless can itself depend on another master and so on.
 */
-void setup(const std::vector<const ModInfo* >& active)
+void setup(const std::vector<const ModInfo* >& active, bool embeddedOnly)
 {
 	TheVFS.clear();
-	TheVFS.map_common();
+	TheVFS.map_common(embeddedOnly);
 	std::string log_ctx = "FileMap::setup(): ";
 
 	Log(LOG_VERBOSE) << log_ctx << "Active mods per options:";
@@ -719,12 +719,15 @@ static void dump_mods_layers(std::ostream &out, const std::string& prefix, bool 
  * @param mrec - ModRec of a mod
  * @param basename - extRes name to map (from userDir/dataDir)
  */
-static bool mapExtResources(ModRecord *mrec, const std::string& basename) {
+static bool mapExtResources(ModRecord *mrec, const std::string& basename, bool embeddedOnly) {
 	auto modId = mrec->modInfo.getId();
 	std::string log_ctx = "FileMap::mapExtResources(" + modId + ", " + basename + "): ";
 	bool mapped_anything = false;
+	std::string zipname = basename + ".zip";
+	SDL_RWops *embedded_rwops = CrossPlatform::getEmbeddedAsset(zipname);
+
 	// first try finding a directory (ass-backwards since we got to push this into front re layers.
-	{
+	if (!embedded_rwops || ! embeddedOnly) {
 		std::string fullname = Options::getUserFolder() + basename;
 		if (!CrossPlatform::folderExists(fullname)) {
 			fullname = CrossPlatform::searchDataFolder(basename);
@@ -744,8 +747,7 @@ static bool mapExtResources(ModRecord *mrec, const std::string& basename) {
 		}
 	}
 	// then try finding a zipfile
-	{
-		std::string zipname = basename + ".zip";
+	if (!embedded_rwops || ! embeddedOnly) {
 		std::string fullname = Options::getUserFolder() + zipname;
 		if (!CrossPlatform::fileExists(fullname)) {
 			fullname = CrossPlatform::searchDataFile(zipname);
@@ -766,13 +768,11 @@ static bool mapExtResources(ModRecord *mrec, const std::string& basename) {
 	}
 	// now try the embedded zip
 	{
-		std::string zipname = basename + ".zip";
-		SDL_RWops *rwops = CrossPlatform::getEmbeddedAsset(zipname);
-		if (rwops) {
+		if (embedded_rwops) {
 			Log(LOG_VERBOSE) << log_ctx << "found embedded asset ("<<zipname<<")";
-			zipname = "exe:" + zipname;
-			auto layer = new VFSLayer(zipname);
-			if (layer->mapZipFileRW(rwops, zipname, "", true)) {
+			std::string ezipname = "exe:" + zipname;
+			auto layer = new VFSLayer(ezipname);
+			if (layer->mapZipFileRW(embedded_rwops, ezipname, "", true)) {
 				mrec->push_front(layer);
 				MappedVFSLayers.insert(layer);
 				mapped_anything = true;
@@ -1017,7 +1017,7 @@ void checkModsDependencies() {
 		auto mrec = mri->second;
 		auto resdirs = mrec->modInfo.getExternalResourceDirs();
 		for (auto eri = resdirs.begin(); eri != resdirs.end(); ++eri) {
-			if (!mapExtResources(mrec, *eri)) {
+			if (!mapExtResources(mrec, *eri, false)) {
 				Log(LOG_DEBUG) << log_ctx << "dropping mod " << modId << ": extResources '" << *eri << "' not found.";
 				drop_list.insert(modId);
 				break;
