@@ -1,3 +1,4 @@
+
 set ( root_src
   lodepng.cpp
   main.cpp
@@ -472,8 +473,16 @@ if ( WIN32 )
   set ( openxcom_icon OpenXcomEx.rc )
 endif ()
 
-set ( openxcom_src ${c_src} ${cxx_src} )
+if ( UNIX AND NOT ANDROID )
+  enable_language(ASM)
+  set ( embed_src OpenXcomEx.s )
+  add_definitions( -DUNIX_STYLE_ASSETS )
+  add_custom_command( OUTPUT common.zip COMMAND zip -r -FS ../../bin/common.zip . WORKING_DIRECTORY ../bin/common )
+  add_custom_command( OUTPUT standard.zip COMMAND zip -r -FS ../../bin/standard.zip . WORKING_DIRECTORY ../bin/standard )
+  add_custom_target(zips DEPENDS common.zip standard.zip)
+endif ()
 
+set ( openxcom_src ${c_src} ${cxx_src} ${embed_src} )
 set ( install_dest RUNTIME )
 set ( set_exec_path ON )
 set ( install_dest_dir bin )
@@ -522,6 +531,11 @@ if ( APPLE AND CREATE_BUNDLE )
 endif ()
 
 add_executable ( openxcom  ${application_type} ${openxcom_src} ${openxcom_icon} )
+
+if ( UNIX AND NOT ANDROID )
+  add_dependencies(openxcom zips)
+endif ()
+
 install ( TARGETS openxcom ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 # Extra link flags for Windows. They need to be set before the SDL/YAML link flags, otherwise you will get strange link errors ('Undefined reference to WinMain@16')
 if ( WIN32 )

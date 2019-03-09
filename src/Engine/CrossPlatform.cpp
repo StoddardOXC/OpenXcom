@@ -1464,6 +1464,42 @@ void log(int level, const std::ostringstream& baremsgstream) {
 	}
 }
 
+#if defined(UNIX_STYLE_ASSETS)
+extern "C" {
+	extern uint8_t common_zip[];
+	extern int common_zip_size;
+	extern uint8_t standard_zip[];
+	extern int standard_zip_size;
+}
+#endif
+
+SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
+	std::string log_ctx = "getEmbeddedAsset('" + assetName + "')";
+	if (assetName.size() == 0 || assetName[0] == '/') {
+		Log(LOG_WARNING) << log_ctx << " ignoring bogus asset name";
+		return NULL;
+	}
+#if defined(UNIX_STYLE_ASSETS)
+	if (assetName == "common.zip") {
+		Log(LOG_VERBOSE) << log_ctx << " returning common.zip, size=" << common_zip_size;
+		return SDL_RWFromConstMem(common_zip, common_zip_size);
+	} else if (assetName == "standard.zip") {
+		Log(LOG_VERBOSE) << log_ctx << " returning standard.zip, size=" << standard_zip_size;
+		return SDL_RWFromConstMem(standard_zip, standard_zip_size);
+	}
+	return NULL;
+#elif defined(ANDROID)
+	return SDL_RWFromFile(assetName, "rb");
+#elif defined(_MSC_VER)
+	return NULL;
+#elif defined(__APPLE__)
+	return NULL;
+#else
+# warning "wtf?"
+	return NULL;
+#endif
+}
+
 }
 
 }
