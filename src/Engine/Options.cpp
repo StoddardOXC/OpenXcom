@@ -580,6 +580,11 @@ bool init()
 void updateMods()
 {
 	FileMap::clear();
+	SDL_RWops *rwops = CrossPlatform::getEmbeddedAsset("standard.zip");
+	if (rwops) {
+		Log(LOG_INFO) << "Scanning embedded standard mods...";
+		FileMap::scanModZipRW(rwops, "exe:standard.zip");
+	}
 	Log(LOG_INFO) << "Scanning standard mods in '" << getDataFolder() << "'...";
 	FileMap::scanModDir(getDataFolder(), "standard");
 	Log(LOG_INFO) << "Scanning user mods in '" << getUserFolder() << "'...";

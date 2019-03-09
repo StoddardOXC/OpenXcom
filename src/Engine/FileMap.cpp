@@ -764,6 +764,25 @@ static bool mapExtResources(ModRecord *mrec, const std::string& basename) {
 			Log(LOG_VERBOSE) << log_ctx << "zip not found ("<<fullname<<")";
 		}
 	}
+	// now try the embedded zip
+	{
+		std::string zipname = basename + ".zip";
+		SDL_RWops *rwops = CrossPlatform::getEmbeddedAsset(zipname);
+		if (rwops) {
+			Log(LOG_VERBOSE) << log_ctx << "found embedded asset ("<<zipname<<")";
+			zipname = "exe:" + zipname;
+			auto layer = new VFSLayer(zipname);
+			if (layer->mapZipFileRW(rwops, zipname, "", true)) {
+				mrec->push_front(layer);
+				MappedVFSLayers.insert(layer);
+				mapped_anything = true;
+			} else {
+				delete layer;
+			}
+		} else {
+			Log(LOG_VERBOSE) << log_ctx << "embedded asset not found ("<<zipname<<")";
+		}
+	}
 	if (!mapped_anything) { // well, nothing found. say so.
 		Log(LOG_ERROR) << log_ctx << "external resources not found.";
 	}
