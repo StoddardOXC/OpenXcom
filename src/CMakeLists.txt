@@ -562,7 +562,6 @@ endif ()
 
 add_executable ( openxcom  ${application_type} ${openxcom_src} ${openxcom_icon} )
 
-
 if ( EMBED_ASSETS )
   add_dependencies(openxcom zips)
 endif ()
