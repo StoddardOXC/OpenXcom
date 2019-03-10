@@ -1,9 +1,7 @@
 set ( root_src
   lodepng.cpp
   main.cpp
-  ../libs/miniz/miniz.c
 )
-
 set ( basescape_src
   Basescape/BaseInfoState.cpp
   Basescape/BaseView.cpp
@@ -382,51 +380,73 @@ set ( ufopedia_src
   Ufopaedia/UfopaediaStartState.cpp
 )
 
+set ( cxx_src
+    ${root_src}
+    ${basescape_src}
+    ${battlescape_src}
+    ${engine_src}
+    ${geoscape_src}
+    ${interface_src}
+    ${menu_src}
+    ${mod_src}
+    ${savegame_src}
+    ${ufopedia_src}
+)
+
+set ( c_src
+  ../libs/miniz/miniz.c
+)
+set_property ( SOURCE ${c_src} APPEND PROPERTY COMPILE_DEFINITIONS MINIZ_NO_STDIO )
+set_property ( SOURCE Engine/Scalers/xbrz.cpp APPEND_STRING PROPERTY COMPILE_FLAGS -Wno-unused\ )
+
 set ( data_install_dir bin )
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )
-  add_definitions ( -D_DEBUG )
+  set_property ( SOURCE Engine/Options.cpp APPEND PROPERTY COMPILE_DEFINITIONS _DEBUG )
+  set_property ( SOURCE OpenXcomEx.rc APPEND PROPERTY COMPILE_DEFINITIONS _DEBUG )
 endif ()
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
   # attempt to limit the executable size
-  add_definitions( -femit-struct-debug-reduced  )
+  set_property ( SOURCE ${cxx_src} APPEND_STRING PROPERTY COMPILE_FLAGS -femit-struct-debug-reduced\ )
 endif ()
 if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
   if ( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR ENABLE_WARNING )
     # Enable more GCC warnings if requested or we are doing a Debug build.
-    add_definitions ( -Wall -Wextra
-      -Wsuggest-override
-      -Winit-self
-      -Wmissing-include-dirs
-      -Wunknown-pragmas
-      -Wmissing-format-attribute
-      -Wredundant-decls
-      -Wformat-security
-      -Wtype-limits
-      -Wempty-body
-      -Wuninitialized
-      -Wignored-qualifiers
-      -Wno-unused-parameter
-      -Winline
-      -Wshadow
-# These warning options actually generate way too many warnings. Should be enabled later.
-#      -Weffc++
-      )
+    # C++ - only warnings
+    set_property ( SOURCE ${cxx_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wsuggest-override\ )
+    # C and C++ warnings
+    set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wall\ )
+    set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wextra\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Winit-self\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wmissing-include-dirs\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wunknown-pragmas\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wmissing-format-attribute\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wredundant-decls\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wformat-security\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wtype-limits\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wempty-body\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wuninitialized\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wignored-qualifiers\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wno-unused-parameter\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Winline\ )
+	set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wshadow\ )
     if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
       # add warning flags recognized by g++ but not by clang
-      add_definitions ( -Wclobbered -Wlogical-op )
+      set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wclobbered\ )
+      set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Wlogical-op\ )
     elseif ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
       # add warning flags recognized by clang but not by g++
     endif ()
     if ( FATAL_WARNING )
-      add_definitions ( -Werror )
+      set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Werror\ )
     endif ()
   endif ()
 endif ()
 
 if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
-  add_definitions ( -Qunused-arguments -pipe )
+  set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -Qunused-arguments\ )
+  set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS -pipe\ )
   if ( ENABLE_CLANG_ANALYSIS )
-    add_definitions ( --analyze )
+    set_property ( SOURCE ${cxx_src} ${c_src} APPEND_STRING PROPERTY COMPILE_FLAGS --analyze\ )
   endif ()
 endif ()
 
@@ -444,26 +464,22 @@ if ( MSVC )
 endif ()
 
 if ( DUMP_CORE )
-  set_source_files_properties ( main.cpp PROPERTIES COMPILE_FLAGS -DDUMP_CORE )
+  set_property ( SOURCE main.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS DUMP_CORE )
 endif ()
-
-remove_definitions( ../libs/miniz/miniz.c -Wsuggest-override )
-set_source_files_properties ( ../libs/miniz/miniz.c PROPERTIES COMPILE_FLAGS -DMINIZ_NO_STDIO )
-set_source_files_properties ( Engine/Scalers/xbrz.cpp PROPERTIES COMPILE_FLAGS -Wno-unused )
 
 if ( WIN32 )
   set ( application_type WIN32 )
   set ( openxcom_icon OpenXcomEx.rc )
 endif ()
 
-set ( openxcom_src ${root_src} ${basescape_src} ${battlescape_src} ${engine_src} ${geoscape_src} ${interface_src} ${menu_src} ${mod_src} ${savegame_src} ${ufopedia_src} )
+set ( openxcom_src ${c_src} ${cxx_src} )
 
 set ( install_dest RUNTIME )
 set ( set_exec_path ON )
 set ( install_dest_dir bin )
 if ( UNIX AND NOT APPLE )
   set ( data_install_dir "${CMAKE_INSTALL_FULL_DATADIR}/openxcom" )
-  add_definitions( -DDATADIR="${data_install_dir}/" )
+  set_property ( SOURCE main.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS DATADIR="${data_install_dir}/" )
 endif ()
 if ( APPLE )
   set ( sdl_src "${MACOS_SDLMAIN_M_PATH}" )
@@ -512,8 +528,7 @@ if ( WIN32 )
     set ( SDLMIXER_LIBRARY "${SDLMIXER_LIBRARY} -lwinmm" )
   endif ()
   if ( MSVC )
-    set_target_properties ( openxcom
-      PROPERTIES PREFIX ../ )
+    set_target_properties ( openxcom PROPERTIES PREFIX ../ )
   endif ()
   set ( system_libs ${basic_windows_libs} SDLmain ${static_flags} )
 endif ()
