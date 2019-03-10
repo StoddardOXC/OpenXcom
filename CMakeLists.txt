@@ -176,11 +176,8 @@ if ( "${OPENXCOM_VERSION_STRING}" STREQUAL "" )
   endif()
 endif()
 
-add_definitions( -DGIT_BUILD=1 )
-
 configure_file("${CMAKE_SOURCE_DIR}/src/git_version.h.in" "${CMAKE_CURRENT_BINARY_DIR}/git_version.h" )
 include_directories ( "${CMAKE_CURRENT_BINARY_DIR}" )
-
 
 if ( DEV_BUILD )
   # Append the commit to version number
