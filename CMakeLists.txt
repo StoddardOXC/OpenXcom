@@ -76,7 +76,7 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
 elseif (CMAKE_HOST_UNIX AND NOT APPLE)
   set(ENV{PKG_CONFIG_PATH} "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/")
 
-  set(CMAKE_C_FLAGS "-fno-omit-frame-pointer -f")
+  set(CMAKE_C_FLAGS "-fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -ggdb3")
   set(CMAKE_C_FLAGS_RELEASE "-O3 -ggdb3")
