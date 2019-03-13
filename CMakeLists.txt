@@ -176,6 +176,13 @@ if ( "${OPENXCOM_VERSION_STRING}" STREQUAL "" )
     set ( git_commit ${CMAKE_MATCH_3} )
     set ( git_dirty ${CMAKE_MATCH_4} )
     set ( OPENXCOM_VERSION_STRING ".${git_commit}${git_dirty}" )
+    execute_process ( COMMAND ${GIT_EXECUTABLE} show -s --format=%ci
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE git_show_out
+      ERROR_VARIABLE git_show_error
+      RESULT_VARIABLE git_show_result
+    )
+    string ( REGEX MATCH "[0-9-]+" git_date "${git_show_out}" )
   endif()
 endif()
 
@@ -184,8 +191,8 @@ include_directories ( "${CMAKE_CURRENT_BINARY_DIR}" )
 
 # Always append the commit to version number
 set ( CPACK_PACKAGE_VERSION_PATCH "${git_commit}${git_dirty}" )
-set ( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}" )
-set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}" )
+set ( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}-${git_date}" )
+set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-macos" )
 set ( CPACK_SOURCE_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-src" )
 
 if ( BUILD_PACKAGE )
