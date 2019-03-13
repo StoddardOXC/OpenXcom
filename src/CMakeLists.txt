@@ -542,16 +542,12 @@ if (${CMAKE_SYSTEM_NAME} MATCHES FreeBSD OR ${CMAKE_SYSTEM_NAME} MATCHES NetBSD 
   set ( system_libs -lexecinfo )
 endif ()
 
-if (CMAKE_HOST_UNIX AND NOT APPLE)
-  if (WIN32)
-    set(CMAKE_EXE_LINKER_FLAGS -Wl,--export-all-symbols)
-    set(WIN32_LIBS  imagehlp dbghelp)
-  endif(WIN32)
+if (WIN32)
+  set(CMAKE_EXE_LINKER_FLAGS -Wl,--export-all-symbols)
+  set(WIN32_LIBS imagehlp dbghelp)
+endif(WIN32)
 
-  target_link_libraries ( openxcom ${system_libs} ${PKG_SDLIMAGE_LIBRARIES} ${PKG_SDLMIXER_LIBRARIES} ${PKG_SDLGFX_LIBRARIES} ${PKG_SDL_LIBRARIES} ${OPENGL_LIBRARIES} ${PKG_YAMLCPP_LIBRARIES} ${WIN32_LIBS})
-else ()
-  target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_LIBRARIES} debug ${YAMLCPP_LIBRARY_DEBUG} optimized ${YAMLCPP_LIBRARY} )
-endif ()
+target_link_libraries ( openxcom ${system_libs} ${PKG_DEPS_LDFLAGS} ${WIN32_LIBS} )
 
 # Pack libraries into bundle and link executable appropriately
 if ( APPLE AND CREATE_BUNDLE )
