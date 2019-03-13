@@ -517,6 +517,10 @@ if ( FORCE_INSTALL_DATA_TO_BIN )
   set ( data_install_dir bin )
 endif ()
 
+if ( APPLE AND CREATE_BUNDLE AND BUILD_DMG )
+  set ( CMAKE_INSTALL_BINDIR "." )
+endif ()
+
 add_executable ( openxcom  ${application_type} ${openxcom_src} ${openxcom_icon} )
 install ( TARGETS openxcom ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 # Extra link flags for Windows. They need to be set before the SDL/YAML link flags, otherwise you will get strange link errors ('Undefined reference to WinMain@16')
@@ -567,8 +571,8 @@ foreach ( binpath ${bin_data_dirs} )
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${EXECUTABLE_OUTPUT_PATH}/${binpath}
 	  VERBATIM )
+    install ( DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${binpath} DESTINATION ${data_install_dir} )
   endif ()
-  install ( DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${binpath} DESTINATION ${data_install_dir} )
 endforeach()
 
 # Copy Windows DLLs to bin folder
