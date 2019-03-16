@@ -33,5 +33,5 @@ if ( NOT ( DOXYGEN_EXECUTABLE MATCHES "NOTFOUND" ) )
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "Generating doxygen documentation" )
 else ()
-  message ( FATAL_ERROR "No doxygen command found. Disable API documentation generation" )
+  message ( WARNING "Doxygen not found. API documentation generation disabled." )
 endif ()
