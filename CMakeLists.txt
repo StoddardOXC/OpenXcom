@@ -8,7 +8,6 @@ include(GNUInstallDirs)
 # For yaml-cpp
 set (CMAKE_CXX_STANDARD 11)
 
-
 option ( DEV_BUILD "Development Build. Disable this for release builds" ON )
 option ( DUMP_CORE "Disables exception and segfault handling." OFF )
 option ( BUILD_PACKAGE "Prepares build for creation of a package with CPack" ON )
@@ -24,11 +23,11 @@ set ( OPENXCOM_VERSION_STRING "" CACHE STRING "Version string (after x.x)" )
 if ( CHECK_CCACHE )
   find_program( CCACHE_PROGRAM ccache )
   if( NOT CCACHE_PROGRAM )
-    message ( "CCACHE requested but not found on the system." )
+    message ( FATAL_ERROR "CCACHE requested but not found on the system." )
   else ()
     set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}" )
     set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}" )
-    message ( "found CCACHE (${CCACHE_PROGRAM})" )
+    message ( STATUS "found CCACHE (${CCACHE_PROGRAM})" )
   endif()
 endif ()
 
@@ -53,7 +52,7 @@ if ( CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
   elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
   else()
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+    message( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
   endif()
 endif()
 
@@ -67,7 +66,7 @@ if ( NOT OPENGL_FOUND )
   add_definitions(-D__NO_OPENGL)
 else ()
   include_directories ( ${OPENGL_INCLUDE_DIR} )
-  message ( "found openGL (${OPENGL_LIBRARIES})" )
+  message ( STATUS "OpenGL libraries: ${OPENGL_LIBRARIES}" )
 endif ()
 
 if(NOT UNIX AND IS_DIRECTORY ${DEPS_DIR})
@@ -100,7 +99,7 @@ elseif(UNIX)
   include_directories(${PKG_SDLGFX_INCLUDE_DIRS} ${PKG_SDLMIXER_INCLUDE_DIRS} ${PKG_YAMLCPP_INCLUDE_DIRS})
   set(PKG_DEPS_LDFLAGS ${PKG_SDL_LDFLAGS} ${PKG_ZLIB_LDFLAGS} ${PKG_SDLIMAGE_LDFLAGS} ${PKG_SDLGFX_LDFLAGS} ${PKG_SDLMIXER_LDFLAGS} ${PKG_YAMLCPP_LDFLAGS} ${OPENGL_LIBRARIES})
 
-  message ( STATUS "PKG_DEPS_LDFLAGS = ${PKG_DEPS_LDFLAGS} ")
+  message ( STATUS "PKG_DEPS_LDFLAGS: ${PKG_DEPS_LDFLAGS} ")
 else()
   message ( FATAL_ERROR "pkg-config is not supported on your platform. Use DEPS_DIR" )
 endif()
@@ -113,42 +112,44 @@ set ( CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1} )
 set ( CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2} )
 set ( CPACK_PACKAGE_VERSION_PATCH "" )
 
-if ( "${OPENXCOM_VERSION_STRING}" STREQUAL "" )
-  find_package ( Git )
-  if ( GIT_FOUND )
-    message("git found: ${GIT_EXECUTABLE}")
-    execute_process ( COMMAND ${GIT_EXECUTABLE} describe --dirty
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE git_describe_out
-      ERROR_VARIABLE git_describe_error
-      RESULT_VARIABLE git_describe_result
-      )
-    string ( REGEX MATCH "([a-z|0-9|.]*)-([0-9]*)-g([a-z|0-9]*)([-|a-z]*)" git_commit "${git_describe_out}" )
-    set ( git_tag ${CMAKE_MATCH_1} )
-    set ( git_nb_commit ${CMAKE_MATCH_2} )
-    set ( git_commit ${CMAKE_MATCH_3} )
-    set ( git_dirty ${CMAKE_MATCH_4} )
-    set ( OPENXCOM_VERSION_STRING ".${git_commit}${git_dirty}" )
-    execute_process ( COMMAND ${GIT_EXECUTABLE} show -s --format=%ci
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE git_show_out
-      ERROR_VARIABLE git_show_error
-      RESULT_VARIABLE git_show_result
+find_package ( Git )
+if ( GIT_FOUND )
+  execute_process ( COMMAND ${GIT_EXECUTABLE} describe --dirty
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE git_describe_out
+    ERROR_VARIABLE git_describe_error
+    RESULT_VARIABLE git_describe_result
     )
-    string ( REGEX MATCH "[0-9-]+" git_date "${git_show_out}" )
-  endif()
+  string ( REGEX MATCH "([a-z|0-9|.]*)-([0-9]*)-g([a-z|0-9]*)([-|a-z]*)" git_commit "${git_describe_out}" )
+  set ( git_tag ${CMAKE_MATCH_1} )
+  set ( git_nb_commit ${CMAKE_MATCH_2} )
+  set ( git_commit ${CMAKE_MATCH_3} )
+  set ( git_dirty ${CMAKE_MATCH_4} )
+  execute_process ( COMMAND ${GIT_EXECUTABLE} show -s --format=%ci
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE git_show_out
+    ERROR_VARIABLE git_show_error
+    RESULT_VARIABLE git_show_result
+  )
+  string ( REGEX MATCH "[0-9-]+" git_date "${git_show_out}" )
+else ()
+  message( WARNING "Git not found.")
+endif()
+
+if ( "${OPENXCOM_VERSION_STRING}" STREQUAL "" )
+  set ( OPENXCOM_VERSION_STRING ".${git_commit}${git_dirty}" )
 endif()
 
 configure_file("${CMAKE_SOURCE_DIR}/src/git_version.h.in" "${CMAKE_CURRENT_BINARY_DIR}/git_version.h" )
 include_directories ( "${CMAKE_CURRENT_BINARY_DIR}" )
 
-# Always append the commit to version number
-set ( CPACK_PACKAGE_VERSION_PATCH "${git_commit}${git_dirty}" )
-set ( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}-${git_date}" )
-set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-macos" )
-set ( CPACK_SOURCE_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-src" )
-
 if ( BUILD_PACKAGE )
+  # Always append the commit to version number
+  set ( CPACK_PACKAGE_VERSION_PATCH "${git_commit}${git_dirty}" )
+  set ( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}-${git_date}" )
+  set ( CPACK_SOURCE_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-src" )
+  set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-unknown" ) # TODO: determine package suffix (osrelease+arch)
+
   if ( NOT DEV_BUILD )
     string ( LENGTH "${git_dirty}" is_dirty )
     if ( ${is_dirty} GREATER 0 )
@@ -170,24 +171,50 @@ if ( BUILD_PACKAGE )
   set ( CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open-source clone of UFO: Enemy Unknown" )
   set ( CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/cmake/modules/Description.txt" )
   set ( CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md" )
-  if ( NOT APPLE )
-    set ( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt" )
-  endif ()
   set ( CPACK_PACKAGE_CONTACT "The OpenXcom project (http://www.openxcom.org)" )
-
-  include ( LinuxDEB )
-  include ( LinuxRPM )
-  include ( nsis )
+  # DMG-specific -- sets CPACK_GENERATOR to DragNDrop itself
   if (APPLE)
+    set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-macos" )
     set ( CPACK_BUNDLE_NAME "OpenXcom Extended" )
     set ( CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/res/mac/AppIcon.icns" )
     set ( CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/openxcom.app/Contents/Info.plist" )
     set ( CPACK_DMG_VOLUME_NAME "OpenXcom Extended" )
     set ( CPACK_DMG_BACKGROUND_IMAGE "${CMAKE_SOURCE_DIR}/res/openxcom_block.png" )
     set ( CPACK_GENERATOR "DragNDrop")
+  else()
+    set ( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt" )
   endif()
+  # DEB-specific -- set -DCPACK_GENERATOR=DEB
+  if ( "${CPACK_GENERATOR}" MATCHES "^(.*;)?DEB(;.*)?$" )
+    set ( CPACK_DEBIAN_PACKAGE_MAINTAINER "The OpenXcom project" )
+    set ( CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://openxcom.org/" )
+    set ( CPACK_DEBIAN_PACKAGE_SECTION "games" )
+    set ( CPACK_DEBIAN_PACKAGE_PRIORITY "optional" )
+    set ( CPACK_DEBIAN_COMPRESSION_TYPE "xz" )
+    if ( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" )
+      set ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64" )
+    elseif ( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i686" )
+      set ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386" )
+    endif ()
+    if ( NOT CPACK_DEBIAN_PACKAGE_DEPENDS )
+      message ( STATUS "CPACK_DEBIAN_PACKAGE_DEPENDS not set - DEB package will have no dependencies" )
+    endif ()
+  endif ()
+  # RPM-specific -- set -DCPACK_GENERATOR=RPM
+  if ( "${CPACK_GENERATOR}" MATCHES "^(.*;)?RPM(;.*)?$" )
+    set ( CPACK_RPM_PACKAGE_LICENSE "GPLv3" )
+    set ( CPACK_RPM_PACKAGE_GROUP "Amusements/Games" )
+    set ( CPACK_RPM_PACKAGE_URL "https://openxcom.org/" )
+    set ( CPACK_RPM_COMPRESSION_TYPE "xz" )
+    if ( NOT CPACK_RPM_PACKAGE_REQUIRES )
+      message ( STATUS "CPACK_RPM_PACKAGE_REQUIRES not set - RPM package will have no dependencies" )
+    endif ()
+  endif ()
+  # NSIS-specific -- set -DCPACK_GENERATOR=NSIS
+  set ( CPACK_NSIS_MODIFY_PATH OFF )
+  set ( CPACK_NSIS_DISPLAY_NAME "OpenXcom Extended" )
   include ( CPack )
-  message ( "version:${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+  message ( STATUS "OpenXcom version: ${CPACK_PACKAGE_VERSION}")
 endif()
 
 if ( NOT WIN32 )
