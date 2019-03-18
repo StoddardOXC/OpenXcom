@@ -154,8 +154,7 @@ static size_t mz_rwops_read_func(void *vops, mz_uint64 file_ofs, void *pBuf, siz
 	int size_read = SDL_RWread(rwops, pBuf, 1, n);
 	return size_read;
 }
-static mz_bool mz_zip_reader_init_rwops(mz_zip_archive *pZip, const char *filename) {
-	SDL_RWops *rwops = SDL_RWFromFile(filename, "r");
+static mz_bool mz_zip_reader_init_rwops(mz_zip_archive *pZip, SDL_RWops *rwops) {
 	if (!rwops) { return false; }
 	Sint64 size = SDL_RWsize(rwops);
 	mz_zip_zero_struct(pZip);
@@ -337,8 +336,7 @@ struct VFSLayer {
 		}
 		vdirs.at(dirname).insert(basename);
 	}
-	/** maps a zipped moddir
-	* @param mrec - module record
+	/** maps a zipped moddir from filesystem
 	* @param zippath - path to the .zip
 	* @param prefix - prefix in the .zip in case there are multiple mods in a single .zip. Has to have the trailing slash.
 	* @param ignore_ruls - skip rulesets
@@ -385,11 +383,6 @@ struct VFSLayer {
 			auto err = log_ctx + "Bogus prefix of '" + prefix;
 			Log(LOG_FATAL) << err;
 			throw Exception(err);
-		}
-		if (!mz_zip_reader_init_rwops(&zip, zippath.c_str())) {
-			// whoa, no opening the file
-			Log(LOG_WARNING) << log_ctx << "Ignoring zip: can't open '"<<zippath<<"': " << mz_zip_get_error_string(mz_zip_get_last_error(&zip));
-			return false;
 		}
 		mapped = true;
 		fullpath = zippath;
@@ -831,7 +824,8 @@ static void mapZippedMod(mz_zip_archive *zip, const std::string& zipfname, const
 	ModsAvailable.insert(std::make_pair(mrec->modInfo.getId(), mrec));
 }
 /** now this scans a zip of mods or of a single mod
- * @param fullpath - full path to the .zip.
+ * @param rwops - SDL_RWops to the zip data
+ * @param fullpath - full path to associate with the .zip.
  */
 void scanModZipRW(SDL_RWops *rwops, const std::string& fullpath) {
 	std::string log_ctx = "scanModZipRW(rwops, " + fullpath + "): ";
@@ -859,6 +853,18 @@ void scanModZipRW(SDL_RWops *rwops, const std::string& fullpath) {
 		if (slashpos != prefix.size() - 1) { continue; } // not top-level: skip.
 		mapZippedMod(mzip, fullpath, prefix);
 	}
+}
+/** Filesystem wrapper for scanModZipRW()
+ * @param fullpath - full path to the .zip.
+ */
+void scanModZip(const std::string& fullpath) {
+	std::string log_ctx = "scanModZip(" + fullpath + "): ";
+	SDL_RWops *rwops = SDL_RWFromFile(fullpath.c_str(), "r");
+	if (!rwops) {
+		Log(LOG_WARNING) << log_ctx << "Ignoring zip: " << SDL_GetError();
+		return;
+	}
+	scanModZipRW(rwops, fullpath);
 }
 /**
  * this scans a mod dir.
