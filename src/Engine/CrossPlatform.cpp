@@ -1493,9 +1493,9 @@ extern "C" {
 #endif
 SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 	SDL_RWops *rv = NULL;
-	std::string log_ctx = "getEmbeddedAsset('" + assetName + "')";
+	std::string log_ctx = "getEmbeddedAsset('" + assetName + "'): ";
 	if (assetName.size() == 0 || assetName[0] == '/') {
-		Log(LOG_WARNING) << log_ctx << " ignoring bogus asset name";
+		Log(LOG_WARNING) << log_ctx << "ignoring bogus asset name";
 		return NULL;
 	}
 #if defined(EMBED_ASSETS)
@@ -1525,12 +1525,12 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 	}
 # endif
 	if (rv == NULL) {
-		Log(LOG_ERROR) << log_ctx << " embedded asset not found: "<< SDL_GetError();
+		Log(LOG_ERROR) << log_ctx << "embedded asset not found: "<< SDL_GetError();
 	}
 	return rv;
 #else
 	/* Asset embedding disabled. */
-	Log(LOG_DEBUG) << log_ctx << " assets were not embedded.";
+	Log(LOG_DEBUG) << log_ctx << "assets were not embedded.";
 	return NULL;
 #endif
 }
