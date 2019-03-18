@@ -867,6 +867,9 @@ void updateOptions()
 		if (CrossPlatform::fileExists(_configFolder + "options.cfg"))
 		{
 			load();
+#ifndef EMBED_ASSETS
+			Options::modStandardMods = true;
+#endif
 		}
 		else
 		{

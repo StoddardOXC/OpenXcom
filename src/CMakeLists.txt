@@ -468,19 +468,26 @@ if ( DUMP_CORE )
   set_property ( SOURCE main.cpp APPEND PROPERTY COMPILE_DEFINITIONS DUMP_CORE )
 endif ()
 
+if ( EMBED_ASSETS )
+  set_property ( SOURCE OpenXcomEx.rc APPEND PROPERTY COMPILE_DEFINITIONS EMBED_ASSETS )
+  set_property ( SOURCE Engine/CrossPlatform.cpp APPEND PROPERTY COMPILE_DEFINITIONS EMBED_ASSETS )
+  set_property ( SOURCE Engine/Options.cpp APPEND PROPERTY COMPILE_DEFINITIONS EMBED_ASSETS )
+  add_custom_command ( OUTPUT "${CMAKE_BINARY_DIR}/common.zip" COMMAND zip -r -FS "${CMAKE_BINARY_DIR}/common.zip" .
+                        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/common" )
+  add_custom_command ( OUTPUT "${CMAKE_BINARY_DIR}/standard.zip" COMMAND zip -r -FS "${CMAKE_BINARY_DIR}/standard.zip" .
+                        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/standard" )
+  add_custom_target ( zips DEPENDS "${CMAKE_BINARY_DIR}/common.zip" "${CMAKE_BINARY_DIR}/standard.zip" )
+endif ()
+
 if ( WIN32 )
   set ( application_type WIN32 )
   set ( openxcom_icon OpenXcomEx.rc )
 endif ()
 
-if ( UNIX AND NOT ANDROID )
+if ( UNIX AND EMBED_ASSETS )
   enable_language(ASM)
   set ( embed_src OpenXcomEx.s )
-  set_source_files_properties ( OpenXcomEx.s PROPERTIES COMPILE_FLAGS -Ibin )
-  add_definitions( -DUNIX_STYLE_ASSETS )
-  add_custom_command( OUTPUT common.zip COMMAND zip -r -FS ../../bin/common.zip . WORKING_DIRECTORY ../bin/common )
-  add_custom_command( OUTPUT standard.zip COMMAND zip -r -FS ../../bin/standard.zip . WORKING_DIRECTORY ../bin/standard )
-  add_custom_target(zips DEPENDS common.zip standard.zip)
+  set_property ( SOURCE OpenXcomEx.s PROPERTY COMPILE_FLAGS -I${CMAKE_BINARY_DIR} )
 endif ()
 
 set ( openxcom_src ${c_src} ${cxx_src} ${embed_src} )
@@ -533,7 +540,7 @@ endif ()
 
 add_executable ( openxcom  ${application_type} ${openxcom_src} ${openxcom_icon} )
 
-if ( UNIX AND NOT ANDROID )
+if ( EMBED_ASSETS )
   add_dependencies(openxcom zips)
 endif ()
 
@@ -570,21 +577,23 @@ if ( APPLE AND CREATE_BUNDLE )
   postprocess_bundle ( openxcom ${bundle_path} )
 endif ()
 
-set ( bin_data_dirs TFTD UFO common standard )
-foreach ( binpath ${bin_data_dirs} )
-  if ( APPLE AND CREATE_BUNDLE )
-    add_custom_command ( TARGET openxcom
-      POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${bundle_path}/Contents/Resources/${binpath}
-	  VERBATIM )
-  else ()
-    add_custom_command ( TARGET openxcom
-      POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${EXECUTABLE_OUTPUT_PATH}/${binpath}
-	  VERBATIM )
-    install ( DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${binpath} DESTINATION ${data_install_dir} )
-  endif ()
-endforeach()
+if ( NOT EMBED_ASSETS )
+  set ( bin_data_dirs TFTD UFO common standard )
+  foreach ( binpath ${bin_data_dirs} )
+    if ( APPLE AND CREATE_BUNDLE )
+      add_custom_command ( TARGET openxcom
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${bundle_path}/Contents/Resources/${binpath}
+	    VERBATIM )
+    else ()
+      add_custom_command ( TARGET openxcom
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${EXECUTABLE_OUTPUT_PATH}/${binpath}
+	    VERBATIM )
+      install ( DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${binpath} DESTINATION ${data_install_dir} )
+    endif ()
+  endforeach ()
+endif ()
 
 # Copy Windows DLLs to bin folder
 if ( WIN32 )

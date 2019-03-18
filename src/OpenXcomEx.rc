@@ -107,9 +107,9 @@ IDI_ICON1               ICON                    "../res/windows/openxcomex.ico"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
-#ifdef WIN32_STYLE_ASSETS
+#ifdef EMBED_ASSETS
 
-IDZ_COMMON_ZIP           RCDATA                  "../bin/common.zip"
-IDZ_STANDARD_ZIP         RCDATA                  "../bin/standard.zip"
+IDZ_COMMON_ZIP           RCDATA                  "../common.zip"
+IDZ_STANDARD_ZIP         RCDATA                  "../standard.zip"
 
 #endif
