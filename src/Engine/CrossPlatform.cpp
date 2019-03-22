@@ -187,11 +187,12 @@ const std::vector<std::string>& getArgs() { return args; }
 void showError(const std::string &error)
 {
 #ifdef _WIN32
-	auto titleW = pathToWindows("OpenXcom Error", false);
+	auto titleW = pathToWindows("OpenXcom Extended Error", false);
 	auto errorW = pathToWindows(error, false);
 	MessageBoxW(NULL, errorW.c_str(), titleW.c_str(), MB_ICONERROR | MB_OK);
 #elif defined (__ANDROID__)
-	// FIXME: How come there isn't an android popup for this? I think SDL2's can be used.
+	std::string msg = error + "\n\nSee openxcom.log for more details.\n";
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "OpenXcom Extended Error", msg.c_str(), NULL);
 	__android_log_print(ANDROID_LOG_ERROR, "OpenXcom", "%s", error.c_str());
 #else
 	if (errorDlg.empty())

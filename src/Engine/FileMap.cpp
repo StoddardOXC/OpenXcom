@@ -589,7 +589,9 @@ struct VFS {
 	void map_common(bool embeddedOnly) {
 		auto mrec = new ModRecord("common");
 		if (!mapExtResources(mrec, "common", embeddedOnly)) {
-			Log(LOG_ERROR) << "VFS::map_common(): failed to map 'common'";
+			const std::string error = "VFS::map_common(): failed to map 'common'";
+			Log(LOG_ERROR) << error;
+			CrossPlatform::showError(error);
 			delete mrec;
 			return;
 		}
