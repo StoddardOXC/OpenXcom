@@ -69,11 +69,11 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <dirent.h>
 #ifndef __ANDROID__
 #include <execinfo.h>
 #include <cxxabi.h>
 #include <dlfcn.h>
-#include <dirent.h>
 #include "Unicode.h"
 #endif
 #endif		/* #ifdef _WIN32 */
