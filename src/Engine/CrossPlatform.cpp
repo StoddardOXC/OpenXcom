@@ -30,7 +30,6 @@
 #include <time.h>
 #include <signal.h>
 #include <sys/stat.h>
-#include "../dirent.h"
 #include "Logger.h"
 #include "Exception.h"
 #include "Options.h"
@@ -58,7 +57,7 @@
 #pragma comment(lib, "dbghelp.lib")
 #endif
 #endif
-#else
+#else		/* #ifdef _WIN32 */
 #include <iostream>
 #include <fstream>
 #include <locale>
@@ -72,9 +71,12 @@
 #include <pwd.h>
 #ifndef __ANDROID__
 #include <execinfo.h>
+#include <cxxabi.h>
+#include <dlfcn.h>
+#include <dirent.h>
 #include "Unicode.h"
 #endif
-#endif
+#endif		/* #ifdef _WIN32 */
 #include <SDL.h>
 #include <SDL_syswm.h>
 #ifdef __HAIKU__
@@ -1493,17 +1495,37 @@ void stackTrace(void *ctx)
 #warning Stack trace not supported on Android yet!
 	Log(LOG_FATAL) << "Unfortunately, no stack trace information is available";
 #else
-	const int MAX_STACK_FRAMES = 16;
-	void *array[MAX_STACK_FRAMES];
-	size_t size = backtrace(array, MAX_STACK_FRAMES);
-	char **strings = backtrace_symbols(array, size);
+	void *frames[32];
+	char buf[1024];
+	int  frame_count = backtrace(frames, 32);
+	char *demangled = NULL;
+	const char *mangled = NULL;
+	int status;
+	size_t sym_offset;
 
-	for (size_t i = 0; i < size; ++i)
-	{
-		Log(LOG_FATAL) << strings[i];
+	for (int i = 0; i < frame_count; i++) {
+		Dl_info dl_info;
+		if (dladdr(frames[i], &dl_info )) {
+			demangled = NULL;
+			mangled = dl_info.dli_sname;
+			if ( mangled != NULL) {
+				sym_offset = (char *)frames[i] - (char *)dl_info.dli_saddr;
+				demangled = abi::__cxa_demangle( dl_info.dli_sname, NULL, 0, &status);
+				snprintf(buf, sizeof(buf), "%s(%s+0x%zx) [%p]",
+						dl_info.dli_fname,
+						status == 0 ? demangled : mangled,
+						sym_offset, frames[i] );
+			} else { // symbol not found
+				sym_offset = (char *)frames[i] - (char *)dl_info.dli_fbase;
+				snprintf(buf, sizeof(buf), "%s(+0x%zx) [%p]", dl_info.dli_fname, sym_offset, frames[i]);
+			}
+			free(demangled);
+			Log(LOG_FATAL) << buf;
+		} else { // object not found
+			snprintf(buf, sizeof(buf), "? ? [%p]", frames[i]);
+			Log(LOG_FATAL) << buf;
+		}
 	}
-
-	free(strings);
 #endif
 	ctx = (void*)ctx;
 }
@@ -1707,13 +1729,13 @@ extern "C" {
 # endif
 #endif
 SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
-	SDL_RWops *rv = NULL;
 	std::string log_ctx = "getEmbeddedAsset('" + assetName + "'): ";
 	if (assetName.size() == 0 || assetName[0] == '/') {
 		Log(LOG_WARNING) << log_ctx << "ignoring bogus asset name";
 		return NULL;
 	}
 #if defined(EMBED_ASSETS)
+	SDL_RWops *rv = NULL;
 # if defined(_WIN32)
 	if (assetName == "common.zip") {
 		if (!CommonZipAssetPtr) {

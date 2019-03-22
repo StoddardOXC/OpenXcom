@@ -1382,7 +1382,6 @@
     <ClInclude Include="Battlescape\BattlescapeGenerator.h">
       <Filter>Battlescape</Filter>
     </ClInclude>
-    <ClInclude Include="dirent.h" />
     <ClInclude Include="Engine\Exception.h">
       <Filter>Engine</Filter>
     </ClInclude>
