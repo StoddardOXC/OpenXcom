@@ -12,6 +12,7 @@ OPT bool fullscreen, asyncBlit, playIntro,
 
 // SDL2 scalers
 OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler, integerRatioScaling;
+
 OPT bool integerRatioScaling;
 
 OPT std::string language, renderDriver, renderFilterSDL, renderFilterGL2;
