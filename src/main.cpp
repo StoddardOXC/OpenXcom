@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 	std::ostringstream title;
-	title << "OpenXcom " << OPENXCOM_VERSION_SHORT << OPENXCOM_VERSION_GIT;
+	title << "OpenXcom " << OPENXCOM_VERSION_SHORT << " - " << OPENXCOM_VERSION_GIT;
 	Log(LOG_INFO) << title.str();
 
 	CrossPlatform::getErrorDialog();
