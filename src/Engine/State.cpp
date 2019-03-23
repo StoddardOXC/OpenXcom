@@ -39,6 +39,9 @@
 #include "../Mod/RuleInterface.h"
 #include "Action.h"
 
+#include <typeinfo>
+#include <cxxabi.h>
+
 namespace OpenXcom
 {
 
@@ -50,7 +53,7 @@ Game* State::_game = 0;
  * By default states are full-screen.
  * @param game Pointer to the core game.
  */
-State::State() : _screen(true), _soundPlayed(false), _modal(0), _ruleInterface(0), _ruleInterfaceParent(0), _screenMode(SC_INHERITED)
+State::State() : _screen(true), _soundPlayed(false), _modal(0), _ruleInterface(0), _ruleInterfaceParent(0), _screenMode(SC_INHERITED), _width (320), _height (200), _x (0), _y (0)
 {
 	// initialize palette to all black
 	memset(_palette, 0, sizeof(_palette));
@@ -285,6 +288,8 @@ void State::init()
 			_soundPlayed = true;
 		}
 	}
+	Log(LOG_INFO)<<"State::State("<<typeid(*this).name()<<").";
+
 }
 
 /**
@@ -420,40 +425,6 @@ LocalizedText State::tr(const std::string &id, unsigned n) const
 LocalizedText State::tr(const std::string &id, SoldierGender gender) const
 {
 	return _game->getLanguage()->getString(id, gender);
-}
-
-/**
- * Centers all the surfaces on the screen.
- * For this, overall State size in pixels is required.
- * First surface in the stack is used for this.
- * If there are no surfaces, this is a no-op.
- */
-void State::centerAllSurfaces()
-{
-	if (_surfaces.size() == 0) { return; }
-	int w0 = _surfaces[0]->getWidth();
-	int h0 = _surfaces[0]->getHeight();
-	int sw = _game->getScreen()->getWidth();
-	int sh = _game->getScreen()->getHeight();
-	int x0 = (sw - w0)/2;
-	int y0 = (sh - h0)/2;
-	Log(LOG_INFO)<<"State::centerAllSurfaces("<<this<<"): swh= "<<sw<<"x"<<sh<<" wh0="<<w0<<"x"<<h0<<" xy0="<<x0<<"x"<<y0;
-	for (std::vector<Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		(*i)->setX((*i)->getX() + x0);
-		(*i)->setY((*i)->getY() + y0);
-	}
-}
-
-/**
- * drop all the surfaces by half the screen height
- */
-void State::lowerAllSurfaces()
-{
-	for (std::vector<Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		(*i)->setY((*i)->getY() + _game->getScreen()->getDY() / 2);
-	}
 }
 
 /**
@@ -603,22 +574,25 @@ SDL_Color *State::getPalette()
  */
 void State::resize(int &dX, int &dY)
 {
-	recenter(dX, dY);
+	Log(LOG_INFO)<<"State::resize("<<typeid(*this).name()<<", dX="<<dX<<", dY="<<dY<<")";
+	recenter();
 }
 
-/**
- * Re-orients all the surfaces in the state.
- * @param dX delta of X;
- * @param dY delta of Y;
- */
-void State::recenter(int dX, int dY)
+void State::recenter()
 {
-	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		(*i)->setX((*i)->getX() + dX / 2);
-		(*i)->setY((*i)->getY() + dY / 2);
+	if (_surfaces.size() == 0) { return; }
+	int sw = _game->getScreen()->getWidth();
+	int sh = _game->getScreen()->getHeight();
+	_x = (sw - _width )/2;
+	_y = (sh - _height )/2;
+	Log(LOG_INFO)<<"State::recenter("<<typeid(*this).name()<<"): screen= "<<sw<<"x"<<sh<<" state="<<_width<<"x"<<_height<<"@"<<_x<<"x"<<_y;
+	for (auto surf: _surfaces) {
+		Log(LOG_INFO) << "    recentering "<<typeid(*surf).name();
+		surf->setDXY( _x, _y );
 	}
+
 }
+
 
 void State::setGamePtr(Game* game)
 {

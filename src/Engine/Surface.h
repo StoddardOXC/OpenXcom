@@ -88,7 +88,7 @@ public:
 protected:
 	UniqueBufferPtr _alignedBuffer;
 	UniqueSurfacePtr _surface;
-	Sint16 _x, _y;
+	Sint16 _x, _y, _dx, _dy;
 	Uint16 _width, _height, _pitch;
 	Uint8 _visible: 1;
 	Uint8 _hidden: 1;
@@ -186,6 +186,8 @@ public:
 			return NULL;
 		}
 	}
+	/// Sets the blit offset, for use only in State::blit()
+	void setDXY(int dx, int dy) { _dx = dx; _dy = dy; }
 	/// Sets the X position of the surface.
 	virtual void setX(int x);
 	/**

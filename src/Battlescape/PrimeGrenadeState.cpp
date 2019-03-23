@@ -118,7 +118,7 @@ PrimeGrenadeState::PrimeGrenadeState(BattleAction *action, bool inInventoryView,
 		_number[i]->setAlign(ALIGN_CENTER);
 		_number[i]->setVerticalAlign(ALIGN_MIDDLE);
 	}
-	lowerAllSurfaces();  // FIXME this is hacky but just might work
+	// FIXME somehow shift the state lower
 }
 
 /**
