@@ -52,8 +52,6 @@ namespace OpenXcom
 		add(_btnNo, "confirmDefaults", "optionsMenu");
 		add(_txtTitle, "confirmDefaults", "optionsMenu");
 
-		centerAllSurfaces();
-
 		// Set up objects
 		setWindowBackground(_window, "optionsMenu");
 

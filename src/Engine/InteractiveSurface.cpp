@@ -19,6 +19,7 @@
 #include "InteractiveSurface.h"
 #include "Action.h"
 #include "CrossPlatform.h"
+#include "State.h"
 
 namespace OpenXcom
 {
@@ -113,8 +114,8 @@ void InteractiveSurface::handle(Action *action, State *state)
 
 	if (action->isMouseAction())
 	{
-		if ((action->getAbsoluteXMouse() >= getX() && action->getAbsoluteXMouse() < getX() + getWidth()) &&
-			(action->getAbsoluteYMouse() >= getY() && action->getAbsoluteYMouse() < getY() + getHeight()))
+		if ((action->getAbsoluteXMouse() >= getX() + state->getX() && action->getAbsoluteXMouse() < getX() + state->getX() + getWidth()) &&
+			(action->getAbsoluteYMouse() >= getY() + state->getY() && action->getAbsoluteYMouse() < getY() + state->getY() + getHeight()))
 		{
 			if (!_isHovered)
 			{

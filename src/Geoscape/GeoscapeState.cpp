@@ -136,54 +136,54 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_screenMode = SC_GEOSCAPE;
 	_game->setScreenMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
 
-	int screenWidth = _game->getScreen()->getWidth();
-	int screenHeight = _game->getScreen()->getHeight();
+	_width = _game->getScreen()->getWidth();
+	_height = _game->getScreen()->getHeight();
 
 	// Create objects
 	Surface *hd = _game->getMod()->getSurface("ALTGEOBORD.SCR");
 	_bg = new Surface(hd->getWidth(), hd->getHeight(), 0, 0);
-	_sideLine = new Surface(64, screenHeight, screenWidth - 64, 0);
-	_sidebar = new Surface(64, 200, screenWidth - 64, screenHeight / 2 - 100);
+	_sideLine = new Surface(64, _height, _width - 64, 0);
+	_sidebar = new Surface(64, 200, _width - 64, _height / 2 - 100);
 
-	_globe = new Globe(_game, (screenWidth-64)/2, screenHeight/2, screenWidth-64, screenHeight, 0, 0);
+	_globe = new Globe(_game, ( _width-64)/2, _height/2, _width-64, _height, 0, 0);
 	_bg->setX((_globe->getWidth() - _bg->getWidth()) / 2);
 	_bg->setY((_globe->getHeight() - _bg->getHeight()) / 2);
 
-	_btnIntercept = new TextButton(63, 11, screenWidth-63, screenHeight/2-100);
-	_btnBases = new TextButton(63, 11, screenWidth-63, screenHeight/2-88);
-	_btnGraphs = new TextButton(63, 11, screenWidth-63, screenHeight/2-76);
-	_btnUfopaedia = new TextButton(63, 11, screenWidth-63, screenHeight/2-64);
-	_btnOptions = new TextButton(63, 11, screenWidth-63, screenHeight/2-52);
-	_btnFunding = new TextButton(63, 11, screenWidth-63, screenHeight/2-40);
+	_btnIntercept = new TextButton(63, 11, _width-63, _height/2-100);
+	_btnBases = new TextButton(63, 11, _width-63, _height/2-88);
+	_btnGraphs = new TextButton(63, 11, _width-63, _height/2-76);
+	_btnUfopaedia = new TextButton(63, 11, _width-63, _height/2-64);
+	_btnOptions = new TextButton(63, 11, _width-63, _height/2-52);
+	_btnFunding = new TextButton(63, 11, _width-63, _height/2-40);
 
-	_btn5Secs = new TextButton(31, 13, screenWidth-63, screenHeight/2+12);
-	_btn1Min = new TextButton(31, 13, screenWidth-31, screenHeight/2+12);
-	_btn5Mins = new TextButton(31, 13, screenWidth-63, screenHeight/2+26);
-	_btn30Mins = new TextButton(31, 13, screenWidth-31, screenHeight/2+26);
-	_btn1Hour = new TextButton(31, 13, screenWidth-63, screenHeight/2+40);
-	_btn1Day = new TextButton(31, 13, screenWidth-31, screenHeight/2+40);
+	_btn5Secs = new TextButton(31, 13, _width-63, _height/2+12);
+	_btn1Min = new TextButton(31, 13, _width-31, _height/2+12);
+	_btn5Mins = new TextButton(31, 13, _width-63, _height/2+26);
+	_btn30Mins = new TextButton(31, 13, _width-31, _height/2+26);
+	_btn1Hour = new TextButton(31, 13, _width-63, _height/2+40);
+	_btn1Day = new TextButton(31, 13, _width-31, _height/2+40);
 
-	_btnRotateLeft = new InteractiveSurface(12, 10, screenWidth-61, screenHeight/2+76);
-	_btnRotateRight = new InteractiveSurface(12, 10, screenWidth-37, screenHeight/2+76);
-	_btnRotateUp = new InteractiveSurface(13, 12, screenWidth-49, screenHeight/2+62);
-	_btnRotateDown = new InteractiveSurface(13, 12, screenWidth-49, screenHeight/2+87);
-	_btnZoomIn = new InteractiveSurface(23, 23, screenWidth-25, screenHeight/2+56);
-	_btnZoomOut = new InteractiveSurface(13, 17, screenWidth-20, screenHeight/2+82);
+	_btnRotateLeft = new InteractiveSurface(12, 10, _width-61, _height/2+76);
+	_btnRotateRight = new InteractiveSurface(12, 10, _width-37, _height/2+76);
+	_btnRotateUp = new InteractiveSurface(13, 12, _width-49, _height/2+62);
+	_btnRotateDown = new InteractiveSurface(13, 12, _width-49, _height/2+87);
+	_btnZoomIn = new InteractiveSurface(23, 23, _width-25, _height/2+56);
+	_btnZoomOut = new InteractiveSurface(13, 17, _width-20, _height/2+82);
 
-	int height = (screenHeight - Screen::ORIGINAL_HEIGHT) / 2 + 10;
-	_sideTop = new TextButton(63, height, screenWidth-63, _sidebar->getY() - height - 1);
-	_sideBottom = new TextButton(63, height, screenWidth-63, _sidebar->getY() + _sidebar->getHeight() + 1);
+	int height = ( _height - Screen::ORIGINAL_HEIGHT) / 2 + 10;
+	_sideTop = new TextButton(63, height, _width-63, _sidebar->getY() - height - 1);
+	_sideBottom = new TextButton(63, height, _width-63, _sidebar->getY() + _sidebar->getHeight() + 1);
 
-	_txtHour = new Text(20, 16, screenWidth-61, screenHeight/2-26);
-	_txtHourSep = new Text(4, 16, screenWidth-41, screenHeight/2-26);
-	_txtMin = new Text(20, 16, screenWidth-37, screenHeight/2-26);
-	_txtMinSep = new Text(4, 16, screenWidth-17, screenHeight/2-26);
-	_txtSec = new Text(11, 8, screenWidth-13, screenHeight/2-20);
-	_txtWeekday = new Text(59, 8, screenWidth-61, screenHeight/2-13);
-	_txtDay = new Text(29, 8, screenWidth-61, screenHeight/2-6);
-	_txtMonth = new Text(29, 8, screenWidth-32, screenHeight/2-6);
-	_txtYear = new Text(59, 8, screenWidth-61, screenHeight/2+1);
-	_txtFunds = new Text(59, 8, screenWidth-61, screenHeight/2-27);
+	_txtHour = new Text(20, 16, _width-61, _height/2-26);
+	_txtHourSep = new Text(4, 16, _width-41, _height/2-26);
+	_txtMin = new Text(20, 16, _width-37, _height/2-26);
+	_txtMinSep = new Text(4, 16, _width-17, _height/2-26);
+	_txtSec = new Text(11, 8, _width-13, _height/2-20);
+	_txtWeekday = new Text(59, 8, _width-61, _height/2-13);
+	_txtDay = new Text(29, 8, _width-61, _height/2-6);
+	_txtMonth = new Text(29, 8, _width-32, _height/2-6);
+	_txtYear = new Text(59, 8, _width-61, _height/2+1);
+	_txtFunds = new Text(59, 8, _width-61, _height/2-27);
 
 	_timeSpeed = _btn5Secs;
 	_gameTimer = new Timer(Options::geoClockSpeed);
@@ -3852,6 +3852,9 @@ void GeoscapeState::resize(int &dX, int &dY)
 	if (_game->getSavedGame()->getSavedBattle())
 		return;
 
+	_width = _game->getScreen()->getWidth();
+	_height = _game->getScreen()->getHeight();
+
 	_globe->resize();
 
 	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
@@ -3866,7 +3869,7 @@ void GeoscapeState::resize(int &dX, int &dY)
 	_bg->setX((_globe->getWidth() - _bg->getWidth()) / 2);
 	_bg->setY((_globe->getHeight() - _bg->getHeight()) / 2);
 
-	int height = _game->getScreen()->getDY() / 2 + 10;
+	int height = _game->getScreen()->getDY() / 2 + 10;  /// FIXME!!! no DY in da code.
 	_sideTop->setHeight(height);
 	_sideTop->setY(_sidebar->getY() - height - 1);
 	_sideBottom->setHeight(height);

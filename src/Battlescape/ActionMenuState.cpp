@@ -515,7 +515,7 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
  */
 void ActionMenuState::resize(int &dX, int &dY)
 {
-	State::recenter(dX, dY * 2);
+	_y += dY * 2;  // FIXME? or NOT?
 }
 #ifdef __MOBILE__
 void ActionMenuState::outsideClick(Action *action)

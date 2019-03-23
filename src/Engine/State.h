@@ -56,6 +56,8 @@ protected:
 	RuleInterface *_ruleInterface;
 	RuleInterface *_ruleInterfaceParent;
 	ScreenMode _screenMode;
+	int _width, _height; // nominal state size for the purposes of centering on resize
+	int _x, _y;          // nominal state position for the purposes of centering and detecting clicks on child InteractiveSurfaces
 
 	SDL_Color _palette[256];
 	Uint8 _cursorColor;
@@ -101,10 +103,6 @@ public:
 	LocalizedText tr(const std::string &id, SoldierGender gender) const;
 	/// redraw all the text-type surfaces.
 	void redrawText();
-	/// center all surfaces relative to the screen.
-	void centerAllSurfaces();
-	/// lower all surfaces by half the screen height.
-	void lowerAllSurfaces();
 	/// switch the colours to use the battlescape palette.
 	void applyBattlescapeTheme();
 	/// Sets game object pointer
@@ -121,8 +119,11 @@ public:
 	SDL_Color *getPalette();
 	/// Let the state know the window has been resized.
 	virtual void resize(int &dX, int &dY);
-	/// Re-orients all the surfaces in the state.
-	virtual void recenter(int dX, int dY);
+	/// centers the state on the screen.
+	void recenter();
+	/// returns nominal position
+	int getX() const { return _x; }
+	int getY() const { return _y; }
 	/// Returns the pointer to the game object
 	static Game *getGame();
 	/// Returns declared screen/scale mode for this state

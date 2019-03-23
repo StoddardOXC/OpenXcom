@@ -104,14 +104,14 @@ BattlescapeState::BattlescapeState() :
 
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
-	const int screenWidth = _game->getScreen()->getWidth();
-	const int screenHeight = _game->getScreen()->getHeight();
+	_width = _game->getScreen()->getWidth();
+	_height = _game->getScreen()->getHeight();
 	const int iconsWidth = _game->getMod()->getInterface("battlescape")->getElement("icons")->w;
 	const int iconsHeight = _game->getMod()->getInterface("battlescape")->getElement("icons")->h;
-	const int visibleMapHeight = screenHeight - iconsHeight;
+	const int visibleMapHeight = _height - iconsHeight;
 	_mouseOverIcons = false;
-	const int x = screenWidth/2 - iconsWidth/2;
-	const int y = screenHeight - iconsHeight;
+	const int x = _width/2 - iconsWidth/2;
+	const int y = _height - iconsHeight;
 
 	_indicatorTextColor = _game->getMod()->getInterface("battlescape")->getElement("visibleUnits")->color;
 	_indicatorGreen = _game->getMod()->getInterface("battlescape")->getElement("squadsightUnits")->color;
@@ -133,7 +133,7 @@ BattlescapeState::BattlescapeState() :
 
 	// Create the battlemap view
 	// the actual map height is the total height minus the height of the buttonbar
-	_map = new Map(_game, screenWidth, screenHeight, 0, 0, visibleMapHeight);
+	_map = new Map(_game, _width, _height, 0, 0, visibleMapHeight);
 
 	_numLayers = new NumberText(3, 5, x + 232, y + 6);
 	_rank = new Surface(26, 23, x + 107, y + 33);
@@ -193,11 +193,11 @@ BattlescapeState::BattlescapeState() :
 	_numVisibleUnit[9]->setX(_numVisibleUnit[9]->getX() - 2); // center number 10
 	_btnToggleNV = new InteractiveSurface(12, 12, x + 2, y - 23);
 	_warning = new WarningMessage(224, 24, x + 48, y + 32);
-	_btnLaunch = new BattlescapeButton(32, 24, screenWidth - 32, 0); // we need screenWidth, because that is independent of the black bars on the screen
+	_btnLaunch = new BattlescapeButton(32, 24, _width - 32, 0); // we need screenWidth, because that is independent of the black bars on the screen
 	_btnLaunch->setVisible(false);
-	_btnPsi = new BattlescapeButton(32, 24, screenWidth - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
+	_btnPsi = new BattlescapeButton(32, 24, _width - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
 	_btnPsi->setVisible(false);
-	_btnSpecial = new BattlescapeButton(32, 24, screenWidth - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
+	_btnSpecial = new BattlescapeButton(32, 24, _width - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
 	_btnSpecial->setVisible(false);
 
 	// Create soldier stats summary
@@ -3516,8 +3516,10 @@ void BattlescapeState::txtTooltipOut(Action *action)
  */
 void BattlescapeState::resize(int &dX, int &dY)
 {
-	_map->setWidth(_game->getScreen()->getWidth());
-	_map->setHeight(_game->getScreen()->getHeight());
+	_width = _game->getScreen()->getWidth();
+	_height = _game->getScreen()->getHeight();
+	_map->setWidth(_width);
+	_map->setHeight(_height);
 	_map->getCamera()->resize();
 	_map->getCamera()->jumpXY(dX/2, dY/2);
 
