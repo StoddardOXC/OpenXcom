@@ -1133,7 +1133,7 @@ std::unique_ptr<std::istream> getYamlSaveHeader(const std::string& filename) {
 	}
 	while(true) {
 		auto actually_read = SDL_RWread(rwops, data + offs, 1, chunksize);
-		if (actually_read == 0 || actually_read == -1) {
+		if (actually_read == 0) {
 			break;
 		}
 		size += actually_read;
