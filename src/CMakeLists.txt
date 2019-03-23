@@ -549,10 +549,10 @@ if (( APPLE AND CREATE_BUNDLE ) OR CPACK_GENERATOR STREQUAL "7Z" )
   set ( CMAKE_INSTALL_BINDIR "." )
 endif ()
 
-add_executable ( openxcom  ${application_type} ${openxcom_src} ${openxcom_icon} )
+add_executable ( OpenXcomExSDL2  ${application_type} ${openxcom_src} ${openxcom_icon} )
 
 if ( EMBED_ASSETS )
-  add_dependencies(openxcom zips)
+  add_dependencies(OpenXcomExSDL2 zips)
 endif ()
 
 install ( TARGETS OpenXcomExSDL2 ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
@@ -566,7 +566,7 @@ if ( WIN32 )
     set ( SDLMIXER_LIBRARY "${SDLMIXER_LIBRARY} -lwinmm" )
   endif ()
   if ( MSVC )
-    set_target_properties ( openxcom PROPERTIES PREFIX ../ )
+    set_target_properties ( OpenXcomExSDL2 PROPERTIES PREFIX ../ )
   endif ()
   set ( system_libs ${basic_windows_libs} SDL2main ${static_flags} )
 endif ()
@@ -581,7 +581,7 @@ if (WIN32)
   set(WIN32_LIBS imagehlp dbghelp)
 endif(WIN32)
 
-target_link_libraries ( openxcom ${system_libs} ${PKG_DEPS_LDFLAGS} ${WIN32_LIBS} )
+target_link_libraries ( OpenXcomExSDL2 ${system_libs} ${PKG_DEPS_LDFLAGS} ${WIN32_LIBS} )
 
 # Pack libraries into bundle and link executable appropriately
 if ( APPLE AND CREATE_BUNDLE )
@@ -593,12 +593,12 @@ if ( NOT EMBED_ASSETS )
   set ( bin_data_dirs TFTD UFO common standard )
   foreach ( binpath ${bin_data_dirs} )
     if ( APPLE AND CREATE_BUNDLE )
-      add_custom_command ( TARGET openxcom
+      add_custom_command ( TARGET OpenXcomExSDL2
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${bundle_path}/Contents/Resources/${binpath}
 	    VERBATIM )
     else ()
-      add_custom_command ( TARGET openxcom
+      add_custom_command ( TARGET OpenXcomExSDL2
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bin/${binpath} ${EXECUTABLE_OUTPUT_PATH}/${binpath}
 	    VERBATIM )
