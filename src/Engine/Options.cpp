@@ -913,6 +913,8 @@ void setFolders()
 	}
 }
 
+static const std::string OPTIONS_FILENAME = "sdl2options";
+
 /**
  * Updates the game's options with those in the configuration
  * file, if it exists yet, and any supplied on the command line.
@@ -928,7 +930,7 @@ void updateOptions()
 	}
 	// Load existing option
 	if (CrossPlatform::folderExists(_configFolder)) {
-		if (CrossPlatform::fileExists(_configFolder + "options-sdl2.cfg")) {
+		if (CrossPlatform::fileExists(_configFolder + "/" + OPTIONS_FILENAME + ".cfg")) {
 			load();
 #ifndef EMBED_ASSETS
 			Options::embeddedOnly = false;
@@ -947,8 +949,6 @@ void updateOptions()
 	}
 }
 
-static const std::string OPTIONS_FILENAME = "sdl2options";
-
 /**
  * Loads options from a YAML file.
  * @param filename YAML filename.
@@ -956,7 +956,7 @@ static const std::string OPTIONS_FILENAME = "sdl2options";
  */
 bool load()
 {
-	std::string s = _configFolder + OPTIONS_FILENAME + ".cfg";
+	std::string s = _configFolder + "/" + OPTIONS_FILENAME + ".cfg";
 	if (!CrossPlatform::fileExists(s)) {
 		Log(LOG_DEBUG) << "Options::load('" << OPTIONS_FILENAME << "'): " << s << " does not exist.";
 		return false;
@@ -1073,7 +1073,7 @@ bool save()
 		Log(LOG_WARNING) << e.what();
 		return false;
 	}
-	std::string filepath = _configFolder + OPTIONS_FILENAME + ".cfg";
+	std::string filepath = _configFolder + "/" + OPTIONS_FILENAME + ".cfg";
 	std::string data(out.c_str());
 	Log(LOG_DEBUG) << "Options::save('" << OPTIONS_FILENAME << "'): writing " << filepath;
 
