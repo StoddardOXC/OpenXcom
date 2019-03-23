@@ -494,7 +494,7 @@ endif ()
 
 if ( WIN32 )
   set ( application_type WIN32 )
-  set ( openxcom_icon OpenXcomEx.rc )
+  set ( openxcom_icon OpenXcom.rc )
 endif ()
 
 if ( UNIX AND EMBED_ASSETS )
