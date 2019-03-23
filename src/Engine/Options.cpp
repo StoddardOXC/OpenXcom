@@ -611,7 +611,6 @@ bool init()
 	// this enables writes to the log file and filters already emitted messages
 	CrossPlatform::setLogFileName(getUserFolder() + "openxcom.log");
 
-	Log(LOG_INFO) << "OpenXcom Version: " << OPENXCOM_VERSION_SHORT << OPENXCOM_VERSION_GIT;
 #ifdef _WIN64
 	Log(LOG_INFO) << "Platform: Windows 64 bit";
 #elif _WIN32
