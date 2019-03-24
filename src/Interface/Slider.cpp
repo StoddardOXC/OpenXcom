@@ -99,6 +99,15 @@ void Slider::setY(int y)
 	_button->setY(getY());
 }
 
+
+void Slider::setOffset(int x, int y)
+{
+	Surface::setOffset(x, y);
+	_txtMinus->setOffset(x, y);
+	_txtPlus->setOffset(x, y);
+	_frame->setOffset(x, y);
+	_button->setOffset(x, y);
+}
 /**
  * Changes the various resources needed for text rendering.
  * The different fonts need to be passed in advance since the
@@ -176,7 +185,7 @@ void Slider::handle(Action *action, State *state)
 	//_button->handle(action, state);
 	if (_pressed && (action->getType() == SDL_MOUSEMOTION || action->getType() == SDL_MOUSEBUTTONDOWN))
 	{
-		int cursorX = action->getAbsoluteXMouse();
+		int cursorX = action->getMouseX() - _dx;
 		double buttonX = Clamp(cursorX + _offsetX, _minX, _maxX);
 		double pos = (buttonX - _minX) / (_maxX - _minX);
 		int value = _min + (int)Round((_max - _min) * pos);
