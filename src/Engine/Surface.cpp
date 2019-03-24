@@ -984,6 +984,11 @@ void Surface::invalidate(bool valid)
 	_redraw = valid;
 }
 
+void Surface::setOffset(int x, int y)
+{
+	_dx = x; _dy = y;
+}
+
 /**
  * Recreates the surface with a new size.
  * Old contents will not be altered, and may be

@@ -588,7 +588,7 @@ void State::recenter()
 	Log(LOG_INFO)<<"State::recenter("<<typeid(*this).name()<<"): screen= "<<sw<<"x"<<sh<<" state="<<_width<<"x"<<_height<<"@"<<_x<<"x"<<_y;
 	for (auto surf: _surfaces) {
 		Log(LOG_INFO) << "    recentering "<<typeid(*surf).name();
-		surf->setDXY( _x, _y );
+		surf->setOffset ( _x, _y );
 	}
 
 }

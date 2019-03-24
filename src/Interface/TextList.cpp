@@ -113,6 +113,16 @@ void TextList::setY(int y)
 		_selector->setY(getY());
 }
 
+void TextList::setOffset(int x, int y)
+{
+	Surface::setOffset(x, y);
+	_up->setOffset(x, y);
+	_down->setOffset(x, y);
+	_scrollbar->setOffset(x, y);
+	if (_selector != 0)
+		_selector->setOffset(x, y);
+}
+
 /**
  * Gets the arrowsLeftEdge.
  * @return arrowsLeftEdge.

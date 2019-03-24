@@ -66,6 +66,8 @@ public:
 	void setX(int x) override;
 	/// Sets the Y position of the surface.
 	void setY(int y) override;
+	///
+	void setOffset(int x, int y) override;
 	/// Sets the palette of the text list.
 	void setPalette(const SDL_Color *colors, int firstcolor = 0, int ncolors = 256) override;
 	/// Initializes the resources for the text list.

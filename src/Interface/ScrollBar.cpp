@@ -74,6 +74,12 @@ void ScrollBar::setY(int y)
 	_thumb->setY(y);
 }
 
+void ScrollBar::setOffset(int x, int y)
+{
+	Surface::setOffset(x, y);
+	_track->setOffset(x, y);
+	_thumb->setOffset(x, y);
+}
 /**
  * Changes the height of the scrollbar.
  * @param height New height in pixels.

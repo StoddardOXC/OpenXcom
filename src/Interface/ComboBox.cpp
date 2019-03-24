@@ -122,6 +122,15 @@ void ComboBox::setY(int y)
 	_list->setY(popupY + VERTICAL_MARGIN);
 }
 
+void ComboBox::setOffset(int x, int y)
+{
+	Surface::setOffset(x, y);
+	_button->setOffset(x, y);
+	_arrow->setOffset(x, y);
+	_window->setOffset(x, y);
+	_list->setOffset(x, y);
+}
+
 /**
  * Replaces a certain amount of colors in the palette of all
  * the text contained in the list.
