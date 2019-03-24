@@ -55,6 +55,8 @@ protected:
 	/// Set a mouse button's internal state.
 	void setButtonPressed(Uint8 button, bool pressed);
 public:
+	/// Checks for a (mouse) hit
+	static bool hit(int mx, int my, int x, int y, int w, int h) { return (mx > x && mx < x + w) && (my > y && my < y + h ); }
 	/// Creates a new interactive surface with the specified size and position.
 	InteractiveSurface(int width, int height, int x = 0, int y = 0);
 	/// Cleans up the interactive surface.

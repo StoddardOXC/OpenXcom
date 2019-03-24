@@ -671,9 +671,10 @@ void TextList::setBig()
 	_font = _big;
 
 	delete _selector;
-	_selector = new Surface(getWidth(), _font->getHeight() + _font->getSpacing(), getX(), getY());
+	_selector = new Surface(getWidth(), _font->getHeight() + _font->getSpacing(), getX() , getY());
 	_selector->setPalette(getPalette());
 	_selector->setVisible(false);
+	_selector->setOffset(_dx, _dy);
 
 	updateVisible();
 }
@@ -689,6 +690,7 @@ void TextList::setSmall()
 	_selector = new Surface(getWidth(), _font->getHeight() + _font->getSpacing(), getX(), getY());
 	_selector->setPalette(getPalette());
 	_selector->setVisible(false);
+	_selector->setOffset(_dx, _dy);
 
 	updateVisible();
 }
@@ -1143,7 +1145,7 @@ void TextList::mouseWheel(Action *action, State *state)
 	bool allowScroll = true;
 	if (Options::changeValueByMouseWheel != 0)
 	{
-		allowScroll = (action->getAbsoluteXMouse() < _arrowsLeftEdge || action->getAbsoluteXMouse() > _arrowsRightEdge);
+		allowScroll = (action->getMouseX() < _arrowsLeftEdge + _dx || action->getMouseX() > _arrowsRightEdge + _dx);
 	}
 	if (allowScroll && action->getType() == SDL_MOUSEWHEEL)
 	{
@@ -1248,7 +1250,7 @@ void TextList::mouseOver(Action *action, State *state)
 	if (_selectable)
 	{
 		int rowHeight = _font->getHeight() + _font->getSpacing(); //theoretical line height
-		_selRow = std::max(0, (int)(_scroll + (int)floor(action->getRelativeYMouse() / rowHeight)));
+		_selRow = _scroll + (action->getMouseY() - _dy - _y) / rowHeight;
 		if (_selRow < _rows.size())
 		{
 			Text *selText = _texts[_rows[_selRow]].front();
