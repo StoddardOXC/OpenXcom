@@ -37,7 +37,7 @@ letterboxing, actual window size, the infoscreen maximize option, etc.
 
 
 
-##A `State` has a nominal position and size `(_dx, _dy, _w, _h)`.
+## A `State` has a nominal position and size `(_dx, _dy, _w, _h)`.
 
 
 A `State` is a de-facto container of `Surface`s but mostly `InteractiveSurface`s
