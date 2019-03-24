@@ -123,6 +123,16 @@ bool  Action::isMouseRightClick() const
  */
 int Action::getAbsoluteXMouse() const
 {
+	return getMouseX();
+}
+
+/**
+ * Returns the X position of the mouse cursor
+ * in logical screen coordinates
+ * @return Mouse's absolute X position.
+ */
+int Action::getMouseX() const
+{
 	if (_ev == NULL)
 		throw(Exception("bad stuff in action handling"));
 	return _mouseX;
@@ -135,6 +145,16 @@ int Action::getAbsoluteXMouse() const
  * @return Mouse's absolute X position.
  */
 int Action::getAbsoluteYMouse() const
+{
+	return getMouseY();
+}
+
+/**
+ * Returns the Y position of the mouse cursor
+ * in logical screen coordinates
+ * @return Mouse's absolute X position.
+ */
+int Action::getMouseY() const
 {
 	if (_ev == NULL)
 		throw(Exception("bad stuff in action handling"));
