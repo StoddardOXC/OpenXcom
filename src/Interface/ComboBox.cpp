@@ -305,21 +305,13 @@ void ComboBox::setSelected(size_t sel)
  */
 void ComboBox::setDropdown(int options)
 {
-	int items = std::min(options, MAX_ITEMS);
 	int h = _button->getFont()->getHeight() + _button->getFont()->getSpacing();
-#if 0 // FIXME: stretching combobox lists to the full screen height
-	// okay we don't have access to actual logical screen now
-	// so just skip this for the time being.
-	int dy = (_game->getScreen()->getHeight() - 200) / 2;
-#else
-	int dy = 0;
-#endif
-	while (_window->getY() + items * h + VERTICAL_MARGIN * 2 > 200 + dy)
-	{
-		items--;
-	}
-
+	/* what we do here is calculate how many items fit on the screen. h is the item height */
+	int max_height_available = _popupAboveButton ? _dy + _y : 200 - _y;
+	int max_item_count = max_height_available / h - 1; // since VERTICAL_MARGIN * 2 always < h
+	int items = std::min(std::min(options, MAX_ITEMS), max_item_count);
 	int popupHeight = items * h + VERTICAL_MARGIN * 2;
+
 	int popupY = getPopupWindowY(getHeight(), getY(), popupHeight, _popupAboveButton);
 	_window->setY(popupY);
 	_window->setHeight(popupHeight);
@@ -376,10 +368,10 @@ void ComboBox::handle(Action *action, State *state)
 	_button->handle(action, state);
 	_list->handle(action, state);
 	InteractiveSurface::handle(action, state);
-	int topY = std::min(getY(), _window->getY());
-	if (_window->getVisible() && action->getType() == SDL_MOUSEBUTTONDOWN &&
-		(action->getAbsoluteXMouse() < getX() || action->getAbsoluteXMouse() >= getX() + getWidth() ||
-		 action->getAbsoluteYMouse() < topY || action->getAbsoluteYMouse() >= topY + getHeight() + _window->getHeight()))
+	int topY = std::min(_y + _dy, _window->getY() + _dy);
+	if (_window->getVisible() && action->getType() == SDL_MOUSEBUTTONDOWN
+		&& !hit(action->getMouseX(), action->getMouseY(),
+				_x + _dx, topY, _width, _height + _window->getHeight()))
 	{
 		toggle();
 	}
