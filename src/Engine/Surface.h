@@ -187,7 +187,7 @@ public:
 		}
 	}
 	/// Sets the blit offset, for use only in State::blit()
-	void setDXY(int dx, int dy) { _dx = dx; _dy = dy; }
+	virtual void setOffset(int dx, int dy);
 	/// Sets the X position of the surface.
 	virtual void setX(int x);
 	/**
