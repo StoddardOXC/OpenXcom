@@ -71,6 +71,14 @@ to the logical screen.
 
 <https://github.com/StoddardOXC/OpenXcom/tree/android-pc5>
 
+
+### Known :
+ - intro does not work
+ - cutscenes do not work
+ - inventory is broken
+ - clicks on scanner are broken (medikit probably too)
+
+
 ### How to build:
 
 `apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev zlib1g-dev`
