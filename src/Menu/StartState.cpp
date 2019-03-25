@@ -51,6 +51,11 @@ std::string StartState::error;
 StartState::StartState() : _anim(0)
 {
 	_screenMode = SC_STARTSTATE;
+	_game->setScreenMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
+
+	// set _w and _h
+	_width = _game->getScreen()->getWidth();
+	_height = _game->getScreen()->getHeight();
 
 	// Create objects
 	_thread = 0;
@@ -62,7 +67,7 @@ StartState::StartState() : _anim(0)
 	_font->loadTerminal();
 	_lang = new Language();
 
-	_text = new Text(_game->getScreen()->getWidth(), _game->getScreen()->getHeight(), 0, 0);
+	_text = new Text(_width, _height, 0, 0);
 	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
 	_timer = new Timer(150);
 
