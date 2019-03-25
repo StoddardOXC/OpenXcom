@@ -87,7 +87,11 @@ to the logical screen.
 
 Install <https://github.com/lxnt/SDL_pnglite>, it's a straightforward cmake build
 
-The rest is same as a regular linux build.
+Install <https://github.com/StoddardOXC/SDL_gfx_SDL2>, it's also a straightforward cmake build.
+
+The rest is same as a regular linux/mxe build.
+
+For MXE builds use <https://github.com/StoddardOXC/mxe>, it includes necessary dependencies.
 
 Consider adding `-DEMBED_ASSETS=ON` to the `cmake` call to make sure assets are those that are expected.
 
