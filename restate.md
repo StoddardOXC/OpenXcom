@@ -75,7 +75,6 @@ to the logical screen.
 ### Known :
  - intro does not work
  - cutscenes do not work
- - inventory is broken
  - clicks on scanner are broken (medikit probably too)
 
 
