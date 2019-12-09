@@ -11,7 +11,7 @@ OPT bool fullscreen, asyncBlit, playIntro,
 	rootWindowedMode, rawScreenShots, lazyLoadResources, backgroundMute, listVFSContents, embeddedOnly;
 
 // SDL2 scalers
-OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler, integerRatioScaling;
+OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler;
 
 OPT bool integerRatioScaling;
 

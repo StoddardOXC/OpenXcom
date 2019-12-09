@@ -74,8 +74,6 @@ GlobalManufactureState::GlobalManufactureState(bool openedFromBasescape) : _open
 	add(_txtTimeLeft, "text2", "globalManufactureMenu");
 	add(_lstManufacture, "list", "globalManufactureMenu");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "globalManufactureMenu");
 

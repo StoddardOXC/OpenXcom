@@ -40,7 +40,6 @@
 namespace OpenXcom
 {
 
-<<<<<<< HEAD
 GoToMainMenuState::GoToMainMenuState(bool updateCheck) : _updateCheck(updateCheck)
 {
 	_screenMode = SC_MAINMENU;
