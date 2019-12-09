@@ -54,8 +54,6 @@ OptionsFoldersState::OptionsFoldersState(OptionsOrigin origin) : OptionsBaseStat
 	add(_txtSaveFolderPath, "text2", "foldersMenu");
 	add(_txtConfigFolderPath, "text2", "foldersMenu");
 
-	centerAllSurfaces();
-
 	// Set up object
 	_txtDataFolder->setText(tr("STR_DATA_FOLDER"));
 	_txtUserFolder->setText(tr("STR_USER_FOLDER"));

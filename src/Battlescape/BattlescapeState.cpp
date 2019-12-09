@@ -1666,7 +1666,7 @@ void BattlescapeState::btnVisibleUnitClick(Action *action)
 		_map->getCamera()->centerOnPosition(position);
 	}
 
-	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+//	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
 #ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif

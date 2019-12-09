@@ -71,11 +71,6 @@ NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *stat
 	add(_txtMessage2, "messageWindows", "battlescape");
 	add(_txtMessage3, "messageWindows", "battlescape");
 
-	//centerAllSurfaces();
-	// FIXME: this might break
-	// since now cAS() is called
-	// after the constructor
-
 	_bg->setX(0);
 	_bg->setY(0);
 	SDL_Rect rect;

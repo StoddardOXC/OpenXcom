@@ -59,8 +59,6 @@ GeoscapeEventState::GeoscapeEventState(GeoscapeEvent *geoEvent) : _eventRule(geo
 	add(_txtMessage, "text2", "geoscapeEvent");
 	add(_btnOk, "button", "geoscapeEvent");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_window->setBackground(_game->getMod()->getSurface(_eventRule.getBackground()));
 

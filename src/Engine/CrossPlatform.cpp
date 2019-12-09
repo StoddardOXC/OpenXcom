@@ -88,7 +88,6 @@
 #include <StorageDefs.h>
 #endif
 #include "FileMap.h"
-#include "SDL2Helpers.h"
 #include "../version.h"
 
 #ifdef __ANDROID__

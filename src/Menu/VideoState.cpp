@@ -425,8 +425,6 @@ void VideoState::init()
 	int dx = _game->getScreen()->getDX();
 	int dy = _game->getScreen()->getDY();
 
-	// We can only do a fade out in 8bpp, otherwise instantly end it
-	bool fade = (_game->getScreen()->getSurface()->format->BitsPerPixel == 8);
 	const int FADE_DELAY = 45;
 	const int FADE_STEPS = 20;
 
@@ -472,7 +470,6 @@ void VideoState::init()
 
 		if (flcPlayer->wasSkipped())
 		{
-			fade = false;
 			break;
 		}
 	}
@@ -481,10 +478,6 @@ void VideoState::init()
 	{
 		delete flcPlayer;
 	}
-
-
-	const int FADE_DELAY = 45;
-	const int FADE_STEPS = 20;
 
 #ifndef __NO_MUSIC
 	{

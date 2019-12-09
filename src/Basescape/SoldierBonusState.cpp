@@ -61,8 +61,6 @@ SoldierBonusState::SoldierBonusState(Base *base, size_t soldier) : _base(base), 
 	add(_txtType, "text", "soldierBonus");
 	add(_lstBonuses, "list", "soldierBonus");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "soldierBonus");
 
