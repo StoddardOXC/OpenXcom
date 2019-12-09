@@ -102,6 +102,7 @@ public:
 #endif
 	/// Handler for clicking the De-assign All Soldiers button.
 	void btnDeassignAllSoldiersClick(Action *action);
+	void btnDeassignCraftSoldiersClick(Action *action);
 };
 
 }

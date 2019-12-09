@@ -39,6 +39,19 @@ class RuleSoldier
 {
 public:
 
+	/// Number of bits for soldier gender.
+	static constexpr int LookGenderBits = 1;
+	/// Number of bits for soldier look.
+	static constexpr int LookBaseBits = 2;
+	/// Number of bits for soldier lookVariants.
+	static constexpr int LookVariantBits = 6;
+	/// Max number of soldier lookVariant.s
+	static constexpr int LookVariantMax = (1 << LookVariantBits);
+	/// Mask for soldier lookVariants.
+	static constexpr int LookVariantMask = LookVariantMax - 1;
+	/// Mask for all possible looks types for soldier.
+	static constexpr int LookTotalMask = (1 << (LookVariantBits + LookBaseBits + LookGenderBits)) - 1;
+
 	/// Name of class used in script.
 	static constexpr const char *ScriptName = "RuleSoldier";
 	/// Register all useful function used by script.
@@ -56,6 +69,10 @@ private:
 	int _femaleFrequency, _value, _transferTime, _moraleLossWhenKilled;
 	std::vector<int> _deathSoundMale, _deathSoundFemale;
 	std::vector<int> _panicSoundMale, _panicSoundFemale, _berserkSoundMale, _berserkSoundFemale;
+	std::vector<int> _selectUnitSoundMale, _selectUnitSoundFemale;
+	std::vector<int> _startMovingSoundMale, _startMovingSoundFemale;
+	std::vector<int> _selectWeaponSoundMale, _selectWeaponSoundFemale;
+	std::vector<int> _annoyedSoundMale, _annoyedSoundFemale;
 	std::vector<SoldierNamePool*> _names;
 	std::string _armorForAvatar;
 	int _avatarOffsetX, _avatarOffsetY, _flagOffset;
@@ -66,8 +83,6 @@ private:
 	ScriptValues<RuleSoldier> _scriptValues;
 
 	void addSoldierNamePool(const std::string &namFile);
-	/// Load sound vector from YAML.
-	void loadSoundVector(const YAML::Node &node, Mod *mod, std::vector<int> &vector);
 public:
 	/// Creates a blank soldier ruleset.
 	RuleSoldier(const std::string &type);
@@ -133,6 +148,22 @@ public:
 	const std::vector<int> &getMaleBerserkSounds() const;
 	/// Gets the soldier's female berserk sounds.
 	const std::vector<int> &getFemaleBerserkSounds() const;
+	/// Gets the soldier's male "select unit" sounds.
+	const std::vector<int> &getMaleSelectUnitSounds() const { return _selectUnitSoundMale; }
+	/// Gets the soldier's female "select unit" sounds.
+	const std::vector<int> &getFemaleSelectUnitSounds() const { return _selectUnitSoundFemale; }
+	/// Gets the soldier's male "start moving" sounds.
+	const std::vector<int> &getMaleStartMovingSounds() const { return _startMovingSoundMale; }
+	/// Gets the soldier's female "start moving" sounds.
+	const std::vector<int> &getFemaleStartMovingSounds() const { return _startMovingSoundFemale; }
+	/// Gets the soldier's male "select weapon" sounds.
+	const std::vector<int> &getMaleSelectWeaponSounds() const { return _selectWeaponSoundMale; }
+	/// Gets the soldier's female "select weapon" sounds.
+	const std::vector<int> &getFemaleSelectWeaponSounds() const { return _selectWeaponSoundFemale; }
+	/// Gets the soldier's male "annoyed" sounds.
+	const std::vector<int> &getMaleAnnoyedSounds() const { return _annoyedSoundMale; }
+	/// Gets the soldier's female "annoyed" sounds.
+	const std::vector<int> &getFemaleAnnoyedSounds() const { return _annoyedSoundFemale; }
 	/// Gets the pool list for soldier names.
 	const std::vector<SoldierNamePool*> &getNames() const;
 	/// Gets the value - for score calculation.

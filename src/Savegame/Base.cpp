@@ -54,7 +54,7 @@ namespace OpenXcom
  * Initializes an empty base.
  * @param mod Pointer to mod.
  */
-Base::Base(const Mod *mod) : Target(), _mod(mod), _scientists(0), _engineers(0), _inBattlescape(false), _retaliationTarget(false)
+Base::Base(const Mod *mod) : Target(), _mod(mod), _scientists(0), _engineers(0), _inBattlescape(false), _retaliationTarget(false), _fakeUnderwater(false)
 {
 	_items = new ItemContainer();
 }
@@ -226,6 +226,9 @@ void Base::load(const YAML::Node &node, SavedGame *save, bool newGame, bool newB
 	}
 
 	_retaliationTarget = node["retaliationTarget"].as<bool>(_retaliationTarget);
+	_fakeUnderwater = node["fakeUnderwater"].as<bool>(_fakeUnderwater);
+
+	isOverlappingOrOverflowing(); // don't crash, just report in the log file...
 }
 
 /**
@@ -260,6 +263,56 @@ void Base::finishLoading(const YAML::Node &node, SavedGame *save)
 			Log(LOG_ERROR) << "Failed to load craft " << type;
 		}
 	}
+}
+
+/**
+ * Tests whether the base facilities are within the base boundaries and not overlapping.
+ * @return True if the base has a problem.
+ */
+bool Base::isOverlappingOrOverflowing()
+{
+	bool result = false;
+	BaseFacility* grid[BASE_SIZE][BASE_SIZE];
+
+	// i don't think i NEED to do this for a pointer array, but who knows what might happen on weird archaic linux distros if i don't?
+	for (int x = 0; x < BASE_SIZE; ++x)
+	{
+		for (int y = 0; y < BASE_SIZE; ++y)
+		{
+			grid[x][y] = 0;
+		}
+	}
+
+	for (std::vector<BaseFacility*>::iterator f = _facilities.begin(); f != _facilities.end(); ++f)
+	{
+		RuleBaseFacility *rules = (*f)->getRules();
+		int facilityX = (*f)->getX();
+		int facilityY = (*f)->getY();
+		int facilitySize = rules->getSize();
+
+		if (facilityX < 0 || facilityY < 0 || facilityX + (facilitySize - 1) >= BASE_SIZE || facilityY + (facilitySize - 1) >= BASE_SIZE)
+		{
+			Log(LOG_ERROR) << "Facility " << rules->getType() << " at [" << facilityX << ", " << facilityY << "] (size " << facilitySize << ") is outside of base boundaries.";
+			result = true;
+			continue;
+		}
+
+		for (int x = facilityX; x < facilityX + facilitySize; ++x)
+		{
+			for (int y = facilityY; y < facilityY + facilitySize; ++y)
+			{
+				if (grid[x][y] != 0)
+				{
+					Log(LOG_ERROR) << "Facility " << rules->getType() << " at [" << facilityX << ", " << facilityY << "] (size " << facilitySize
+						<< ") overlaps with " << grid[x][y]->getRules()->getType() << " at [" << x << ", " << y << "] (size " << grid[x][y]->getRules()->getSize() << ")";
+					result = true;
+				}
+				grid[x][y] = *f;
+			}
+		}
+	}
+
+	return result;
 }
 
 /**
@@ -299,7 +352,9 @@ YAML::Node Base::save() const
 		node["productions"].push_back((*i)->save());
 	}
 	if (_retaliationTarget)
-	node["retaliationTarget"] = _retaliationTarget;
+		node["retaliationTarget"] = _retaliationTarget;
+	if (_fakeUnderwater)
+		node["fakeUnderwater"] = _fakeUnderwater;
 	return node;
 }
 
@@ -351,6 +406,17 @@ std::vector<BaseFacility*> *Base::getFacilities()
 std::vector<Soldier*> *Base::getSoldiers()
 {
 	return &_soldiers;
+}
+
+/**
+ * Pre-calculates soldier stats with various bonuses.
+ */
+void Base::prepareSoldierStatsWithBonuses()
+{
+	for (auto soldier : _soldiers)
+	{
+		soldier->prepareStatsWithBonuses(_mod);
+	}
 }
 
 /**
@@ -422,64 +488,84 @@ void Base::setEngineers(int engineers)
  * Returns if a certain target is covered by the base's
  * radar range, taking in account the range and chance.
  * @param target Pointer to target to compare.
+ * @param alreadyDedected Was ufo already detected, `true` mean we track it without probability.
  * @return 0 - not detected, 1 - detected by conventional radar, 2 - detected by hyper-wave decoder.
  */
-int Base::detect(Target *target) const
+UfoDetection Base::detect(const Ufo *target, bool alreadyTracked) const
 {
-	int chance = 0;
-	double distance = getDistance(target) * 60.0 * (180.0 / M_PI);
+	auto distance = XcomDistance(getDistance(target));
+	auto hyperwave = false;
+	auto hyperwave_max_range = 0;
+	auto radar_max_range = 0;
+	auto radar_chance = 0;
+
 	for (std::vector<BaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
 	{
-		if ((*i)->getRules()->getRadarRange() >= distance && (*i)->getBuildTime() == 0)
+		if ((*i)->getBuildTime() != 0)
+		{
+			continue;
+		}
+		if ((*i)->getRules()->getRadarRange() >= distance)
 		{
 			int radarChance = (*i)->getRules()->getRadarChance();
 			if ((*i)->getRules()->isHyperwave())
 			{
 				if (radarChance == 100 || RNG::percent(radarChance))
 				{
-					return 2;
+					hyperwave = true;
 				}
 			}
 			else
 			{
-				chance += radarChance;
+				radar_chance += radarChance;
 			}
 		}
-	}
-	if (chance == 0) return 0;
-
-	Ufo *u = dynamic_cast<Ufo*>(target);
-	if (u != 0)
-	{
-		chance = chance * (100 + u->getVisibility()) / 100;
-	}
-
-	return RNG::percent(chance)? 1 : 0;
-}
-
-/**
- * Returns if a certain target is inside the base's
- * radar range, taking in account the positions of both.
- * @param target Pointer to target to compare.
- * @return 0 - outside radar range, 1 - inside conventional radar range, 2 - inside hyper-wave decoder range.
- */
-int Base::insideRadarRange(Target *target) const
-{
-	bool insideRange = false;
-	double distance = getDistance(target) * 60.0 * (180.0 / M_PI);
-	for (std::vector<BaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
-	{
-		if ((*i)->getRules()->getRadarRange() >= distance && (*i)->getBuildTime() == 0)
+		if ((*i)->getRules()->isHyperwave())
 		{
-			if ((*i)->getRules()->isHyperwave())
-			{
-				return 2;
-			}
-			insideRange = true;
+			hyperwave_max_range = std::max(hyperwave_max_range, (*i)->getRules()->getRadarRange());
+		}
+		else
+		{
+			radar_max_range = std::max(radar_max_range, (*i)->getRules()->getRadarRange());
 		}
 	}
 
-	return insideRange? 1 : 0;
+	auto detectionChance = 0;
+	auto detectionType = DETECTION_NONE;
+
+	if (alreadyTracked)
+	{
+		if (hyperwave)
+		{
+			detectionType = DETECTION_HYPERWAVE;
+			detectionChance = 100;
+		}
+		else if (radar_chance > 0)
+		{
+			detectionType = DETECTION_RADAR;
+			detectionChance = 100;
+		}
+	}
+	else
+	{
+		if (hyperwave)
+		{
+			detectionType = DETECTION_HYPERWAVE;
+			detectionChance = 100;
+		}
+		else if (radar_chance > 0)
+		{
+			detectionType = DETECTION_RADAR;
+			detectionChance = radar_chance * (100 + target->getVisibility()) / 100;
+		}
+	}
+
+	ModScript::DetectUfoFromBase::Output args { detectionType, detectionChance, };
+	ModScript::DetectUfoFromBase::Worker work { target, distance, alreadyTracked, radar_chance, radar_max_range, hyperwave_max_range, };
+
+	work.execute(target->getRules()->getScript<ModScript::DetectUfoFromBase>(), args);
+
+	return RNG::percent(args.getSecond()) ? (UfoDetection)args.getFirst() : DETECTION_NONE;
 }
 
 /**
@@ -593,62 +679,93 @@ int Base::getTotalEngineers() const
 }
 
 /**
-* Returns the total amount of other employees contained in the base.
-* @return Number of employees.
-*/
-int Base::getTotalOtherEmployees() const
+ * Returns the total cost of other staff & inventory contained in the base.
+ * @return Total cost.
+ */
+int Base::getTotalOtherStaffAndInventoryCost(int& staffCount, int& inventoryCount) const
 {
-	int total = 0;
-	for (std::vector<Transfer*>::const_iterator i = _transfers.begin(); i != _transfers.end(); ++i)
-	{
-		if ((*i)->getType() == TRANSFER_ITEM)
-		{
-			int salary = _mod->getItem((*i)->getItems())->getMonthlySalary();
-			if (salary != 0)
-			{
-				total += (*i)->getQuantity();
-			}
-		}
-	}
-	for (std::map<std::string, int>::const_iterator i = _items->getContents()->begin(); i != _items->getContents()->end(); ++i)
-	{
-		int salary = _mod->getItem(i->first)->getMonthlySalary();
-		if (salary != 0)
-		{
-			total += i->second;
-		}
-	}
-	return total;
-}
+	staffCount = 0;
+	inventoryCount = 0;
+	int totalCost = 0;
 
-/**
-* Returns the total cost of other employees contained
-* in the base.
-* @return Cost of employees.
-*/
-int Base::getTotalOtherEmployeeCost() const
-{
-	int total = 0;
-	for (std::vector<Transfer*>::const_iterator i = _transfers.begin(); i != _transfers.end(); ++i)
+	for (auto transfer : _transfers)
 	{
-		if ((*i)->getType() == TRANSFER_ITEM)
+		if (transfer->getType() == TRANSFER_ITEM)
 		{
-			int salary = _mod->getItem((*i)->getItems())->getMonthlySalary();
-			if (salary != 0)
+			auto ruleItem = _mod->getItem(transfer->getItems(), true);
+			if (ruleItem->getMonthlySalary() != 0)
 			{
-				total += salary * (*i)->getQuantity();
+				staffCount += transfer->getQuantity();
+				totalCost += ruleItem->getMonthlySalary() * transfer->getQuantity();
+			}
+			if (ruleItem->getMonthlyMaintenance() != 0)
+			{
+				inventoryCount += transfer->getQuantity();
+				totalCost += ruleItem->getMonthlyMaintenance() * transfer->getQuantity();
 			}
 		}
 	}
-	for (std::map<std::string, int>::const_iterator i = _items->getContents()->begin(); i != _items->getContents()->end(); ++i)
+	for (const auto& storeItem : *_items->getContents())
 	{
-		int salary = _mod->getItem(i->first)->getMonthlySalary();
-		if (salary != 0)
+		auto ruleItem = _mod->getItem(storeItem.first, true);
+		if (ruleItem->getMonthlySalary() != 0)
 		{
-			total += salary * i->second;
+			staffCount += storeItem.second;
+			totalCost += ruleItem->getMonthlySalary() * storeItem.second;
+		}
+		if (ruleItem->getMonthlyMaintenance() != 0)
+		{
+			inventoryCount += storeItem.second;
+			totalCost += ruleItem->getMonthlyMaintenance() * storeItem.second;
 		}
 	}
-	return total;
+	for (auto craft : _crafts)
+	{
+		for (const auto &craftItem : *craft->getItems()->getContents())
+		{
+			auto ruleItem = _mod->getItem(craftItem.first, true);
+			if (ruleItem->getMonthlySalary() != 0)
+			{
+				staffCount += craftItem.second;
+				totalCost += ruleItem->getMonthlySalary() * craftItem.second;
+			}
+			if (ruleItem->getMonthlyMaintenance() != 0)
+			{
+				inventoryCount += craftItem.second;
+				totalCost += ruleItem->getMonthlyMaintenance() * craftItem.second;
+			}
+		}
+		for (auto vehicle : *craft->getVehicles())
+		{
+			auto ruleItem = vehicle->getRules();
+			if (ruleItem->getMonthlySalary() != 0)
+			{
+				staffCount += 1;
+				totalCost += ruleItem->getMonthlySalary();
+			}
+			if (ruleItem->getMonthlyMaintenance() != 0)
+			{
+				inventoryCount += 1;
+				totalCost += ruleItem->getMonthlyMaintenance();
+			}
+		}
+	}
+	for (auto soldier : _soldiers)
+	{
+		auto ruleItem = _mod->getItem(soldier->getArmor()->getStoreItem(), false);
+		if (ruleItem && ruleItem->getMonthlySalary() != 0)
+		{
+			staffCount += 1;
+			totalCost += ruleItem->getMonthlySalary();
+		}
+		if (ruleItem && ruleItem->getMonthlyMaintenance() != 0)
+		{
+			inventoryCount += 1;
+			totalCost += ruleItem->getMonthlyMaintenance();
+		}
+	}
+
+	return totalCost;
 }
 
 /**
@@ -920,8 +1037,8 @@ int Base::getFreeWorkshops() const
 }
 
 /**
- * Return psilab space not in use
- * @return psilab space not in use
+ * Return psi lab space not in use
+ * @return psi lab space not in use
  */
 int Base::getFreePsiLabs() const
 {
@@ -1141,37 +1258,8 @@ int Base::getPersonnelMaintenance() const
 	}
 	total += getTotalEngineers() * _mod->getEngineerCost();
 	total += getTotalScientists() * _mod->getScientistCost();
-	total += getTotalOtherEmployeeCost(); // other employees
-	return total;
-}
-
-/**
-* Returns the total amount of monthly costs
-* for maintaining the items in the base.
-* @return Maintenance costs.
-*/
-int Base::getItemMaintenance() const
-{
-	int total = 0;
-	for (std::vector<Transfer*>::const_iterator i = _transfers.begin(); i != _transfers.end(); ++i)
-	{
-		if ((*i)->getType() == TRANSFER_ITEM)
-		{
-			int maintenance = _mod->getItem((*i)->getItems())->getMonthlyMaintenance();
-			if (maintenance != 0)
-			{
-				total += maintenance * (*i)->getQuantity();
-			}
-		}
-	}
-	for (std::map<std::string, int>::const_iterator i = _items->getContents()->begin(); i != _items->getContents()->end(); ++i)
-	{
-		int maintenance = _mod->getItem(i->first)->getMonthlyMaintenance();
-		if (maintenance != 0)
-		{
-			total += maintenance * i->second;
-		}
-	}
+	int dummy1, dummy2;
+	total += getTotalOtherStaffAndInventoryCost(dummy1, dummy2); // other staff & inventory
 	return total;
 }
 
@@ -1200,7 +1288,7 @@ int Base::getFacilityMaintenance() const
  */
 int Base::getMonthlyMaintenace() const
 {
-	return getCraftMaintenance() + getPersonnelMaintenance() + getFacilityMaintenance() + getItemMaintenance();
+	return getCraftMaintenance() + getPersonnelMaintenance() + getFacilityMaintenance();
 }
 
 /**
@@ -1488,63 +1576,24 @@ bool Base::getRetaliationTarget() const
 }
 
 /**
- * Functor to check for mind shield capability.
- */
-struct isMindShield: public std::unary_function<BaseFacility*, bool>
-{
-	/// Check isMindShield() for @a facility.
-	bool operator()(const BaseFacility *facility) const;
-};
-
-/**
- * Only fully operational facilities are checked.
- * @param facility Pointer to the facility to check.
- * @return If @a facility can act as a mind shield.
- */
-bool isMindShield::operator()(const BaseFacility *facility) const
-{
-	if (facility->getBuildTime() != 0 || facility->getDisabled())
-	{
-		// Still building this (or is temporarily disabled)
-		return false;
-	}
-	return (facility->getRules()->isMindShield());
-}
-
-/**
- * Functor to check for completed facilities.
- */
-struct isCompleted: public std::unary_function<BaseFacility*, bool>
-{
-	/// Check isCompleted() for @a facility.
-	bool operator()(const BaseFacility *facility) const;
-};
-
-/**
- * Facilities are checked for construction completion.
- * @param facility Pointer to the facility to check.
- * @return If @a facility has completed construction.
- */
-bool isCompleted::operator()(const BaseFacility *facility) const
-{
-	return (facility->getBuildTime() == 0);
-}
-
-/**
  * Calculate the detection chance of this base.
- * Big bases without mindshields are easier to detect.
+ * Big bases without mind shields are easier to detect.
  * @param difficulty The savegame difficulty.
  * @return The detection chance.
  */
 size_t Base::getDetectionChance() const
 {
-	size_t mindShields = std::count_if (_facilities.begin(), _facilities.end(), isMindShield());
+	size_t mindShields = 0;
 	size_t completedFacilities = 0;
 	for (std::vector<BaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
 	{
 		if ((*i)->getBuildTime() == 0)
 		{
 			completedFacilities += (*i)->getRules()->getSize() * (*i)->getRules()->getSize();
+			if ((*i)->getRules()->isMindShield() && !(*i)->getDisabled())
+			{
+				mindShields += (*i)->getRules()->getMindShieldPower();
+			}
 		}
 	}
 	return ((completedFacilities / 6 + 15) / (mindShields + 1));
@@ -1845,7 +1894,7 @@ std::list<std::vector<BaseFacility*>::iterator> Base::getDisconnectedFacilities(
 	BaseFacility *lastFacility = 0;
 	for (std::vector<std::pair<std::vector<BaseFacility*>::iterator, bool>*>::iterator i = facilitiesConnStates.begin(); i != facilitiesConnStates.end(); ++i)
 	{
-		// Not a connected fac.? -> push its iterator into the list!
+		// Not a connected facility? -> push its iterator into the list!
 		// Oh, and we don't want duplicates (facilities with bigger sizes like hangar)
 		if (*((*i)->first) != lastFacility && !(*i)->second) result.push_back((*i)->first);
 		lastFacility = *((*i)->first);
@@ -1923,7 +1972,7 @@ void Base::destroyFacility(std::vector<BaseFacility*>::iterator facility)
 		{
 			if ((*i)->isInPsiTraining())
 			{
-				(*i)->setPsiTraining();
+				(*i)->setPsiTraining(false);
 				--toRemove;
 			}
 		}
@@ -2072,9 +2121,9 @@ namespace
 {
 
 /**
- * Store unique values from diffrent vectors.
+ * Store unique values from different vectors.
  * @param result Vector where final data will be send.
- * @param temp Temporaly data container storing working buffer.
+ * @param temp Temporary data container storing working buffer.
  * @param data Data to add.
  */
 void aggregateUnique(std::vector<std::string> &result, std::vector<std::string> &temp, const std::vector<std::string> &data)
@@ -2145,7 +2194,7 @@ std::vector<std::string> Base::getRequireBaseFunc(const BaseFacility *skip) cons
 }
 
 /**
- * Return list of all forbiden functionality in base.
+ * Return list of all forbidden functionality in base.
  * @return List of custom IDs.
  */
 std::vector<std::string> Base::getForbiddenBaseFunc() const
@@ -2199,6 +2248,32 @@ bool Base::isMaxAllowedLimitReached(RuleBaseFacility *rule) const
 }
 
 /**
+ * Gets the base's mana recovery rate.
+ * @return Mana per day.
+ */
+int Base::getManaRecoveryPerDay() const
+{
+	int minimum = 0;
+	int maximum = 0;
+
+	for (std::vector<BaseFacility*>::const_iterator bf = _facilities.begin(); bf != _facilities.end(); ++bf)
+	{
+		if ((*bf)->getBuildTime() == 0)
+		{
+			minimum = std::min(minimum, (*bf)->getRules()->getManaRecoveryPerDay());
+			maximum = std::max(maximum, (*bf)->getRules()->getManaRecoveryPerDay());
+		}
+	}
+
+	if (maximum > 0)
+		return maximum;
+	else if (minimum < 0)
+		return minimum;
+
+	return 0;
+}
+
+/**
 * Gets the amount of additional HP healed in this base due to sick bay facilities (in absolute number).
 * @return Additional HP healed.
 */
@@ -2234,6 +2309,41 @@ float Base::getSickBayRelativeBonus() const
 	}
 
 	return result;
+}
+
+/**
+ * Removes the craft and all associations from the base (does not destroy it!).
+ * @param craft Pointer to craft.
+ * @param unload Unload craft contents before removing.
+ */
+std::vector<Craft*>::iterator Base::removeCraft(Craft *craft, bool unload)
+{
+	// Unload craft
+	if (unload)
+	{
+		craft->unload(_mod);
+	}
+
+	// Clear hangar
+	for (std::vector<BaseFacility*>::iterator f = _facilities.begin(); f != _facilities.end(); ++f)
+	{
+		if ((*f)->getCraftForDrawing() == craft)
+		{
+			(*f)->setCraftForDrawing(0);
+			break;
+		}
+	}
+
+	// Remove craft
+	std::vector<Craft*>::iterator c;
+	for (c = _crafts.begin(); c != _crafts.end(); ++c)
+	{
+		if (*c == craft)
+		{
+			return _crafts.erase(c);
+		}
+	}
+	return c;
 }
 
 }

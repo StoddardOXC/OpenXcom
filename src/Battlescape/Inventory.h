@@ -50,6 +50,7 @@ private:
 	BattleItem *_mouseOverItem;
 	int _groundOffset, _animFrame;
 	std::map<int, std::map<int, int> > _stackLevel;
+	std::vector<std::vector<char>> _occupiedSlotsCache;
 	Surface *_stunIndicator, *_woundIndicator, *_burnIndicator, *_shockIndicator;
 	NumberText *_stackNumber;
 	std::string _searchString;
@@ -66,13 +67,15 @@ private:
 	int _xBeforeDrag, _yBeforeDrag;
 	bool _dragging, _clicked;
 
-	int _depth;
+	int _depth, _groundSlotsX, _groundSlotsY;
 	RuleInventory *_inventorySlotRightHand = nullptr;
 	RuleInventory *_inventorySlotLeftHand = nullptr;
 	RuleInventory *_inventorySlotBackPack = nullptr;
 	RuleInventory *_inventorySlotBelt = nullptr;
 	RuleInventory *_inventorySlotGround = nullptr;
 
+	/// Clear all occupied slots markers.
+	std::vector<std::vector<char>>* clearOccupiedSlotsCache();
 	/// Moves an item to a specified slot.
 	void moveItem(BattleItem *item, RuleInventory *slot, int x, int y);
 	/// Gets the slot in the specified position.
@@ -89,7 +92,7 @@ public:
 	/// Gets the inventory's selected unit.
 	BattleUnit *getSelectedUnit() const;
 	/// Sets the inventory's selected unit.
-	void setSelectedUnit(BattleUnit *unit);
+	void setSelectedUnit(BattleUnit *unit, bool resetGroundOffset);
 	/// Draws the inventory.
 	void draw() override;
 	/// Draws the inventory grid.
@@ -119,7 +122,7 @@ public:
 	/// Special handling for mouse clicks.
 	void mouseClick(Action *action, State *state) override;
 	/// Unloads the selected weapon.
-	bool unload();
+	bool unload(bool quickUnload = false);
 	/// Checks whether the given item is visible with the current search string.
 	bool isInSearchString(BattleItem *item);
 	/// Arranges items on the ground.
@@ -134,7 +137,7 @@ public:
 	void showWarning(const std::string &msg);
 	/// Animate surface.
 	void animate();
-	/// Get current animation frame for invenotry.
+	/// Get current animation frame for inventory.
 	int getAnimFrame() const { return _animFrame; }
 #ifdef __MOBILE__
 	/// Start long press timer

@@ -29,10 +29,12 @@
 #include "SoldierDiary.h"
 #include "../Mod/SoldierNamePool.h"
 #include "../Mod/RuleSoldier.h"
+#include "../Mod/RuleSoldierBonus.h"
 #include "../Mod/Armor.h"
 #include "../Mod/Mod.h"
 #include "../Mod/StatString.h"
 #include "../Mod/RuleSoldierTransformation.h"
+#include "../Mod/RuleCommendations.h"
 
 namespace OpenXcom
 {
@@ -46,7 +48,7 @@ namespace OpenXcom
 Soldier::Soldier(RuleSoldier *rules, Armor *armor, int id) :
 	_id(id), _nationality(0),
 	_improvement(0), _psiStrImprovement(0), _rules(rules), _rank(RANK_ROOKIE), _craft(0),
-	_gender(GENDER_MALE), _look(LOOK_BLONDE), _lookVariant(0), _missions(0), _kills(0), _recovery(0.0f),
+	_gender(GENDER_MALE), _look(LOOK_BLONDE), _lookVariant(0), _missions(0), _kills(0), _manaMissing(0), _recovery(0.0f),
 	_recentlyPromoted(false), _psiTraining(false), _training(false), _returnToTrainingWhenHealed(false),
 	_armor(armor), _replacedArmor(0), _transformedArmor(0), _death(0), _diary(new SoldierDiary()),
 	_corpseRecovered(false)
@@ -59,6 +61,7 @@ Soldier::Soldier(RuleSoldier *rules, Armor *armor, int id) :
 		_initialStats.tu = RNG::generate(minStats.tu, maxStats.tu);
 		_initialStats.stamina = RNG::generate(minStats.stamina, maxStats.stamina);
 		_initialStats.health = RNG::generate(minStats.health, maxStats.health);
+		_initialStats.mana = RNG::generate(minStats.mana, maxStats.mana);
 		_initialStats.bravery = RNG::generate(minStats.bravery/10, maxStats.bravery/10)*10;
 		_initialStats.reactions = RNG::generate(minStats.reactions, maxStats.reactions);
 		_initialStats.firing = RNG::generate(minStats.firing, maxStats.firing);
@@ -86,7 +89,7 @@ Soldier::Soldier(RuleSoldier *rules, Armor *armor, int id) :
 			_name += " Doe";
 		}
 	}
-	_lookVariant = RNG::seedless(0, 15);
+	_lookVariant = RNG::seedless(0, RuleSoldier::LookVariantMax - 1);
 }
 
 /**
@@ -115,12 +118,22 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 	_nationality = node["nationality"].as<int>(_nationality);
 	_initialStats = node["initialStats"].as<UnitStats>(_initialStats);
 	_currentStats = node["currentStats"].as<UnitStats>(_currentStats);
+
+	// re-roll mana stats when upgrading saves
+	if (_currentStats.mana == 0 && _rules->getMaxStats().mana > 0)
+	{
+		int reroll = RNG::generate(_rules->getMinStats().mana, _rules->getMaxStats().mana);
+		_currentStats.mana = reroll;
+		_initialStats.mana = reroll;
+	}
+
 	_rank = (SoldierRank)node["rank"].as<int>();
 	_gender = (SoldierGender)node["gender"].as<int>();
 	_look = (SoldierLook)node["look"].as<int>();
 	_lookVariant = node["lookVariant"].as<int>(_lookVariant);
 	_missions = node["missions"].as<int>(_missions);
 	_kills = node["kills"].as<int>(_kills);
+	_manaMissing = node["manaMissing"].as<int>(_manaMissing);
 	_recovery = node["recovery"].as<float>(_recovery);
 	Armor *armor = mod->getArmor(node["armor"].as<std::string>());
 	if (armor == 0)
@@ -129,9 +142,9 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 	}
 	_armor = armor;
 	if (node["replacedArmor"])
-		_replacedArmor = mod->getArmor(node["replacedArmor"].as<std::string>());;
+		_replacedArmor = mod->getArmor(node["replacedArmor"].as<std::string>());
 	if (node["transformedArmor"])
-		_transformedArmor = mod->getArmor(node["transformedArmor"].as<std::string>());;
+		_transformedArmor = mod->getArmor(node["transformedArmor"].as<std::string>());
 	_psiTraining = node["psiTraining"].as<bool>(_psiTraining);
 	_training = node["training"].as<bool>(_training);
 	_returnToTrainingWhenHealed = node["returnToTrainingWhenHealed"].as<bool>(_returnToTrainingWhenHealed);
@@ -172,6 +185,7 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 	calcStatString(mod->getStatStrings(), (Options::psiStrengthEval && save->isResearched(mod->getPsiRequirements())));
 	_corpseRecovered = node["corpseRecovered"].as<bool>(_corpseRecovered);
 	_previousTransformations = node["previousTransformations"].as<std::map<std::string, int > >(_previousTransformations);
+	_transformationBonuses = node["transformationBonuses"].as<std::map<std::string, int > >(_transformationBonuses);
 	_scriptValues.load(node, shared);
 }
 
@@ -198,6 +212,8 @@ YAML::Node Soldier::save(const ScriptGlobal *shared) const
 	node["lookVariant"] = _lookVariant;
 	node["missions"] = _missions;
 	node["kills"] = _kills;
+	if (_manaMissing > 0)
+		node["manaMissing"] = _manaMissing;
 	if (_recovery > 0.0f)
 		node["recovery"] = _recovery;
 	node["armor"] = _armor->getType();
@@ -222,12 +238,17 @@ YAML::Node Soldier::save(const ScriptGlobal *shared) const
 	{
 		node["death"] = _death->save();
 	}
-	if (Options::soldierDiaries && (!_diary->getMissionIdList().empty() || !_diary->getSoldierCommendations()->empty()))
+	if (Options::soldierDiaries && (!_diary->getMissionIdList().empty() || !_diary->getSoldierCommendations()->empty() || _diary->getMonthsService() > 0))
 	{
 		node["diary"] = _diary->save();
 	}
-	node["corpseRecovered"] = _corpseRecovered;
-	node["previousTransformations"] = _previousTransformations;
+	if (_corpseRecovered)
+		node["corpseRecovered"] = _corpseRecovered;
+	if (!_previousTransformations.empty())
+		node["previousTransformations"] = _previousTransformations;
+	if (!_transformationBonuses.empty())
+		node["transformationBonuses"] = _transformationBonuses;
+
 	_scriptValues.save(node, shared);
 
 	return node;
@@ -531,7 +552,7 @@ void Soldier::setLookVariant(int lookVariant)
 
 /**
  * Returns the soldier's rules.
- * @return rulesoldier
+ * @return rule soldier
  */
 RuleSoldier *Soldier::getRules() const
 {
@@ -634,11 +655,11 @@ const std::vector<std::string> Soldier::getArmorLayers(Armor *customArmor) const
 	bool isDefined = false;
 
 	// find relevant layer
-	for (int i = 0; i <= 4; ++i)
+	for (int i = 0; i <= RuleSoldier::LookVariantBits; ++i)
 	{
 		ss.str("");
 		ss << gender;
-		ss << (int)_look + (_lookVariant & (15 >> i)) * 4;
+		ss << (int)_look + (_lookVariant & (RuleSoldier::LookVariantMask >> i)) * 4;
 		isDefined = (layoutDefinition.find(ss.str()) != layoutDefinition.end());
 		if (isDefined)
 		{
@@ -748,6 +769,40 @@ bool Soldier::canDefendBase() const
 }
 
 /**
+ * Returns the amount of missing mana.
+ * @return Missing mana.
+ */
+int Soldier::getManaMissing() const
+{
+	return _manaMissing;
+}
+
+/**
+ * Sets the amount of missing mana.
+ * @param manaMissing Missing mana.
+ */
+void Soldier::setManaMissing(int manaMissing)
+{
+	_manaMissing = std::max(manaMissing, 0);
+}
+
+/**
+ * Returns the amount of time until the soldier's mana is fully replenished.
+ * @return Number of days. -1 represents infinity.
+ */
+int Soldier::getManaRecovery(int manaRecoveryPerDay) const
+{
+	if (manaRecoveryPerDay <= 0)
+		return -1; // represents infinity
+
+	int days = _manaMissing / manaRecoveryPerDay;
+	if (_manaMissing % manaRecoveryPerDay > 0)
+		++days;
+
+	return days;
+}
+
+/**
  * Returns the amount of time until the soldier is healed.
  * @return Number of days.
  */
@@ -791,6 +846,22 @@ void Soldier::heal(float absBonus, float relBonus)
 }
 
 /**
+ * Replenishes the soldier's mana.
+ */
+void Soldier::replenishMana(int manaRecoveryPerDay)
+{
+	_manaMissing -= manaRecoveryPerDay;
+
+	if (_manaMissing < 0)
+		_manaMissing = 0;
+
+	// maximum amount of mana missing can be up to 2x the current mana pool (WITHOUT armor and bonuses!); at least 100
+	int maxThreshold = std::max(100, _currentStats.mana * 2);
+	if (_manaMissing > maxThreshold)
+		_manaMissing = maxThreshold;
+}
+
+/**
  * Returns the list of EquipmentLayoutItems of a soldier.
  * @return Pointer to the EquipmentLayoutItem list.
  */
@@ -809,7 +880,7 @@ void Soldier::trainPsi()
 
 	_improvement = _psiStrImprovement = 0;
 	// -10 days - tolerance threshold for switch from anytimePsiTraining option.
-	// If soldier has psiskill -10..-1, he was trained 20..59 days. 81.7% probability, he was trained more that 30 days.
+	// If soldier has psi skill -10..-1, he was trained 20..59 days. 81.7% probability, he was trained more that 30 days.
 	if (_currentStats.psiSkill < -10 + _rules->getMinStats().psiSkill)
 		_currentStats.psiSkill = _rules->getMinStats().psiSkill;
 	else if (_currentStats.psiSkill <= _rules->getMaxStats().psiSkill)
@@ -883,11 +954,11 @@ bool Soldier::isInPsiTraining() const
 }
 
 /**
- * toggles whether or not the unit is in psi training
+ * changes whether or not the unit is in psi training
  */
-void Soldier::setPsiTraining()
+void Soldier::setPsiTraining(bool psi)
 {
-	_psiTraining = !_psiTraining;
+	_psiTraining = psi;
 }
 
 /**
@@ -931,6 +1002,7 @@ void Soldier::die(SoldierDeath *death)
 	_training = false;
 	_returnToTrainingWhenHealed = false;
 	_recentlyPromoted = false;
+	_manaMissing = 0;
 	_recovery = 0.0f;
 	clearEquipmentLayout();
 }
@@ -1085,6 +1157,10 @@ std::map<std::string, int> &Soldier::getPreviousTransformations()
  */
 bool Soldier::isEligibleForTransformation(RuleSoldierTransformation *transformationRule)
 {
+	// rank check
+	if ((int)_rank < transformationRule->getMinRank())
+		return false;
+
 	// alive and well
 	if (!_death && !isWounded() && !transformationRule->isAllowingAliveSoldiers())
 		return false;
@@ -1133,10 +1209,27 @@ bool Soldier::isEligibleForTransformation(RuleSoldierTransformation *transformat
 		_currentStats.firing < minStats.firing ||
 		_currentStats.throwing < minStats.throwing ||
 		_currentStats.melee < minStats.melee ||
+		_currentStats.mana < minStats.mana ||
 		_currentStats.strength < minStats.strength ||
 		_currentStats.psiStrength < minStats.psiStrength ||
 		(_currentStats.psiSkill < minStats.psiSkill && minStats.psiSkill != 0)) // The != 0 is required for the "psi training at any time" option, as it sets skill to negative in training
 		return false;
+
+	// Does the soldier have the required commendations?
+	for (auto reqd_comm : transformationRule->getRequiredCommendations())
+	{
+		bool found = false;
+		for (auto comm : *_diary->getSoldierCommendations())
+		{
+			if (comm->getDecorationLevelInt() >= reqd_comm.second && comm->getType() == reqd_comm.first)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
 
 	return true;
 }
@@ -1168,11 +1261,9 @@ void Soldier::transform(const Mod *mod, RuleSoldierTransformation *transformatio
 	{
 		// a clone already has the correct soldier type, but random stats
 		// if we don't want random stats, let's copy them from the source soldier
-		if (!transformationRule->isUsingRandomStats())
-		{
-			UnitStats newStats = *sourceSoldier->getCurrentStats() + calculateStatChanges(mod, transformationRule, sourceSoldier);
-			setBothStats(&newStats);
-		}
+		UnitStats sourceStats = *sourceSoldier->getCurrentStats() + calculateStatChanges(mod, transformationRule, sourceSoldier, 0);
+		UnitStats mergedStats = UnitStats::combine(transformationRule->getRerollStats(), sourceStats, _currentStats);
+		setBothStats(&mergedStats);
 	}
 	else
 	{
@@ -1210,19 +1301,33 @@ void Soldier::transform(const Mod *mod, RuleSoldierTransformation *transformatio
 					break;
 				}
 			}
+
+			// clamp (and randomize) nationality if needed
+			{
+				const std::vector<SoldierNamePool *> &names = _rules->getNames();
+				if (!names.empty())
+				{
+					if ((size_t)_nationality >= _rules->getNames().size())
+					{
+						_nationality = RNG::generate(0, names.size() - 1);
+					}
+				}
+				else
+				{
+					_nationality = 0;
+				}
+			}
 		}
 
 		// change stats
-		if (transformationRule->isUsingRandomStats())
+		_currentStats += calculateStatChanges(mod, transformationRule, sourceSoldier, 0);
+
+		// and randomize stats where needed
 		{
 			Soldier *tmpSoldier = new Soldier(_rules, 0, _id);
-			setBothStats(tmpSoldier->getCurrentStats());
+			_currentStats = UnitStats::combine(transformationRule->getRerollStats(), _currentStats, *tmpSoldier->getCurrentStats());
 			delete tmpSoldier;
 			tmpSoldier = 0;
-		}
-		else
-		{
-			_currentStats += calculateStatChanges(mod, transformationRule, sourceSoldier);
 		}
 	}
 
@@ -1240,6 +1345,12 @@ void Soldier::transform(const Mod *mod, RuleSoldierTransformation *transformatio
 		}
 	}
 
+	// Reset performed transformations (on the destination soldier), if needed
+	if (transformationRule->getReset())
+	{
+		_previousTransformations.clear();
+	}
+
 	// Remember the performed transformation (on the source soldier)
 	auto& history = sourceSoldier->getPreviousTransformations();
 	auto it = history.find(transformationRule->getName());
@@ -1251,20 +1362,37 @@ void Soldier::transform(const Mod *mod, RuleSoldierTransformation *transformatio
 	{
 		history[transformationRule->getName()] = 1;
 	}
+
+	// Reset soldier bonuses, if needed
+	if (transformationRule->getReset())
+	{
+		_transformationBonuses.clear();
+	}
+
+	// Award a soldier bonus, if defined
+	if (!transformationRule->getSoldierBonusType().empty())
+	{
+		auto it2 = _transformationBonuses.find(transformationRule->getSoldierBonusType());
+		if (it2 != _transformationBonuses.end())
+		{
+			it2->second += 1;
+		}
+		else
+		{
+			_transformationBonuses[transformationRule->getSoldierBonusType()] = 1;
+		}
+	}
 }
 
 /**
  * Calculates the stat changes a soldier undergoes from this project
  * @param mod Pointer to the mod
+ * @param mode 0 = final, 1 = min, 2 = max
  * @return The stat changes
  */
-UnitStats Soldier::calculateStatChanges(const Mod *mod, RuleSoldierTransformation *transformationRule, Soldier *sourceSoldier)
+UnitStats Soldier::calculateStatChanges(const Mod *mod, RuleSoldierTransformation *transformationRule, Soldier *sourceSoldier, int mode)
 {
 	UnitStats statChange;
-
-	// If this project uses random stats from the produced soldier type's rules, we don't need calculations!
-	if (transformationRule->isUsingRandomStats())
-		return statChange;
 
 	UnitStats initialStats = *sourceSoldier->getInitStats();
 	UnitStats currentStats = *sourceSoldier->getCurrentStats();
@@ -1272,12 +1400,36 @@ UnitStats Soldier::calculateStatChanges(const Mod *mod, RuleSoldierTransformatio
 
 	// Flat stat changes
 	statChange += transformationRule->getFlatOverallStatChange();
+	UnitStats rnd0;
+	if (mode == 2)
+		rnd0 = UnitStats::max(transformationRule->getFlatMin(), transformationRule->getFlatMax());
+	else if (mode == 1)
+		rnd0 = UnitStats::min(transformationRule->getFlatMin(), transformationRule->getFlatMax());
+	else
+		rnd0 = UnitStats::random(transformationRule->getFlatMin(), transformationRule->getFlatMax());
+	statChange += rnd0;
 
 	// Stat changes based on current stats
 	statChange += UnitStats::percent(currentStats, transformationRule->getPercentOverallStatChange());
+	UnitStats rnd1;
+	if (mode == 2)
+		rnd1 = UnitStats::max(transformationRule->getPercentMin(), transformationRule->getPercentMax());
+	else if (mode == 1)
+		rnd1 = UnitStats::min(transformationRule->getPercentMin(), transformationRule->getPercentMax());
+	else
+		rnd1 = UnitStats::random(transformationRule->getPercentMin(), transformationRule->getPercentMax());
+	statChange += UnitStats::percent(currentStats, rnd1);
 
 	// Stat changes based on gained stats
 	statChange += UnitStats::percent(gainedStats, transformationRule->getPercentGainedStatChange());
+	UnitStats rnd2;
+	if (mode == 2)
+		rnd2 = UnitStats::max(transformationRule->getPercentGainedMin(), transformationRule->getPercentGainedMax());
+	else if (mode == 1)
+		rnd2 = UnitStats::min(transformationRule->getPercentGainedMin(), transformationRule->getPercentGainedMax());
+	else
+		rnd2 = UnitStats::random(transformationRule->getPercentGainedMin(), transformationRule->getPercentGainedMax());
+	statChange += UnitStats::percent(gainedStats, rnd2);
 
 	// round (mathematically) to whole tens
 	int sign = statChange.bravery < 0 ? -1 : 1;
@@ -1308,6 +1460,96 @@ UnitStats Soldier::calculateStatChanges(const Mod *mod, RuleSoldierTransformatio
 	}
 
 	return statChange;
+}
+
+/**
+ * Gets all the soldier bonuses
+ * @return The map of soldier bonuses
+ */
+const std::vector<const RuleSoldierBonus*> *Soldier::getBonuses(const Mod *mod)
+{
+	if (mod)
+	{
+		_bonusCache.clear();
+		auto addSorted = [&](const RuleSoldierBonus* b)
+		{
+			if (!b)
+			{
+				return;
+			}
+
+			auto sort = [](const RuleSoldierBonus* l, const RuleSoldierBonus* r){ return l->getName() < r->getName(); };
+
+			auto p = std::lower_bound(_bonusCache.begin(), _bonusCache.end(), b, sort);
+			if (p == _bonusCache.end() || *p != b)
+			{
+				_bonusCache.insert(p, b);
+			}
+		};
+
+		for (auto bonusName : _transformationBonuses)
+		{
+			auto bonusRule = mod->getSoldierBonus(bonusName.first, false);
+
+			addSorted(bonusRule);
+		}
+		for (auto commendation : *_diary->getSoldierCommendations())
+		{
+			auto bonusRule = commendation->getRule()->getSoldierBonus(commendation->getDecorationLevelInt());
+
+			addSorted(bonusRule);
+		}
+	}
+
+	return &_bonusCache;
+}
+
+/**
+ * Get pointer to current stats with soldier bonuses, but without armor bonuses.
+ */
+UnitStats *Soldier::getStatsWithSoldierBonusesOnly()
+{
+	return &_tmpStatsWithSoldierBonuses;
+}
+
+/**
+ * Get pointer to current stats with armor and soldier bonuses.
+ */
+UnitStats *Soldier::getStatsWithAllBonuses()
+{
+	return &_tmpStatsWithAllBonuses;
+}
+
+/**
+ * Pre-calculates soldier stats with various bonuses.
+ */
+bool Soldier::prepareStatsWithBonuses(const Mod *mod)
+{
+	bool hasSoldierBonus = false;
+
+	// 1. current stats
+	UnitStats tmp = _currentStats;
+
+	// 2. refresh soldier bonuses
+	auto bonuses = getBonuses(mod); // this is the only place where bonus cache is rebuilt
+
+	// 3. apply soldier bonuses
+	for (auto bonusRule : *bonuses)
+	{
+		hasSoldierBonus = true;
+		tmp += *(bonusRule->getStats());
+	}
+
+	// 4. stats with soldier bonuses, but without armor bonuses
+	_tmpStatsWithSoldierBonuses = UnitStats::obeyFixedMinimum(tmp);
+
+	// 5. apply armor bonus
+	tmp += *_armor->getStats();
+
+	// 6. stats with all bonuses
+	_tmpStatsWithAllBonuses = UnitStats::obeyFixedMinimum(tmp);
+
+	return hasSoldierBonus;
 }
 
 
@@ -1380,7 +1622,9 @@ std::string debugDisplayScript(const Soldier* so)
 		s += so->getRules()->getType();
 		s += "\" id: ";
 		s += std::to_string(so->getId());
-		s += ")";
+		s += " name: \"";
+		s += so->getName(false, 0);
+		s += "\")";
 		return s;
 	}
 	else
@@ -1409,13 +1653,15 @@ void Soldier::ScriptRegister(ScriptParserBase* parser)
 	so.add<&getLookVariantScript>("getLookVariant");
 
 
-	UnitStats::addGetStatsScript<Soldier, &Soldier::_currentStats>(so, "Stats.");
-	UnitStats::addSetStatsScript<Soldier, &Soldier::_currentStats>(so, "Stats.");
+	UnitStats::addGetStatsScript<&Soldier::_currentStats>(so, "Stats.");
+	UnitStats::addSetStatsScript<&Soldier::_currentStats>(so, "Stats.");
 
 
 	so.addFunc<getRuleSoldierScript>("getRuleSoldier");
 	so.add<&Soldier::getWoundRecoveryInt>("getWoundRecovery");
 	so.add<&Soldier::setWoundRecovery>("setWoundRecovery");
+	so.add<&Soldier::getManaMissing>("getManaMissing");
+	so.add<&Soldier::setManaMissing>("setManaMissing");
 
 
 	so.addScriptValue<&Soldier::_scriptValues>();

@@ -136,7 +136,7 @@ NewBattleState::NewBattleState() : _craft(0)
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getMod()->getSurface("BACK01.SCR"));
+	setWindowBackground(_window, "newBattleMenu");
 
 	_txtTitle->setAlign(ALIGN_CENTER);
 	_txtTitle->setBig();
@@ -414,12 +414,16 @@ void NewBattleState::initSave()
 			stats->firing		+= RNG::generate(0, 5);
 			stats->throwing		+= RNG::generate(0, 5);
 			stats->strength		+= RNG::generate(0, 5);
+			stats->mana         += RNG::generate(0, 5);
 			stats->psiStrength	+= RNG::generate(0, 5);
 			stats->melee		+= RNG::generate(0, 5);
 			stats->psiSkill		+= RNG::generate(0, 20);
 		}
 		UnitStats* stats = soldier->getCurrentStats();
 		stats->bravery = (int)ceil(stats->bravery / 10.0) * 10; // keep it a multiple of 10
+
+		// update again, could have been changed since soldier creation
+		soldier->calcStatString(mod->getStatStrings(), (Options::psiStrengthEval && save->isResearched(mod->getPsiRequirements())));
 
 		base->getSoldiers()->push_back(soldier);
 		if (i < _craft->getRules()->getSoldiers())
@@ -435,7 +439,7 @@ void NewBattleState::initSave()
 		{
 			int howMany = rule->getBattleType() == BT_AMMO ? 2 : 1;
 			base->getStorageItems()->addItem(*i, howMany);
-			if (rule->getBattleType() != BT_NONE && !rule->isFixed() && rule->getBigSprite() > -1)
+			if (rule->getBattleType() != BT_NONE && rule->isInventoryItem())
 			{
 				_craft->getItems()->addItem(*i, howMany);
 			}

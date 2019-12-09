@@ -80,7 +80,7 @@ PlaceFacilityState::PlaceFacilityState(Base *base, RuleBaseFacility *rule, BaseF
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getMod()->getSurface("BACK01.SCR"));
+	setWindowBackground(_window, "placeFacility");
 
 	_view->setTexture(_game->getMod()->getSurfaceSet("BASEBITS.PCK"));
 	_view->setBase(_base);
@@ -96,7 +96,7 @@ PlaceFacilityState::PlaceFacilityState(Base *base, RuleBaseFacility *rule, BaseF
 	_txtCost->setText(tr("STR_COST_UC"));
 
 	_numCost->setBig();
-	_numCost->setText(Unicode::formatFunding(_origFac != nullptr ? _game->getMod()->getTheBiggestRipOffEver() : _rule->getBuildCost()));
+	_numCost->setText(Unicode::formatFunding(_origFac != nullptr ? 0 : _rule->getBuildCost()));
 
 	if (_origFac == nullptr && !_rule->getBuildCostItems().empty())
 	{
@@ -107,7 +107,16 @@ PlaceFacilityState::PlaceFacilityState(Base *base, RuleBaseFacility *rule, BaseF
 		for (auto& item : _rule->getBuildCostItems())
 		{
 			// Note: `item` is of the form (item name, (cost number, refund number))
-			ss << tr(item.first) << " : " << item.second.first << std::endl;
+			size_t max = 19;
+			if (item.second.first > 9) --max;
+			if (item.second.first > 99) --max;
+			std::string name = tr(item.first);
+			if (name.length() > max)
+			{
+				name = name.substr(0, max);
+			}
+
+			ss << name << ": " << item.second.first << std::endl;
 		}
 		_numResources->setText(ss.str());
 	}
@@ -161,11 +170,6 @@ void PlaceFacilityState::viewClick(Action *)
 		{
 			_game->pushState(new ErrorMessageState(tr("STR_CANNOT_BUILD_HERE"), _palette, _game->getMod()->getInterface("placeFacility")->getElement("errorMessage")->color, "BACK01.SCR", _game->getMod()->getInterface("placeFacility")->getElement("errorPalette")->color));
 		}
-		else if (_game->getSavedGame()->getFunds() < _game->getMod()->getTheBiggestRipOffEver())
-		{
-			_game->popState();
-			_game->pushState(new ErrorMessageState(tr("STR_NOT_ENOUGH_MONEY"), _palette, _game->getMod()->getInterface("placeFacility")->getElement("errorMessage")->color, "BACK01.SCR", _game->getMod()->getInterface("placeFacility")->getElement("errorPalette")->color));
-		}
 		else
 		{
 			_origFac->setX(_view->getGridX());
@@ -178,7 +182,6 @@ void PlaceFacilityState::viewClick(Action *)
 				if (_origFac->getBuildTime() > 0 && _view->isQueuedBuilding(_rule)) _origFac->setBuildTime(INT_MAX);
 				_view->reCalcQueuedBuildings();
 			}
-			_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() - _game->getMod()->getTheBiggestRipOffEver());
 			_game->popState();
 		}
 	}
@@ -247,7 +250,7 @@ void PlaceFacilityState::viewClick(Action *)
 
 					if (checkFacility->getBuildTime() > checkFacility->getRules()->getBuildTime())
 					{
-						// Give full refund if this is an unstarted, queued build.
+						// Give full refund if this is a (not yet started) queued build.
 						_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() + checkFacility->getRules()->getBuildCost());
 						for (std::map<std::string, std::pair<int, int> >::const_iterator j = itemCost.begin(); j != itemCost.end(); ++j)
 						{

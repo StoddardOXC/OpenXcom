@@ -37,7 +37,7 @@ RuleCraft::RuleCraft(const std::string &type) :
 	_keepCraftAfterFailedMission(false), _allowLanding(true), _spacecraft(false), _notifyWhenRefueled(false), _autoPatrol(false),
 	_listOrder(0), _maxItems(0), _maxAltitude(-1), _stats(),
 	_shieldRechargeAtBase(1000),
-	_mapVisible(true)
+	_mapVisible(true), _forceShowInMonthlyCosts(false)
 {
 	for (int i = 0; i < WeaponMax; ++ i)
 	{
@@ -83,7 +83,13 @@ void RuleCraft::load(const YAML::Node &node, Mod *mod, int listOrder)
 
 	if (node["sprite"])
 	{
-		// this is an offset in BASEBITS.PCK, and two in INTICONS.PCK
+		// used in
+		// Surface set (baseOffset):
+		//   BASEBITS.PCK (33)
+		//   INTICON.PCK (11)
+		//   INTICON.PCK (0)
+		//
+		// Final index in surfaceset is `baseOffset + sprite + (sprite > 4 ? modOffset : 0)`
 		_sprite = mod->getOffset(node["sprite"].as<int>(_sprite), 4);
 	}
 	_stats.load(node);
@@ -157,6 +163,7 @@ void RuleCraft::load(const YAML::Node &node, Mod *mod, int listOrder)
 	}
 	_shieldRechargeAtBase = node["shieldRechargedAtBase"].as<int>(_shieldRechargeAtBase);
 	_mapVisible = node["mapVisible"].as<bool>(_mapVisible);
+	_forceShowInMonthlyCosts = node["forceShowInMonthlyCosts"].as<bool>(_forceShowInMonthlyCosts);
 }
 
 /**
@@ -558,6 +565,15 @@ int RuleCraft::getShieldRechargeAtBase() const
 bool RuleCraft::isMapVisible() const
 {
 	return _mapVisible;
+}
+
+/**
+ * Gets whether or not the craft type should be displayed in Monthly Costs even if not present in the base.
+ * @return visible or not?
+ */
+bool RuleCraft::forceShowInMonthlyCosts() const
+{
+	return _forceShowInMonthlyCosts;
 }
 
 /**

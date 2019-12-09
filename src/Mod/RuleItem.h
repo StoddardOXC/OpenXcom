@@ -30,7 +30,7 @@ namespace OpenXcom
 {
 
 enum BattleType { BT_NONE, BT_FIREARM, BT_AMMO, BT_MELEE, BT_GRENADE, BT_PROXIMITYGRENADE, BT_MEDIKIT, BT_SCANNER, BT_MINDPROBE, BT_PSIAMP, BT_FLARE, BT_CORPSE };
-enum BattleFuseType { BFT_NONE = -3, BFT_INSTANT = -2, BFT_SET = -1, BFT_FIX_MIN = 0, BFT_FIX_MAX = 24 };
+enum BattleFuseType { BFT_NONE = -3, BFT_INSTANT = -2, BFT_SET = -1, BFT_FIX_MIN = 0, BFT_FIX_MAX = 64 };
 enum BattleMediKitType { BMT_NORMAL = 0, BMT_HEAL = 1, BMT_STIMULANT = 2, BMT_PAINKILLER = 3 };
 enum ExperienceTrainingMode {
 	ETM_DEFAULT,
@@ -64,14 +64,15 @@ struct RuleItemUseCost
 	int Morale;
 	int Health;
 	int Stun;
+	int Mana;
 
 	/// Default constructor.
-	RuleItemUseCost() : Time(0), Energy(0), Morale(0), Health(0), Stun(0)
+	RuleItemUseCost() : Time(0), Energy(0), Morale(0), Health(0), Stun(0), Mana(0)
 	{
 
 	}
 	/// Create new cost with one value for time units and another for rest.
-	RuleItemUseCost(int tu, int rest = 0) : Time(tu), Energy(rest), Morale(rest), Health(rest), Stun(rest)
+	RuleItemUseCost(int tu, int rest = 0) : Time(tu), Energy(rest), Morale(rest), Health(rest), Stun(rest), Mana(rest)
 	{
 
 	}
@@ -84,6 +85,7 @@ struct RuleItemUseCost
 		Morale += cost.Morale;
 		Health += cost.Health;
 		Stun += cost.Stun;
+		Mana += cost.Mana;
 		return *this;
 	}
 };
@@ -126,7 +128,12 @@ class RuleItem
 public:
 	/// Maximum number of ammo slots on weapon.
 	static const int AmmoSlotMax = 4;
+	/// Special ammo slot that represent usage of weapon itself as ammo.
+	static const int AmmoSlotSelfUse = -1;
 	static const int MedikitSlots = 3;
+
+	/// Load ammo slot with checking correct range.
+	static void loadAmmoSlotChecked(int& result, const YAML::Node& node, const std::string& parentName);
 
 private:
 	std::string _type, _name, _nameAsAmmo; // two types of objects can have the same name
@@ -160,6 +167,7 @@ private:
 	std::vector<int> _psiMissSound;
 	int _psiMissAnimation;
 	int _power;
+	bool _hidePower;
 	float _powerRangeReduction;
 	float _powerRangeThreshold;
 	std::vector<std::string> _compatibleAmmo[AmmoSlotMax];
@@ -174,29 +182,34 @@ private:
 	RuleItemFuseTrigger _fuseTriggerEvents;
 	bool _hiddenOnMinimap;
 	std::string _psiAttackName, _primeActionName, _unprimeActionName, _primeActionMessage, _unprimeActionMessage;
-	bool _twoHanded, _blockBothHands, _fixedWeapon, _fixedWeaponShow, _allowSelfHeal, _isConsumable, _isFireExtinguisher, _isExplodingInHands, _specialUseEmptyHand;
+	bool _twoHanded, _blockBothHands, _fixedWeapon, _fixedWeaponShow, _isConsumable, _isFireExtinguisher, _isExplodingInHands, _specialUseEmptyHand;
 	std::string _defaultInventorySlot;
+	int _defaultInvSlotX, _defaultInvSlotY;
 	std::vector<std::string> _supportedInventorySections;
 	int _waypoints, _invWidth, _invHeight;
 	int _painKiller, _heal, _stimulant;
 	BattleMediKitType _medikitType;
+	bool _medikitTargetSelf, _medikitTargetImmune;
+	int _medikitTargetMatrix;
 	std::string _medikitBackground;
-	int _woundRecovery, _healthRecovery, _stunRecovery, _energyRecovery, _moraleRecovery, _painKillerRecovery;
+	int _woundRecovery, _healthRecovery, _stunRecovery, _energyRecovery, _manaRecovery, _moraleRecovery, _painKillerRecovery;
 	int _recoveryPoints;
 	int _armor;
 	int _turretType;
 	int _aiUseDelay, _aiMeleeHitCount;
-	bool _recover, _recoverCorpse, _ignoreInBaseDefense, _liveAlien;
+	bool _recover, _recoverCorpse, _ignoreInBaseDefense, _ignoreInCraftEquip, _liveAlien;
 	int _liveAlienPrisonType;
 	int _attraction;
 	RuleItemUseCost _flatUse, _flatThrow, _flatPrime, _flatUnprime;
 	bool _arcingShot;
 	ExperienceTrainingMode _experienceTrainingMode;
+	int _manaExperience;
 	int _listOrder, _maxRange, _minRange, _dropoff, _bulletSpeed, _explosionSpeed, _shotgunPellets;
 	int _shotgunBehaviorType, _shotgunSpread, _shotgunChoke;
+	std::map<std::string, std::string> _zombieUnitByArmorMale, _zombieUnitByArmorFemale, _zombieUnitByType;
 	std::string _zombieUnit, _spawnUnit;
 	int _spawnUnitFaction;
-	bool _LOSRequired, _underwaterOnly, _landOnly, _psiReqiured;
+	bool _LOSRequired, _underwaterOnly, _landOnly, _psiReqiured, _manaRequired;
 	int _meleePower, _specialType, _vaporColor, _vaporDensity, _vaporProbability;
 	std::vector<int> _customItemPreviewIndex;
 	int _kneelBonus, _oneHandedPenalty;
@@ -220,8 +233,6 @@ private:
 	void loadPercent(RuleItemUseCost& a, const YAML::Node& node, const std::string& name) const;
 	/// Load RuleItemAction from yaml.
 	void loadConfAction(RuleItemAction& a, const YAML::Node& node, const std::string& name) const;
-	/// Load sound vector from YAML.
-	void loadSoundVector(const YAML::Node &node, Mod *mod, std::vector<int> &vector);
 	/// Gets a random sound from a given vector.
 	int getRandomSound(const std::vector<int> &vector, int defaultValue = -1) const;
 	/// Load RuleItemFuseTrigger from yaml.
@@ -294,6 +305,8 @@ public:
 	bool getFixedShow() const;
 	/// Get name of the default inventory slot.
 	const std::string &getDefaultInventorySlot() const;
+	int getDefaultInventorySlotX() const { return _defaultInvSlotX; }
+	int getDefaultInventorySlotY() const { return _defaultInvSlotY; }
 	/// Gets the item's supported inventory sections.
 	const std::vector<std::string> &getSupportedInventorySections() const;
 	/// Checks if the item can be placed into a given inventory section.
@@ -350,6 +363,8 @@ public:
 
 	/// Gets the item's power.
 	int getPower() const;
+	/// Should the item's power be displayed in Ufopedia or not?
+	bool getHidePower() const { return _hidePower; }
 	/// Get additional power from unit statistics
 	int getPowerBonus(const BattleUnit *unit) const;
 	const RuleStatBonus *getDamageBonusRaw() const { return &_damageBonus; }
@@ -499,12 +514,24 @@ public:
 	int getEnergyRecovery() const;
 	/// Gets the medikit stun recovered per shot.
 	int getStunRecovery() const;
+	/// Gets the medikit mana recovered per shot.
+	int getManaRecovery() const { return _manaRecovery; }
 	/// Gets the medikit morale recovered per shot.
 	int getMoraleRecovery() const;
 	/// Gets the medikit morale recovered based on missing health.
 	float getPainKillerRecovery() const;
-	/// Gets the medikit ability to self heal.
-	bool getAllowSelfHeal() const;
+	/// Gets the medikit's allowed targets.
+	bool getAllowTargetSelf() const { return _medikitTargetSelf; }
+	bool getAllowTargetImmune() const { return _medikitTargetImmune; }
+	bool getAllowTargetGround() const { return _medikitTargetMatrix & 21; } // 1 + 4 + 16
+	bool getAllowTargetStanding() const { return _medikitTargetMatrix & 42; } // 2 + 8 + 32
+	bool getAllowTargetFriendGround() const { return _medikitTargetMatrix & 1; }
+	bool getAllowTargetFriendStanding() const { return _medikitTargetMatrix & 2; }
+	bool getAllowTargetNeutralGround() const { return _medikitTargetMatrix & 4; }
+	bool getAllowTargetNeutralStanding() const { return _medikitTargetMatrix & 8; }
+	bool getAllowTargetHostileGround() const { return _medikitTargetMatrix & 16; }
+	bool getAllowTargetHostileStanding() const { return _medikitTargetMatrix & 32; }
+	int getMedikitTargetMatrixRaw() const { return _medikitTargetMatrix; }
 	/// Is this (medikit-type & items with prime) item consumable?
 	bool isConsumable() const;
 	/// Does this item extinguish fire?
@@ -523,12 +550,18 @@ public:
 	int getRecoveryPoints() const;
 	/// Gets the item's armor.
 	int getArmor() const;
+	/// Check if item is normal inventory item.
+	bool isInventoryItem() const;
+	/// Checks if item have some use in battlescape.
+	bool isUsefulBattlescapeItem() const;
 	/// Gets the item's recoverability.
 	bool isRecoverable() const;
 	/// Gets the corpse item's recoverability.
 	bool isCorpseRecoverable() const;
 	/// Checks if the item can be equipped in base defense mission.
 	bool canBeEquippedBeforeBaseDefense() const;
+	/// Checks if the item can be equipped to craft inventory.
+	bool canBeEquippedToCraftInventory() const;
 	/// Gets the item's turret type.
 	int getTurretType() const;
 	/// Gets first turn when AI can use item.
@@ -544,6 +577,8 @@ public:
 	bool getArcingShot() const;
 	/// Which experience training mode to use for this weapon?
 	ExperienceTrainingMode getExperienceTrainingMode() const;
+	/// How much mana experience does this weapon provide?
+	int getManaExperience() const { return _manaExperience; }
 	/// How much do aliens want this thing?
 	int getAttraction() const;
 	/// Get the list weight for this item.
@@ -587,7 +622,10 @@ public:
 	/// Get the shotgun choke value.
 	int getShotgunChoke() const;
 	/// Gets the weapon's zombie unit.
-	const std::string &getZombieUnit() const;
+	const std::string &getZombieUnit(const BattleUnit* victim) const;
+	const std::map<std::string, std::string> &getZombieUnitByArmorMaleRaw() const { return _zombieUnitByArmorMale; }
+	const std::map<std::string, std::string> &getZombieUnitByArmorFemaleRaw() const { return _zombieUnitByArmorFemale; }
+	const std::map<std::string, std::string> &getZombieUnitByTypeRaw() const { return _zombieUnitByType; }
 	/// Gets the weapon's spawn unit.
 	const std::string &getSpawnUnit() const;
 	/// Gets which faction the spawned unit should have.
@@ -600,6 +638,8 @@ public:
 	bool isLandOnly() const;
 	/// Is this item require unit with psi skill to use it?
 	bool isPsiRequired() const;
+	/// Does this item need mana to operate?
+	bool isManaRequired() const;
 	/// Get the associated special type of this item.
 	int getSpecialType() const;
 	/// Get the color offset to use for the vapor trail.

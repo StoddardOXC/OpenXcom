@@ -37,6 +37,7 @@
 #include "../Mod/RuleCraft.h"
 #include "../Mod/RuleInterface.h"
 #include "../Mod/RuleItem.h"
+#include "../Mod/RuleSoldierBonus.h"
 #include "../Mod/RuleUfo.h"
 #include "../Savegame/SavedGame.h"
 #include "../fmath.h"
@@ -57,6 +58,7 @@ const std::map<std::string, std::string> StatsForNerdsState::translationMap =
 	{ "bravery", "STR_BRAVERY" },
 	{ "firing", "STR_FIRING_ACCURACY" },
 	{ "health", "STR_HEALTH" },
+	{ "mana", "STR_MANA_POOL" },
 	{ "tu", "STR_TIME_UNITS" },
 	{ "reactions", "STR_REACTIONS" },
 	{ "stamina", "STR_STAMINA" },
@@ -69,12 +71,14 @@ const std::map<std::string, std::string> StatsForNerdsState::translationMap =
 	{ "fatalWounds", "STR_FATAL_WOUNDS" },
 
 	{ "healthCurrent", "STR_HEALTH_CURRENT" }, // new, current HP (i.e. not max HP)
+	{ "manaCurrent", "STR_MANA_CURRENT" },
 	{ "tuCurrent", "STR_TIME_UNITS_CURRENT" }, // new
 	{ "energyCurrent", "STR_ENERGY" },
 	{ "moraleCurrent", "STR_MORALE" },
 	{ "stunCurrent", "STR_STUN_LEVEL_CURRENT" }, // new
 
 	{ "healthNormalized", "STR_HEALTH_NORMALIZED" }, // new, current HP normalized to [0, 1] interval
+	{ "manaNormalized", "STR_MANA_NORMALIZED" },
 	{ "tuNormalized", "STR_TIME_UNITS_NORMALIZED" }, // new
 	{ "energyNormalized", "STR_ENERGY_NORMALIZED" }, // new
 	{ "moraleNormalized", "STR_MORALE_NORMALIZED" }, // new
@@ -86,12 +90,12 @@ const std::map<std::string, std::string> StatsForNerdsState::translationMap =
 /**
  * Initializes all the elements on the UI.
  */
-StatsForNerdsState::StatsForNerdsState(const ArticleDefinition *article, size_t currentDetailIndex, bool debug, bool ids, bool defaults) : _counter(0), _indent(false)
+StatsForNerdsState::StatsForNerdsState(std::shared_ptr<ArticleCommonState> state, bool debug, bool ids, bool defaults) : _state{ std::move(state) }, _counter(0), _indent(false)
 {
+	auto article = _state->getCurrentArticle();
 	_typeId = article->getType();
 	_topicId = article->id;
 	_mainArticle = true;
-	_currentDetailIndex = currentDetailIndex;
 
 	buildUI(debug, ids, defaults);
 }
@@ -104,7 +108,6 @@ StatsForNerdsState::StatsForNerdsState(const UfopaediaTypeId typeId, const std::
 	_typeId = typeId;
 	_topicId = topicId;
 	_mainArticle = false;
-	_currentDetailIndex = 0; // dummy
 
 	buildUI(debug, ids, defaults);
 }
@@ -151,7 +154,7 @@ void StatsForNerdsState::buildUI(bool debug, bool ids, bool defaults)
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getMod()->getSurface("BACK05.SCR"));
+	setWindowBackground(_window, "statsForNerds");
 
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
@@ -254,7 +257,7 @@ void StatsForNerdsState::cbxAmmoSelect(Action *)
 
 
 /**
- * Refresh the displayed data including/exluding the raw IDs.
+ * Refresh the displayed data including/excluding the raw IDs.
  * @param action Pointer to an action.
  */
 void StatsForNerdsState::btnRefreshClick(Action *)
@@ -289,7 +292,7 @@ void StatsForNerdsState::btnOkClick(Action *)
  */
 void StatsForNerdsState::btnPrevClick(Action *)
 {
-	Ufopaedia::prevDetail(_game, _currentDetailIndex, _btnIncludeDebug->getPressed(), _btnIncludeIds->getPressed(), _btnIncludeDefaults->getPressed());
+	Ufopaedia::prevDetail(_game, _state, _btnIncludeDebug->getPressed(), _btnIncludeIds->getPressed(), _btnIncludeDefaults->getPressed());
 }
 
 /**
@@ -298,7 +301,7 @@ void StatsForNerdsState::btnPrevClick(Action *)
  */
 void StatsForNerdsState::btnNextClick(Action *)
 {
-	Ufopaedia::nextDetail(_game, _currentDetailIndex, _btnIncludeDebug->getPressed(), _btnIncludeIds->getPressed(), _btnIncludeDefaults->getPressed());
+	Ufopaedia::nextDetail(_game, _state, _btnIncludeDebug->getPressed(), _btnIncludeIds->getPressed(), _btnIncludeDefaults->getPressed());
 }
 
 /**
@@ -353,6 +356,8 @@ void StatsForNerdsState::initLists()
 	case UFOPAEDIA_TYPE_TFTD_USO:
 		initUfoList();
 		break;
+	case UFOPAEDIA_TYPE_UNKNOWN:
+		initSoldierBonusList();
 	default:
 		break;
 	}
@@ -1078,7 +1083,8 @@ void StatsForNerdsState::addRuleItemUseCostFull(std::ostringstream &ss, const Ru
 		value.Energy == defaultvalue.Energy &&
 		value.Morale == defaultvalue.Morale &&
 		value.Health == defaultvalue.Health &&
-		value.Stun == defaultvalue.Stun)
+		value.Stun == defaultvalue.Stun &&
+		value.Mana == defaultvalue.Mana)
 	{
 		isDefault = true;
 	}
@@ -1127,6 +1133,14 @@ void StatsForNerdsState::addRuleItemUseCostFull(std::ostringstream &ss, const Ru
 		ss << tr("STR_COST_STUN") << ": ";
 		addBoolOrInteger(ss, value.Stun, isFlatAttribute);
 		addPercentageSignOrNothing(ss, formatBy.Stun, smartFormat);
+		isFirst = false;
+	}
+	if (value.Mana != defaultvalue.Mana || _showDefaults)
+	{
+		if (!isFirst) ss << ", ";
+		ss << tr("STR_COST_MANA") << ": ";
+		addBoolOrInteger(ss, value.Mana, isFlatAttribute);
+		addPercentageSignOrNothing(ss, formatBy.Mana, smartFormat);
 		isFirst = false;
 	}
 	_lstRawData->addRow(2, trp(propertyName).c_str(), ss.str().c_str());
@@ -1262,7 +1276,7 @@ void StatsForNerdsState::addRuleStatBonus(std::ostringstream &ss, const RuleStat
 				{
 					ss << numberAbs * 1;
 				}
-				if (item.first == "flatHundred")
+				else if (item.first == "flatHundred")
 				{
 					ss << numberAbs * pow(100, power);
 				}
@@ -1301,7 +1315,7 @@ void StatsForNerdsState::addSpriteResourcePath(std::ostringstream &ss, Mod *mod,
 		for (auto extraSprite : i->second)
 		{
 			// strip mod offset from the in-game ID
-			int originalSpriteId = resourceId - (extraSprite->getModIndex());
+			int originalSpriteId = resourceId - (extraSprite->getModOwner()->offset);
 
 			auto mapOfSprites = extraSprite->getSprites();
 			auto individualSprite = mapOfSprites->find(originalSpriteId);
@@ -1309,7 +1323,7 @@ void StatsForNerdsState::addSpriteResourcePath(std::ostringstream &ss, Mod *mod,
 			{
 				std::ostringstream numbers;
 				resetStream(numbers);
-				numbers << "  " << originalSpriteId << " + " << extraSprite->getModIndex();
+				numbers << "  " << originalSpriteId << " + " << extraSprite->getModOwner()->offset;
 
 				resetStream(ss);
 				ss << individualSprite->second;
@@ -1342,7 +1356,7 @@ void StatsForNerdsState::addSoundVectorResourcePaths(std::ostringstream &ss, Mod
 			for (auto resourceId : resourceIds)
 			{
 				// strip mod offset from the in-game ID
-				int originalSoundId = resourceId - (resourceSet.second->getModIndex());
+				int originalSoundId = resourceId - (resourceSet.second->getModOwner()->offset);
 
 				auto mapOfSounds = resourceSet.second->getSounds();
 				auto individualSound = mapOfSounds->find(originalSoundId);
@@ -1350,7 +1364,7 @@ void StatsForNerdsState::addSoundVectorResourcePaths(std::ostringstream &ss, Mod
 				{
 					std::ostringstream numbers;
 					resetStream(numbers);
-					numbers << "  " << originalSoundId << " + " << resourceSet.second->getModIndex();
+					numbers << "  " << originalSoundId << " + " << resourceSet.second->getModOwner()->offset;
 
 					resetStream(ss);
 					ss << individualSound->second;
@@ -1402,10 +1416,12 @@ void StatsForNerdsState::initItemList()
 		_txtTitle->setAlign(ALIGN_LEFT);
 	}
 
+	const auto itemBattleType = itemRule->getBattleType();
 	std::ostringstream ss;
 
-	addBattleType(ss, itemRule->getBattleType(), "battleType");
+	addBattleType(ss, itemBattleType, "battleType");
 	addExperienceTrainingMode(ss, itemRule->getExperienceTrainingMode(), "experienceTrainingMode");
+	addInteger(ss, itemRule->getManaExperience(), "manaExperience");
 	addBoolean(ss, itemRule->getArcingShot(), "arcingShot");
 	addBoolean(ss, itemRule->isFireExtinguisher(), "isFireExtinguisher");
 	addInteger(ss, itemRule->getWaypoints(), "waypoints");
@@ -1418,19 +1434,20 @@ void StatsForNerdsState::initItemList()
 
 	addBoolean(ss, itemRule->isWaterOnly(), "underwaterOnly");
 	addBoolean(ss, itemRule->isLandOnly(), "landOnly");
-	int psiRequiredDefault = itemRule->getBattleType() == BT_PSIAMP ? true : false;
+	int psiRequiredDefault = itemBattleType == BT_PSIAMP ? true : false;
 	addBoolean(ss, itemRule->isPsiRequired(), "psiRequired", psiRequiredDefault);
+	addBoolean(ss, itemRule->isManaRequired(), "manaRequired");
 	addBoolean(ss, itemRule->isLOSRequired(), "LOSRequired");
 
-	if (itemRule->getBattleType() == BT_FIREARM
-		|| itemRule->getBattleType() == BT_GRENADE
-		|| itemRule->getBattleType() == BT_PROXIMITYGRENADE
-		|| itemRule->getBattleType() == BT_FLARE
+	if (itemBattleType == BT_FIREARM
+		|| itemBattleType == BT_GRENADE
+		|| itemBattleType == BT_PROXIMITYGRENADE
+		|| itemBattleType == BT_FLARE
 		|| _showDebug)
 	{
 		addIntegerPercent(ss, itemRule->getNoLOSAccuracyPenalty(mod), "noLOSAccuracyPenalty", -1); // not raw!
 	}
-	if (itemRule->getBattleType() == BT_FIREARM || _showDebug)
+	if (itemBattleType == BT_FIREARM || _showDebug)
 	{
 		addIntegerPercent(ss, itemRule->getKneelBonus(mod), "kneelBonus", 115); // not raw!
 	}
@@ -1442,11 +1459,11 @@ void StatsForNerdsState::initItemList()
 
 	addInteger(ss, itemRule->getMinRange(), "minRange");
 	addInteger(ss, itemRule->getMaxRange(), "maxRange", 200);
-	int aimRangeDefault = itemRule->getBattleType() == BT_PSIAMP ? 0 : 200;
+	int aimRangeDefault = itemBattleType == BT_PSIAMP ? 0 : 200;
 	addInteger(ss, itemRule->getAimRange(), "aimRange", aimRangeDefault);
 	addInteger(ss, itemRule->getAutoRange(), "autoRange", 7);
 	addInteger(ss, itemRule->getSnapRange(), "snapRange", 15);
-	int dropoffDefault = itemRule->getBattleType() == BT_PSIAMP ? 1 : 2;
+	int dropoffDefault = itemBattleType == BT_PSIAMP ? 1 : 2;
 	addInteger(ss, itemRule->getDropoff(), "dropoff", dropoffDefault);
 
 	addRuleStatBonus(ss, *itemRule->getAccuracyMultiplierRaw(), "accuracyMultiplier");
@@ -1463,14 +1480,14 @@ void StatsForNerdsState::initItemList()
 
 	addSingleString(ss, itemRule->getPsiAttackName(), "psiAttackName");
 	addIntegerPercent(ss, itemRule->getAccuracyUse(), "accuracyUse");
-	if (itemRule->getBattleType() == BT_PSIAMP || _showDebug)
+	if (itemBattleType == BT_PSIAMP || _showDebug)
 	{
 		addIntegerPercent(ss, itemRule->getAccuracyMind(), "accuracyMindControl");
 		addIntegerPercent(ss, itemRule->getAccuracyPanic(), "accuracyPanic", 20);
 	}
-	int tuUseDefault = (itemRule->getBattleType() == BT_PSIAMP/* && itemRule->getPsiAttackName().empty()*/) ? 0 : 25;
+	int tuUseDefault = (itemBattleType == BT_PSIAMP/* && itemRule->getPsiAttackName().empty()*/) ? 0 : 25;
 	addRuleItemUseCostFull(ss, itemRule->getCostUse(), "costUse", RuleItemUseCost(tuUseDefault), true, itemRule->getFlatUse());
-	if (itemRule->getBattleType() == BT_PSIAMP || _showDebug)
+	if (itemBattleType == BT_PSIAMP || _showDebug)
 	{
 		// using flatUse! there are no flatMindcontrol and flatPanic
 		// always show! as if default was 0 instead of 25
@@ -1493,7 +1510,7 @@ void StatsForNerdsState::initItemList()
 	addRuleItemUseCostFull(ss, itemRule->getCostPrime(), "costPrime", RuleItemUseCost(50), true, itemRule->getFlatPrime());
 	addRuleItemUseCostFull(ss, itemRule->getCostUnprime(), "costUnprime", RuleItemUseCost(25), true, itemRule->getFlatUnprime());
 
-	if ((mod->getEnableCloseQuartersCombat() && itemRule->getBattleType() == BT_FIREARM) || _showDebug)
+	if ((mod->getEnableCloseQuartersCombat() && itemBattleType == BT_FIREARM) || _showDebug)
 	{
 		addRuleStatBonus(ss, *itemRule->getCloseQuartersMultiplierRaw(), "closeQuartersMultiplier");
 		addIntegerPercent(ss, itemRule->getAccuracyCloseQuarters(mod), "accuracyCloseQuarters", 100); // not raw!
@@ -1507,14 +1524,14 @@ void StatsForNerdsState::initItemList()
 			ItemDamageType damageTypeDefault = DT_NONE;
 			if (rule->ResistType == DT_NONE)
 			{
-				if (itemRule->getBattleType() == BT_FIREARM || itemRule->getBattleType() == BT_AMMO || itemRule->getBattleType() == BT_MELEE)
+				if (itemBattleType == BT_FIREARM || itemBattleType == BT_AMMO || itemBattleType == BT_MELEE)
 				{
 					if (itemRule->getClipSize() != 0)
 					{
 						damageTypeDefault = DAMAGE_TYPES;
 					}
 				}
-				else if (itemRule->getBattleType() == BT_PSIAMP)
+				else if (itemBattleType == BT_PSIAMP)
 				{
 					if (!itemRule->getPsiAttackName().empty())
 					{
@@ -1589,6 +1606,9 @@ void StatsForNerdsState::initItemList()
 		addFloatAsPercentage(ss, rule->ToItem, "ToItem", mod->getDamageType(rule->ResistType)->ToItem);
 		addBoolean(ss, rule->RandomItem, "RandomItem", mod->getDamageType(rule->ResistType)->RandomItem);
 
+		addFloatAsPercentage(ss, rule->ToMana, "ToMana", mod->getDamageType(rule->ResistType)->ToMana);
+		addBoolean(ss, rule->RandomMana, "RandomMana", mod->getDamageType(rule->ResistType)->RandomMana);
+
 		addFloatAsPercentage(ss, rule->ToTile, "ToTile", mod->getDamageType(rule->ResistType)->ToTile);
 		addBoolean(ss, rule->RandomTile, "RandomTile", mod->getDamageType(rule->ResistType)->RandomTile);
 		addInteger(ss, rule->TileDamageMethod, "TileDamageMethod", mod->getDamageType(rule->ResistType)->TileDamageMethod);
@@ -1632,8 +1652,8 @@ void StatsForNerdsState::initItemList()
 		addInteger(ss, itemRule->getConfigMelee()->shots, "shots", 1);
 		addSingleString(ss, itemRule->getConfigMelee()->name, "name");
 		int ammoSlotCurrent = itemRule->getConfigMelee()->ammoSlot;
-		int ammoSlotDefault = itemRule->getBattleType() == BT_MELEE ? 0 : -1;
-		if (itemRule->getBattleType() == BT_NONE)
+		int ammoSlotDefault = itemBattleType == BT_MELEE ? 0 : RuleItem::AmmoSlotSelfUse;
+		if (itemBattleType == BT_NONE)
 		{
 			// exception for unspecified battle type, e.g. Elerium-115 in vanilla
 			if (ammoSlotCurrent <= 0)
@@ -1687,7 +1707,9 @@ void StatsForNerdsState::initItemList()
 	addInteger(ss, itemRule->getArmor(), "armor", 20);
 
 	addBattleMediKitType(ss, itemRule->getMediKitType(), "medikitType");
-	addBoolean(ss, itemRule->getAllowSelfHeal(), "allowSelfHeal");
+	addBoolean(ss, itemRule->getAllowTargetSelf(), "medikitTargetSelf");
+	addBoolean(ss, itemRule->getAllowTargetImmune(), "medikitTargetImmune");
+	addInteger(ss, itemRule->getMedikitTargetMatrixRaw(), "medikitTargetMatrix", 63);
 	addBoolean(ss, itemRule->isConsumable(), "isConsumable");
 	addInteger(ss, itemRule->getPainKillerQuantity(), "painKiller");
 	addInteger(ss, itemRule->getHealQuantity(), "heal");
@@ -1696,6 +1718,7 @@ void StatsForNerdsState::initItemList()
 	addInteger(ss, itemRule->getHealthRecovery(), "healthRecovery");
 	addInteger(ss, itemRule->getStunRecovery(), "stunRecovery");
 	addInteger(ss, itemRule->getEnergyRecovery(), "energyRecovery");
+	addInteger(ss, itemRule->getManaRecovery(), "manaRecovery");
 	addInteger(ss, itemRule->getMoraleRecovery(), "moraleRecovery");
 	addFloatAsPercentage(ss, itemRule->getPainKillerRecovery(), "painKillerRecovery", 1.0f);
 
@@ -1721,17 +1744,21 @@ void StatsForNerdsState::initItemList()
 		addSingleString(ss, itemRule->getName(), "name", itemRule->getType());
 		addSingleString(ss, itemRule->getNameAsAmmo(), "nameAsAmmo");
 		addInteger(ss, itemRule->getListOrder(), "listOrder");
+		addBoolean(ss, itemRule->getHidePower(), "hidePower");
 
 		addSection("{Inventory}", "", _white);
 		addVectorOfIntegers(ss, itemRule->getCustomItemPreviewIndex(), "customItemPreviewIndex");
 		addInteger(ss, itemRule->getInventoryWidth(), "invWidth", -1); // always show!
 		addInteger(ss, itemRule->getInventoryHeight(), "invHeight", -1); // always show!
 		addSingleString(ss, itemRule->getDefaultInventorySlot(), "defaultInventorySlot");
+		addInteger(ss, itemRule->getDefaultInventorySlotX(), "defaultInvSlotX");
+		addInteger(ss, itemRule->getDefaultInventorySlotY(), "defaultInvSlotY");
 		addBoolean(ss, itemRule->isFixed(), "fixedWeapon");
 		addBoolean(ss, itemRule->isSpecialUsingEmptyHand(), "specialUseEmptyHand");
 
 		addSection("{Recovery}", "", _white);
 		addBoolean(ss, !itemRule->canBeEquippedBeforeBaseDefense(), "ignoreInBaseDefense"); // negated!
+		addBoolean(ss, !itemRule->canBeEquippedToCraftInventory(), "ignoreInCraftEquip", !itemRule->isUsefulBattlescapeItem()); // negated!
 		addInteger(ss, itemRule->getSpecialType(), "specialType", -1);
 		addBoolean(ss, !itemRule->getRecoveryDividers().empty(), "recoveryDividers*", false); // just say if there are any or not
 		addBoolean(ss, !itemRule->getRecoveryTransformations().empty(), "recoveryTransformations*", false); // just say if there are any or not
@@ -1748,11 +1775,11 @@ void StatsForNerdsState::initItemList()
 		addSingleString(ss, itemRule->getUnprimeActionName(), "unprimeActionName");
 		addSingleString(ss, itemRule->getUnprimeActionMessage(), "unprimeActionMessage", "STR_GRENADE_IS_DEACTIVATED");
 		BattleFuseType fuseTypeDefault = BFT_NONE;
-		if (itemRule->getBattleType() == BT_PROXIMITYGRENADE)
+		if (itemBattleType == BT_PROXIMITYGRENADE)
 		{
 			fuseTypeDefault = BFT_INSTANT;
 		}
-		else if (itemRule->getBattleType() == BT_GRENADE)
+		else if (itemBattleType == BT_GRENADE)
 		{
 			fuseTypeDefault = BFT_SET;
 		}
@@ -1768,7 +1795,10 @@ void StatsForNerdsState::initItemList()
 			endHeading();
 		}
 		addIntegerPercent(ss, itemRule->getSpecialChance(), "specialChance", 100);
-		addSingleString(ss, itemRule->getZombieUnit(), "zombieUnit");
+		addBoolean(ss, !itemRule->getZombieUnitByArmorMaleRaw().empty(), "zombieUnitByArmorMale*", false); // just say if there are any or not
+		addBoolean(ss, !itemRule->getZombieUnitByArmorFemaleRaw().empty(), "zombieUnitByArmorFemale*", false); // just say if there are any or not
+		addBoolean(ss, !itemRule->getZombieUnitByTypeRaw().empty(), "zombieUnitByType*", false); // just say if there are any or not
+		addSingleString(ss, itemRule->getZombieUnit(nullptr), "zombieUnit");
 		addSingleString(ss, itemRule->getSpawnUnit(), "spawnUnit");
 		addInteger(ss, itemRule->getSpawnUnitFaction(), "spawnUnitFaction", -1);
 
@@ -1776,7 +1806,7 @@ void StatsForNerdsState::initItemList()
 		addBoolean(ss, itemRule->getFixedShow(), "fixedWeaponShow");
 		addInteger(ss, itemRule->getTurretType(), "turretType", -1);
 
-		addInteger(ss, itemRule->getBigSprite(), "bigSprite", -999);
+		addInteger(ss, itemRule->getBigSprite(), "bigSprite", -1);
 		addSpriteResourcePath(ss, mod, "BIGOBS.PCK", itemRule->getBigSprite());
 		addInteger(ss, itemRule->getFloorSprite(), "floorSprite", -1);
 		addSpriteResourcePath(ss, mod, "FLOOROB.PCK", itemRule->getFloorSprite());
@@ -1840,9 +1870,9 @@ void StatsForNerdsState::initItemList()
 		addRuleItemUseCostBasic(ss, itemRule->getCostAuto(), "tuAuto");
 		addRuleItemUseCostBasic(ss, itemRule->getCostSnap(), "tuSnap");
 		addRuleItemUseCostBasic(ss, itemRule->getCostMelee(), "tuMelee");
-		tuUseDefault = (itemRule->getBattleType() == BT_PSIAMP/* && itemRule->getPsiAttackName().empty()*/) ? 0 : 25;
+		tuUseDefault = (itemBattleType == BT_PSIAMP/* && itemRule->getPsiAttackName().empty()*/) ? 0 : 25;
 		addRuleItemUseCostBasic(ss, itemRule->getCostUse(), "tuUse", tuUseDefault);
-		if (itemRule->getBattleType() == BT_PSIAMP || _showDebug)
+		if (itemBattleType == BT_PSIAMP || _showDebug)
 		{
 			// always show! as if default was 0 instead of 25
 			addRuleItemUseCostBasic(ss, itemRule->getCostMind(), "tuMindcontrol", 0);
@@ -1898,7 +1928,7 @@ void StatsForNerdsState::addUnitStatBonus(std::ostringstream &ss, const UnitStat
 {
 	bool isDefault = value.tu == 0 && value.stamina == 0 && value.health == 0 && value.strength == 0
 		&& value.reactions == 0 && value.firing == 0 && value.melee == 0 && value.throwing == 0
-		&& value.psiSkill == 0 && value.psiStrength == 0 && value.bravery == 0;
+		&& value.psiSkill == 0 && value.psiStrength == 0 && value.bravery == 0 && value.mana == 0;
 	if (isDefault && !_showDefaults)
 	{
 		return;
@@ -1913,6 +1943,7 @@ void StatsForNerdsState::addUnitStatBonus(std::ostringstream &ss, const UnitStat
 	addUnitStatFormatted(ss, value.firing, "STR_FIRING_ACCURACY_ABBREVIATION", isFirst);
 	addUnitStatFormatted(ss, value.melee, "STR_MELEE_ACCURACY_ABBREVIATION", isFirst);
 	addUnitStatFormatted(ss, value.throwing, "STR_THROWING_ACCURACY_ABBREVIATION", isFirst);
+	addUnitStatFormatted(ss, value.mana, "STR_MANA_ABBREVIATION", isFirst);
 	addUnitStatFormatted(ss, value.psiStrength, "STR_PSIONIC_STRENGTH_ABBREVIATION", isFirst);
 	addUnitStatFormatted(ss, value.psiSkill, "STR_PSIONIC_SKILL_ABBREVIATION", isFirst);
 	addUnitStatFormatted(ss, value.bravery, "STR_BRAVERY_ABBREVIATION", isFirst);
@@ -2210,6 +2241,7 @@ void StatsForNerdsState::initArmorList()
 		addRuleStatBonus(ss, *armorRule->getMoraleRecoveryRaw(), "morale");
 		addRuleStatBonus(ss, *armorRule->getHealthRecoveryRaw(), "health");
 		addRuleStatBonus(ss, *armorRule->getStunRegenerationRaw(), "stun");
+		addRuleStatBonus(ss, *armorRule->getManaRecoveryRaw(), "mana");
 		endHeading();
 	}
 
@@ -2221,6 +2253,7 @@ void StatsForNerdsState::initArmorList()
 
 		addSection("{Naming}", "", _white);
 		addSingleString(ss, armorRule->getType(), "type");
+		addSingleString(ss, armorRule->getRequiredResearch(), "requires");
 
 		addSection("{Recovery}", "", _white);
 		addVectorOfStrings(ss, armorRule->getCorpseBattlescape(), "corpseBattle");
@@ -2251,6 +2284,26 @@ void StatsForNerdsState::initArmorList()
 		std::vector<int> tmpSoundVector;
 		tmpSoundVector.push_back(armorRule->getMoveSound());
 		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", tmpSoundVector);
+		addVectorOfIntegers(ss, armorRule->getMaleDeathSounds(), "deathMale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getMaleDeathSounds());
+		addVectorOfIntegers(ss, armorRule->getFemaleDeathSounds(), "deathFemale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getFemaleDeathSounds());
+		addVectorOfIntegers(ss, armorRule->getMaleSelectUnitSounds(), "selectUnitMale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getMaleSelectUnitSounds());
+		addVectorOfIntegers(ss, armorRule->getFemaleSelectUnitSounds(), "selectUnitFemale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getFemaleSelectUnitSounds());
+		addVectorOfIntegers(ss, armorRule->getMaleStartMovingSounds(), "startMovingMale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getMaleStartMovingSounds());
+		addVectorOfIntegers(ss, armorRule->getFemaleStartMovingSounds(), "startMovingFemale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getFemaleStartMovingSounds());
+		addVectorOfIntegers(ss, armorRule->getMaleSelectWeaponSounds(), "selectWeaponMale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getMaleSelectWeaponSounds());
+		addVectorOfIntegers(ss, armorRule->getFemaleSelectWeaponSounds(), "selectWeaponFemale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getFemaleSelectWeaponSounds());
+		addVectorOfIntegers(ss, armorRule->getMaleAnnoyedSounds(), "annoyedMale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getMaleAnnoyedSounds());
+		addVectorOfIntegers(ss, armorRule->getFemaleAnnoyedSounds(), "annoyedFemale");
+		addSoundVectorResourcePaths(ss, mod, "BATTLE.CAT", armorRule->getFemaleAnnoyedSounds());
 
 		addSection("{Animations}", "", _white);
 		addDrawingRoutine(ss, armorRule->getDrawingRoutine(), "drawingRoutine");
@@ -2289,6 +2342,62 @@ void StatsForNerdsState::initArmorList()
 			}
 			endHeading();
 		}
+	}
+}
+
+/**
+ * Shows the "raw" RuleSoldierBonus data.
+ */
+void StatsForNerdsState::initSoldierBonusList()
+{
+	_lstRawData->clearList();
+	_lstRawData->setIgnoreSeparators(true);
+
+	std::ostringstream ssTopic;
+	ssTopic << tr(_topicId);
+	if (_showIds)
+	{
+		ssTopic << " [" << _topicId << "]";
+	}
+
+	_txtArticle->setText(tr("STR_ARTICLE").arg(ssTopic.str()));
+
+	Mod *mod = _game->getMod();
+	RuleSoldierBonus *bonusRule = mod->getSoldierBonus(_topicId);
+	if (!bonusRule)
+		return;
+
+	_filterOptions.clear();
+	_cbxRelatedStuff->setVisible(false);
+
+	std::ostringstream ss;
+
+	addUnitStatBonus(ss, *bonusRule->getStats(), "stats");
+
+	addInteger(ss, bonusRule->getVisibilityAtDark(), "visibilityAtDark");
+
+	addHeading("recovery");
+	{
+		addRuleStatBonus(ss, *bonusRule->getTimeRecoveryRaw(), "time");
+		addRuleStatBonus(ss, *bonusRule->getEnergyRecoveryRaw(), "energy");
+		addRuleStatBonus(ss, *bonusRule->getMoraleRecoveryRaw(), "morale");
+		addRuleStatBonus(ss, *bonusRule->getHealthRecoveryRaw(), "health");
+		addRuleStatBonus(ss, *bonusRule->getStunRegenerationRaw(), "stun");
+		addRuleStatBonus(ss, *bonusRule->getManaRecoveryRaw(), "mana");
+		endHeading();
+	}
+
+	addSection("{Script tags}", "", _white, true);
+	{
+		auto tagValues = bonusRule->getScriptValuesRaw().getValuesRaw();
+		ArgEnum index = ScriptParserBase::getArgType<ScriptTag<RuleSoldierBonus>>();
+		auto tagNames = mod->getScriptGlobal()->getTagNames().at(index);
+		for (size_t i = 0; i < tagValues.size(); ++i)
+		{
+			auto nameAsString = tagNames.values[i].name.toString().substr(4);
+			addIntegerScriptTag(ss, tagValues.at(i), nameAsString);
+		}
+		endHeading();
 	}
 }
 
@@ -2422,6 +2531,7 @@ void StatsForNerdsState::initFacilityList()
 	addBoolean(ss, facilityRule->isLift(), "lift");
 	addBoolean(ss, facilityRule->isHyperwave(), "hyper");
 	addBoolean(ss, facilityRule->isMindShield(), "mind");
+	addInteger(ss, facilityRule->getMindShieldPower(), "mindPower", 1);
 	addBoolean(ss, facilityRule->isGravShield(), "grav");
 
 	addInteger(ss, facilityRule->getStorage(), "storage");
@@ -2440,6 +2550,7 @@ void StatsForNerdsState::initFacilityList()
 	addIntegerPercent(ss, facilityRule->getHitRatio(), "hitRatio");
 
 	addInteger(ss, facilityRule->getMaxAllowedPerBase(), "maxAllowedPerBase");
+	addInteger(ss, facilityRule->getManaRecoveryPerDay(), "manaRecoveryPerDay");
 	addFloat(ss, facilityRule->getSickBayAbsoluteBonus(), "sickBayAbsoluteBonus");
 	addFloat(ss, facilityRule->getSickBayRelativeBonus(), "sickBayRelativeBonus");
 
@@ -2461,6 +2572,7 @@ void StatsForNerdsState::initFacilityList()
 		addSingleString(ss, facilityRule->getDestroyedFacility() == 0 ? "" : facilityRule->getDestroyedFacility()->getType(), "destroyedFacility");
 
 		addSection("{Visuals}", "", _white);
+		addInteger(ss, facilityRule->getFakeUnderwaterRaw(), "fakeUnderwater", -1);
 		addSingleString(ss, facilityRule->getMapName(), "mapName");
 		addBoolean(ss, !facilityRule->getVerticalLevels().empty(), "verticalLevels*"); // just say if there are any or not
 		addVectorOfPositions(ss, facilityRule->getStorageTiles(), "storageTiles");
@@ -2652,7 +2764,6 @@ void StatsForNerdsState::initCraftList()
 		addInteger(ss, craftRule->getSprite() + 33, "_sprite (Base)", 32);
 		addSpriteResourcePath(ss, mod, "BASEBITS.PCK", craftRule->getSprite() + 33);
 		addInteger(ss, craftRule->getMarker(), "marker", -1);
-		//addSpriteResourcePath(ss, mod, "GlobeMarkers", craftRule->getMarker());
 		addInteger(ss, craftRule->getScore(), "score");
 
 		addSection("{Battlescape}", "", _white);
@@ -2875,6 +2986,11 @@ void StatsForNerdsState::initUfoList()
 		addInteger(ss, ufoRule->getAlertSound(), "alertSound", -1);
 		tmpSoundVector.clear();
 		tmpSoundVector.push_back(ufoRule->getAlertSound());
+		addSoundVectorResourcePaths(ss, mod, "GEO.CAT", tmpSoundVector);
+
+		addInteger(ss, ufoRule->getHuntAlertSound(), "huntAlertSound", -1);
+		tmpSoundVector.clear();
+		tmpSoundVector.push_back(ufoRule->getHuntAlertSound());
 		addSoundVectorResourcePaths(ss, mod, "GEO.CAT", tmpSoundVector);
 	}
 }

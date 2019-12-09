@@ -43,7 +43,7 @@ class OptionsBaseState : public State
 protected:
 	OptionsOrigin _origin;
 	Window *_window;
-	TextButton *_btnVideo, *_btnAudio, *_btnControls, *_btnGeoscape, *_btnBattlescape, *_btnAdvanced, *_btnMods;
+	TextButton *_btnVideo, *_btnAudio, *_btnControls, *_btnGeoscape, *_btnBattlescape, *_btnAdvanced, *_btnFolders;
 #if defined (__MOBILE__) || defined (__PSEUDO_ANDROID__)
 	TextButton *_btnSystem;
 #endif

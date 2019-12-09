@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Game.h"
+#include "../resource.h"
 #include <algorithm>
 #include <cmath>
 #include <sstream>
@@ -76,7 +77,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _save(0
 	_screen = new Screen();
 
 	// Actually, you can create a window icon only after the screen is here
-	CrossPlatform::setWindowIcon(103, "openxcom.png", _screen->getWindow());
+	CrossPlatform::setWindowIcon(IDI_ICON1, "openxcom.png", _screen->getWindow());
 
 	// And only then you can think about grabbing the mouse
 	SDL_bool captureMouse = Options::captureMouse? SDL_TRUE : SDL_FALSE;
@@ -362,6 +363,7 @@ void Game::run()
 						Log(LOG_INFO) << " numFingers: " << _event.mgesture.numFingers << ", x: " << _event.mgesture.x << ", y: " << _event.mgesture.y;
 						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
 					}
+					[[gnu::fallthrough]];
 
 #if 0
 				// SDL2 handles things differently, so this is basically commented out for historical purposes.
@@ -400,8 +402,8 @@ void Game::run()
 							startupEvent = false;
 						}
 					}
-#endif
 					break;
+#endif
 				case SDL_WINDOWEVENT:
 					switch(_event.window.event)
 					{
@@ -441,7 +443,7 @@ void Game::run()
 						case SDL_WINDOWEVENT_RESTORED:
 							runningState = RUNNING;
 					}
-					break;
+					[[gnu::fallthrough]];
 				case SDL_MOUSEMOTION:
 					// With SDL2 we can have both events from a real mouse
 					// and events from a touch-emulated mouse.
@@ -608,6 +610,8 @@ void Game::setVolume(int sound, int music, int ui)
 				// channel 3: reserved for ambient sound effect.
 				Mix_Volume(3, sound / 2);
 			}
+			// channel 4: reserved for unit responses
+			Mix_Volume(4, sound);
 		}
 		if (music >= 0)
 		{
@@ -897,8 +901,12 @@ void Game::initAudio()
 	else
 	{
 		Mix_AllocateChannels(16);
-		// Set up UI channels
-		Mix_ReserveChannels(4);
+		// Set up reserved channels:
+		// 0 = not used?
+		// 1-2 = UI
+		// 3 = ambient
+		// 4 = unit responses (OXCE only)
+		Mix_ReserveChannels(5);
 		Mix_GroupChannels(1, 2, 0);
 		Log(LOG_INFO) << "SDL_mixer initialized successfully.";
 		setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);

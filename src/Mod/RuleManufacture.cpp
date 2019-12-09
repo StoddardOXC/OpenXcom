@@ -78,6 +78,11 @@ void RuleManufacture::load(const YAML::Node &node, int listOrder)
  */
 void RuleManufacture::afterLoad(const Mod* mod)
 {
+	if (_time <= 0)
+	{
+		throw Exception("Manufacturing time must be greater than zero.");
+	}
+
 	_requires = mod->getResearch(_requiresName);
 	if (_category == "STR_CRAFT")
 	{
@@ -116,7 +121,7 @@ void RuleManufacture::afterLoad(const Mod* mod)
 		}
 		else
 		{
-			throw Exception("Unknow required item '" + i.first + "'");
+			throw Exception("Unknown required item '" + i.first + "'");
 		}
 	}
 
@@ -131,10 +136,10 @@ void RuleManufacture::afterLoad(const Mod* mod)
 	}
 
 	//remove not needed data
-	Collections::deleteAll(_requiresName);
-	Collections::deleteAll(_producedItemsNames);
-	Collections::deleteAll(_requiredItemsNames);
-	Collections::deleteAll(_randomProducedItemsNames);
+	Collections::removeAll(_requiresName);
+	Collections::removeAll(_producedItemsNames);
+	Collections::removeAll(_requiredItemsNames);
+	Collections::removeAll(_randomProducedItemsNames);
 }
 
 /**

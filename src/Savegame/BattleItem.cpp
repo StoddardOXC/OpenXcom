@@ -174,7 +174,8 @@ YAML::Node BattleItem::save(const ScriptGlobal *shared) const
 	}
 	if (_fuseTimer != -1)
 		node["fuseTimer"] = _fuseTimer;
-	node["fuseEnabed"] = _fuseEnabled;
+	if (_fuseEnabled)
+		node["fuseEnabed"] = _fuseEnabled;
 	if (_droppedOnAlienTurn)
 		node["droppedOnAlienTurn"] = _droppedOnAlienTurn;
 	if (_XCOMProperty)
@@ -237,6 +238,17 @@ void BattleItem::setFuseTimer(int turns)
 bool BattleItem::isFuseEnabled() const
 {
 	return _fuseEnabled;
+}
+
+/**
+ * Set fuse trigger.
+ */
+void BattleItem::setFuseEnabled(bool enable)
+{
+	if (getFuseTimer() > -1)
+	{
+		_fuseEnabled = enable;
+	}
 }
 
 /**
@@ -602,14 +614,15 @@ Surface *BattleItem::getFloorSprite(SurfaceSet *set, int animFrame, int shade) c
 		//enforce compatibility with basic version
 		if (surf == nullptr)
 		{
-			throw Exception("Invlid surface set 'FLOOROB.PCK' for item '" + _rules->getType() + "': not enough frames");
+			throw Exception("Image missing in 'FLOOROB.PCK' for item '" + _rules->getType() + "'");
 		}
 
-		ModScript::SelectItemSprite::Output arg{ i, 0 };
-		ModScript::SelectItemSprite::Worker work{ this, BODYPART_ITEM_FLOOR, animFrame, shade };
-		work.execute(_rules->getScript<ModScript::SelectItemSprite>(), arg);
-
-		auto newSurf = set->getFrame(arg.getFirst());
+		i = ModScript::scriptFunc2<ModScript::SelectItemSprite>(
+			_rules,
+			i, 0,
+			this, BODYPART_ITEM_FLOOR, animFrame, shade
+		);
+		auto newSurf = set->getFrame(i);
 		if (newSurf == nullptr)
 		{
 			newSurf = surf;
@@ -629,20 +642,22 @@ Surface *BattleItem::getFloorSprite(SurfaceSet *set, int animFrame, int shade) c
 Surface *BattleItem::getBigSprite(SurfaceSet *set, int animFrame) const
 {
 	int i = _rules->getBigSprite();
-	if (i != -999)
+	if (i != -1)
 	{
 		Surface *surf = set->getFrame(i);
 		//enforce compatibility with basic version
 		if (surf == nullptr)
 		{
-			throw Exception("Invlid surface set 'BIGOBS.PCK' for item '" + _rules->getType() + "': not enough frames");
+			throw Exception("Image missing in 'BIGOBS.PCK' for item '" + _rules->getType() + "'");
 		}
 
-		ModScript::SelectItemSprite::Output arg{ i, 0 };
-		ModScript::SelectItemSprite::Worker work{ this, BODYPART_ITEM_INVENTORY, animFrame, 0 };
-		work.execute(_rules->getScript<ModScript::SelectItemSprite>(), arg);
+		i = ModScript::scriptFunc2<ModScript::SelectItemSprite>(
+			_rules,
+			i, 0,
+			this, BODYPART_ITEM_INVENTORY, animFrame, 0
+		);
 
-		auto newSurf = set->getFrame(arg.getFirst());
+		auto newSurf = set->getFrame(i);
 		if (newSurf == nullptr)
 		{
 			newSurf = surf;
@@ -665,8 +680,8 @@ bool BattleItem::isWeaponWithAmmo() const
 }
 
 /**
- * Check if weapon have enought ammo to shoot.
- * @return True if have ammo.
+ * Check if weapon has enough ammo to shoot.
+ * @return True if has enough ammo.
  */
 bool BattleItem::haveAnyAmmo() const
 {
@@ -766,7 +781,7 @@ bool BattleItem::getArcingShot(BattleActionType action) const
 bool BattleItem::needsAmmoForAction(BattleActionType action) const
 {
 	auto conf = getActionConf(action);
-	if (!conf || conf->ammoSlot == -1)
+	if (!conf || conf->ammoSlot == RuleItem::AmmoSlotSelfUse)
 	{
 		return false;
 	}
@@ -786,7 +801,7 @@ const BattleItem *BattleItem::getAmmoForAction(BattleActionType action) const
 	{
 		return nullptr;
 	}
-	if (conf->ammoSlot == -1)
+	if (conf->ammoSlot == RuleItem::AmmoSlotSelfUse)
 	{
 		return this;
 	}
@@ -812,7 +827,7 @@ BattleItem *BattleItem::getAmmoForAction(BattleActionType action, std::string* m
 	{
 		return nullptr;
 	}
-	if (conf->ammoSlot == -1)
+	if (conf->ammoSlot == RuleItem::AmmoSlotSelfUse)
 	{
 		return this;
 	}
@@ -832,13 +847,13 @@ BattleItem *BattleItem::getAmmoForAction(BattleActionType action, std::string* m
 }
 
 /**
- * Spend weapon ammo, if depleded remove clip.
+ * Spend weapon ammo, if depleted remove clip.
  * @param action Battle Action done using this item.
  * @param save Save game.
  */
 void BattleItem::spendAmmoForAction(BattleActionType action, SavedBattleGame* save)
 {
-	if (save->getDebugMode() || getActionConf(action)->ammoSlot == -1)
+	if (save->getDebugMode() || getActionConf(action)->ammoSlot == RuleItem::AmmoSlotSelfUse)
 	{
 		return;
 	}
@@ -961,7 +976,7 @@ int BattleItem::getTotalWeight() const
 }
 
 /**
- * Get wayponts count of weapon or from ammo.
+ * Get waypoints count of weapon or from ammo.
  * @return Maximum waypoints count or -1 if unlimited.
  */
 int BattleItem::getCurrentWaypoints() const
@@ -1301,11 +1316,23 @@ std::string debugDisplayScript(const BattleItem* bt)
 	}
 }
 
+void getFuseTimerDefaultScript(const BattleItem* bt, int& i)
+{
+	if (bt)
+	{
+		i = bt->getRules()->getFuseTimerDefault();
+	}
+	else
+	{
+		i = -1;
+	}
+}
+
 void setFuseTimerScript(BattleItem* bt, int i)
 {
 	if (bt)
 	{
-		bt->setFuseTimer(Clamp(i, 1, 100));
+		bt->setFuseTimer(Clamp(i, -1, 100));
 	}
 }
 
@@ -1374,9 +1401,11 @@ void BattleItem::ScriptRegister(ScriptParserBase* parser)
 	bi.add<&setAmmoQuantityScript>("setAmmoQuantity");
 
 	bi.add<&BattleItem::getFuseTimer>("getFuseTimer");
-	bi.add<&setFuseTimerScript>("setFuseTimer");
+	bi.add<&getFuseTimerDefaultScript>("getFuseTimerDefault", "get default fuse timer");
+	bi.add<&setFuseTimerScript>("setFuseTimer", "set item fuse timer, -1 mean disable it");
 
-	bi.add<&BattleItem::isFuseEnabled>("isFuseEnabled");
+	bi.add<&BattleItem::isFuseEnabled>("isFuseEnabled", "check if fuse is triggered (like throw or proxy unit)");
+	bi.add<&BattleItem::setFuseEnabled>("setFuseEnabled", "force set or unset fuse trigger state");
 
 	bi.add<&BattleItem::getHealQuantity>("getHealQuantity");
 	bi.add<&setHealQuantityScript>("setHealQuantity");

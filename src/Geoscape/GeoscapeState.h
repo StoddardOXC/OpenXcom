@@ -55,7 +55,12 @@ private:
 	Text *_txtDebug;
 	std::list<State*> _popups;
 	std::list<DogfightState*> _dogfights, _dogfightsToBeStarted;
+	std::vector<Craft*> _activeCrafts;
 	size_t _minimizedDogfights;
+
+	/// Update list of active crafts.
+	const std::vector<Craft*>* updateActiveCrafts();
+
 public:
 	/// Creates the Geoscape state.
 	GeoscapeState();
@@ -101,6 +106,8 @@ public:
 	void btnTechTreeViewerClick(Action *action);
 	/// Handler for clicking the [SelectMusicTrack] button.
 	void btnSelectMusicTrackClick(Action *action);
+	/// Handler for clicking the [GlobalProduction] key.
+	void btnGlobalProductionClick(Action *action);
 	/// Handler for clicking the [GlobalResearch] key.
 	void btnGlobalResearchClick(Action *action);
 	/// Handler for clicking the Bases button.

@@ -34,7 +34,7 @@
 namespace OpenXcom
 {
 
-	ArticleStateTFTDArmor::ArticleStateTFTDArmor(ArticleDefinitionTFTD *defs) : ArticleStateTFTD(defs), _row(0)
+	ArticleStateTFTDArmor::ArticleStateTFTDArmor(ArticleDefinitionTFTD *defs, std::shared_ptr<ArticleCommonState> state) : ArticleStateTFTD(defs, std::move(state)), _row(0)
 	{
 		_btnInfo->setVisible(_game->getMod()->getShowPediaInfoButton());
 
@@ -82,6 +82,7 @@ namespace OpenXcom
 		addStat("STR_THROWING_ACCURACY", armor->getStats()->throwing, true);
 		addStat("STR_MELEE_ACCURACY", armor->getStats()->melee, true);
 		addStat("STR_STRENGTH", armor->getStats()->strength, true);
+		addStat("STR_MANA_POOL", armor->getStats()->mana, true);
 		addStat("STR_PSIONIC_STRENGTH", armor->getStats()->psiStrength, true);
 		addStat("STR_PSIONIC_SKILL", armor->getStats()->psiSkill, true);
 

@@ -1,3 +1,4 @@
+#pragma once
 /*
  * Copyright 2010-2015 OpenXcom Developers.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_RULESTATBONUS_H
-#define	OPENXCOM_RULESTATBONUS_H
-
 #include <vector>
 #include <string>
 #include "ModScript.h"
@@ -69,7 +67,7 @@ public:
 	/// Set default for Stun recovery.
 	void setStunRecovery();
 	/// Get bonus based on unit stats.
-	int getBonus(const BattleUnit* unit) const;
+	int getBonus(const BattleUnit* unit, int externalBonuses = 0) const;
 	/// Used for "Stats for Nerds".
 	const std::vector<RuleStatBonusDataOrig> *getBonusRaw() const { return &_bonusOrig; }
 	bool isModded() const { return _modded; }
@@ -77,6 +75,3 @@ public:
 };
 
 }
-
-#endif	/* OPENXCOM_RULESTATBONUS_H */
-

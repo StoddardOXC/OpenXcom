@@ -41,15 +41,73 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>. */
    rather suggest to use a xorshift128+ (for maximum speed) or
    xorshift1024* (for speed and very long period) generator. */
 
-uint64_t x = time(0); /* The state must be seeded with a nonzero value. */
-
-uint64_t next()
+static uint64_t nextImpl(uint64_t& state)
 {
-	x ^= x >> 12; // a
-	x ^= x << 25; // b
-	x ^= x >> 27; // c
-	return x * 2685821657736338717ULL;
+	state ^= state >> 12; // a
+	state ^= state << 25; // b
+	state ^= state >> 27; // c
+	return state * 2685821657736338717ULL;
 }
+
+
+
+
+/**
+ * Default constructor initializing the seed by time and this type address.
+ */
+RandomState::RandomState()
+{
+	_seedState = time(0) ^ (~(uint64_t)&_seedState);
+}
+
+/**
+ * Constructor from predefined seed.
+ */
+RandomState::RandomState(uint64_t seed) : _seedState(seed)
+{
+
+}
+
+/**
+ * Returns the current seed in use by the generator.
+ * @return Current seed.
+ */
+uint64_t RandomState::getSeed() const
+{
+	return _seedState;
+}
+
+/**
+ * Get next random number.
+ * @return Random number.
+ */
+uint64_t RandomState::next()
+{
+	return nextImpl(_seedState);
+}
+
+/**
+ * Generates a random integer number, inclusive.
+ */
+int RandomState::generate(int min, int max)
+{
+	return (int)(next() % (max - min + 1) + min);
+}
+
+
+
+/**
+ * State for game random number generator. Do not use during other variable static initialization because: https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use-members
+ */
+RandomState x;
+
+/**
+ * Separate state for some auxiliary random numbers that do not affect game state. Do not use during other variable static initialization because: https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use-members
+ */
+RandomState x_seedless;
+
+
+
 
 /**
  * Returns the current seed in use by the generator.
@@ -57,7 +115,7 @@ uint64_t next()
  */
 uint64_t getSeed()
 {
-	return x;
+	return x.getSeed();
 }
 
 /**
@@ -66,7 +124,15 @@ uint64_t getSeed()
  */
 void setSeed(uint64_t n)
 {
-	x = n;
+	x = RandomState(n);
+}
+
+/**
+ * State
+ */
+RandomState& globalRandomState()
+{
+	return x;
 }
 
 /**
@@ -77,8 +143,7 @@ void setSeed(uint64_t n)
  */
 int generate(int min, int max)
 {
-	uint64_t num = next();
-	return (int)(num % (max - min + 1) + min);
+	return x.generate(min, max);
 }
 
 /**
@@ -89,7 +154,7 @@ int generate(int min, int max)
  */
 double generate(double min, double max)
 {
-	double num = next();
+	double num = x.next();
 	return (num / ((double)UINT64_MAX / (max - min)) + min);
 }
 
@@ -102,9 +167,8 @@ double generate(double min, double max)
  */
 int seedless(int min, int max)
 {
-	return (rand() % (max - min + 1) + min);
+	return x_seedless.generate(min, max);
 }
-
 
 /**
  * Normal random variate generator
@@ -150,17 +214,6 @@ double boxMuller(double m, double s)
 bool percent(int value)
 {
 	return (generate(0, 99) < value);
-}
-
-/**
- * Generates a random positive integer up to a number.
- * @param max Maximum number, exclusive.
- * @return Generated number.
- */
-int generateEx(int max)
-{
-	uint64_t num = next();
-	return (int)(num % max);
 }
 
 }

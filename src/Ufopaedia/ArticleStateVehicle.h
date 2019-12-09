@@ -27,13 +27,13 @@ namespace OpenXcom
 	class ArticleDefinitionVehicle;
 
 	/**
-	 * ArticleStateVehicle hasa caption, text and a stats block.
+	 * ArticleStateVehicle has a caption, text and a stats block.
 	 */
 
 	class ArticleStateVehicle : public ArticleState
 	{
 	public:
-		ArticleStateVehicle(ArticleDefinitionVehicle *article_defs);
+		ArticleStateVehicle(ArticleDefinitionVehicle *article_defs, std::shared_ptr<ArticleCommonState> state);
 		virtual ~ArticleStateVehicle();
 
 	protected:

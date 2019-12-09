@@ -35,6 +35,7 @@
 #include "../Mod/Mod.h"
 #include "../Mod/Armor.h"
 #include "../Engine/Game.h"
+#include "../Engine/Sound.h"
 #include "../Mod/RuleInventory.h"
 #include "../Battlescape/AIModule.h"
 #include "../Engine/RNG.h"
@@ -42,9 +43,10 @@
 #include "../Engine/Logger.h"
 #include "../Engine/ScriptBind.h"
 #include "SerializationHelper.h"
+#include "../Mod/RuleEnviroEffects.h"
 #include "../Mod/RuleItem.h"
 #include "../Mod/RuleSoldier.h"
-#include "../Mod/RuleStartingCondition.h"
+#include "../Mod/RuleSoldierBonus.h"
 #include "../fallthrough.h"
 
 namespace OpenXcom
@@ -55,9 +57,11 @@ namespace OpenXcom
  */
 SavedBattleGame::SavedBattleGame(Mod *rule) :
 	_battleState(0), _rule(rule), _mapsize_x(0), _mapsize_y(0), _mapsize_z(0), _selectedUnit(0),
-	_lastSelectedUnit(0), _pathfinding(0), _tileEngine(0), _startingCondition(nullptr), _globalShade(0), _side(FACTION_PLAYER), _turn(1), _bughuntMinTurn(20), _animFrame(0),
+	_lastSelectedUnit(0), _pathfinding(0), _tileEngine(0), _enviroEffects(nullptr), _ecEnabledFriendly(false), _ecEnabledHostile(false), _ecEnabledNeutral(false),
+	_globalShade(0), _side(FACTION_PLAYER), _turn(0), _bughuntMinTurn(20), _animFrame(0),
 	_debugMode(false), _bughuntMode(false), _aborted(false), _itemId(0), _objectiveType(-1), _objectivesDestroyed(0), _objectivesNeeded(0), _unitsFalling(false),
-	_cheating(false), _tuReserved(BA_NONE), _kneelReserved(false), _depth(0), _ambience(-1), _ambientVolume(0.5),
+	_cheating(false), _tuReserved(BA_NONE), _kneelReserved(false), _depth(0),
+	_ambience(-1), _ambientVolume(0.5), _minAmbienceRandomDelay(20), _maxAmbienceRandomDelay(60), _currentAmbienceDelay(0),
 	_turnLimit(0), _cheatTurn(20), _chronoTrigger(FORCE_LOSE), _beforeGame(true)
 {
 	_tileSearch.resize(11*11);
@@ -127,11 +131,16 @@ void SavedBattleGame::load(const YAML::Node &node, Mod *mod, SavedGame* savedGam
 	initMap(mapsize_x, mapsize_y, mapsize_z);
 
 	_missionType = node["missionType"].as<std::string>(_missionType);
-	if (node["startingConditionType"])
+	_strTarget = node["strTarget"].as<std::string>(_strTarget);
+	_strCraftOrBase = node["strCraftOrBase"].as<std::string>(_strCraftOrBase);
+	if (node["enviroEffectsType"])
 	{
-		std::string startingConditionType = node["startingConditionType"].as<std::string>();
-		_startingCondition = mod->getStartingCondition(startingConditionType);
+		std::string enviroEffectsType = node["enviroEffectsType"].as<std::string>();
+		_enviroEffects = mod->getEnviroEffects(enviroEffectsType);
 	}
+	_ecEnabledFriendly = node["ecEnabledFriendly"].as<bool>(_ecEnabledFriendly);
+	_ecEnabledHostile = node["ecEnabledHostile"].as<bool>(_ecEnabledHostile);
+	_ecEnabledNeutral = node["ecEnabledNeutral"].as<bool>(_ecEnabledNeutral);
 	_alienCustomDeploy = node["alienCustomDeploy"].as<std::string>(_alienCustomDeploy);
 	_alienCustomMission = node["alienCustomMission"].as<std::string>(_alienCustomMission);
 	_globalShade = node["globalshade"].as<int>(_globalShade);
@@ -216,7 +225,7 @@ void SavedBattleGame::load(const YAML::Node &node, Mod *mod, SavedGame* savedGam
 		if (id < BattleUnit::MAX_SOLDIER_ID) // Unit is linked to a geoscape soldier
 		{
 			// look up the matching soldier
-			unit = new BattleUnit(savedGame->getSoldier(id), _depth, mod->getMaxViewDistance());
+			unit = new BattleUnit(mod, savedGame->getSoldier(id), _depth);
 		}
 		else
 		{
@@ -224,7 +233,7 @@ void SavedBattleGame::load(const YAML::Node &node, Mod *mod, SavedGame* savedGam
 			std::string armor = (*i)["genUnitArmor"].as<std::string>();
 			// create a new Unit.
 			if(!mod->getUnit(type) || !mod->getArmor(armor)) continue;
-			unit = new BattleUnit(mod->getUnit(type), originalFaction, id, nullptr, mod->getArmor(armor), mod->getStatAdjustment(savedGame->getDifficulty()), _depth, mod->getMaxViewDistance());
+			unit = new BattleUnit(mod, mod->getUnit(type), originalFaction, id, nullptr, mod->getArmor(armor), mod->getStatAdjustment(savedGame->getDifficulty()), _depth);
 		}
 		unit->load(*i, this->getMod()->getScriptGlobal());
 		unit->setSpecialWeapon(this);
@@ -367,6 +376,10 @@ void SavedBattleGame::load(const YAML::Node &node, Mod *mod, SavedGame* savedGam
 	_kneelReserved = node["kneelReserved"].as<bool>(_kneelReserved);
 	_ambience = node["ambience"].as<int>(_ambience);
 	_ambientVolume = node["ambientVolume"].as<double>(_ambientVolume);
+	_ambienceRandom = node["ambienceRandom"].as<std::vector<int> >(_ambienceRandom);
+	_minAmbienceRandomDelay = node["minAmbienceRandomDelay"].as<int>(_minAmbienceRandomDelay);
+	_maxAmbienceRandomDelay = node["maxAmbienceRandomDelay"].as<int>(_maxAmbienceRandomDelay);
+	_currentAmbienceDelay = node["currentAmbienceDelay"].as<int>(_currentAmbienceDelay);
 	_music = node["music"].as<std::string>(_music);
 	_baseItems->load(node["baseItems"]);
 	_turnLimit = node["turnLimit"].as<int>(_turnLimit);
@@ -383,11 +396,7 @@ void SavedBattleGame::loadMapResources(Mod *mod)
 {
 	for (std::vector<MapDataSet*>::const_iterator i = _mapDataSets.begin(); i != _mapDataSets.end(); ++i)
 	{
-		(*i)->loadData();
-		if (mod->getMCDPatch((*i)->getName()))
-		{
-			mod->getMCDPatch((*i)->getName())->modifyData(*i);
-		}
+		(*i)->loadData(mod->getMCDPatch((*i)->getName()));
 	}
 
 	int mdsID, mdID;
@@ -400,7 +409,11 @@ void SavedBattleGame::loadMapResources(Mod *mod)
 			_tiles[i].getMapData(&mdID, &mdsID, tp);
 			if (mdID != -1 && mdsID != -1)
 			{
-				_tiles[i].setMapData(_mapDataSets[mdsID]->getObjects()->at(mdID), mdID, mdsID, tp);
+				_tiles[i].setMapData(_mapDataSets[mdsID]->getObject(mdID), mdID, mdsID, tp);
+			}
+			else
+			{
+				_tiles[i].setMapData(nullptr, -1, -1, tp);
 			}
 		}
 	}
@@ -429,10 +442,15 @@ YAML::Node SavedBattleGame::save() const
 	node["length"] = _mapsize_y;
 	node["height"] = _mapsize_z;
 	node["missionType"] = _missionType;
-	if (_startingCondition)
+	node["strTarget"] = _strTarget;
+	node["strCraftOrBase"] = _strCraftOrBase;
+	if (_enviroEffects)
 	{
-		node["startingConditionType"] = _startingCondition->getType();
+		node["enviroEffectsType"] = _enviroEffects->getType();
 	}
+	node["ecEnabledFriendly"] = _ecEnabledFriendly;
+	node["ecEnabledHostile"] = _ecEnabledHostile;
+	node["ecEnabledNeutral"] = _ecEnabledNeutral;
 	node["alienCustomDeploy"] = _alienCustomDeploy;
 	node["alienCustomMission"] = _alienCustomMission;
 	node["globalshade"] = _globalShade;
@@ -504,6 +522,10 @@ YAML::Node SavedBattleGame::save() const
 	node["depth"] = _depth;
 	node["ambience"] = _ambience;
 	node["ambientVolume"] = _ambientVolume;
+	node["ambienceRandom"] = _ambienceRandom;
+	node["minAmbienceRandomDelay"] = _minAmbienceRandomDelay;
+	node["maxAmbienceRandomDelay"] = _maxAmbienceRandomDelay;
+	node["currentAmbienceDelay"] = _currentAmbienceDelay;
 	for (std::vector<BattleItem*>::const_iterator i = _recoverGuaranteed.begin(); i != _recoverGuaranteed.end(); ++i)
 	{
 		node["recoverGuaranteed"].push_back((*i)->save(this->getMod()->getScriptGlobal()));
@@ -571,8 +593,8 @@ void SavedBattleGame::initUtilities(Mod *mod, bool craftInventory)
 }
 
 /**
- * Gets if this is craft pre-eqipt phase in base view.
- * @return True if it in base equpt screen.
+ * Gets if this is craft pre-equip phase in base view.
+ * @return True if it in base equip screen.
  */
 bool SavedBattleGame::isBaseCraftInventory()
 {
@@ -608,21 +630,54 @@ ItemContainer *SavedBattleGame::getBaseStorageItems()
 }
 
 /**
- * Sets the starting condition.
- * @param startingCondition The starting condition.
+ * Applies the enviro effects.
+ * @param enviroEffects The enviro effects.
  */
-void SavedBattleGame::setStartingCondition(const RuleStartingCondition* startingCondition)
+void SavedBattleGame::applyEnviroEffects(const RuleEnviroEffects* enviroEffects)
 {
-	_startingCondition = startingCondition;
+	_enviroEffects = enviroEffects;
+
+	_ecEnabledFriendly = false;
+	_ecEnabledHostile = false;
+	_ecEnabledNeutral = false;
+
+	if (_enviroEffects)
+	{
+		_ecEnabledFriendly = RNG::percent(_enviroEffects->getEnvironmetalCondition("STR_FRIENDLY").globalChance);
+		_ecEnabledHostile = RNG::percent(_enviroEffects->getEnvironmetalCondition("STR_HOSTILE").globalChance);
+		_ecEnabledNeutral = RNG::percent(_enviroEffects->getEnvironmetalCondition("STR_NEUTRAL").globalChance);
+	}
 }
 
 /**
- * Gets the starting condition.
- * @return The starting condition.
+ * Gets the enviro effects.
+ * @return The enviro effects.
  */
-const RuleStartingCondition* SavedBattleGame::getStartingCondition() const
+const RuleEnviroEffects* SavedBattleGame::getEnviroEffects() const
 {
-	return _startingCondition;
+	return _enviroEffects;
+}
+
+/**
+ * Are environmental conditions (for a given faction) enabled?
+ * @param faction The relevant faction.
+ * @return True, if enabled.
+ */
+bool SavedBattleGame::getEnvironmentalConditionsEnabled(UnitFaction faction) const
+{
+	if (faction == FACTION_PLAYER)
+	{
+		return _ecEnabledFriendly;
+	}
+	else if (faction == FACTION_HOSTILE)
+	{
+		return _ecEnabledHostile;
+	}
+	else if (faction == FACTION_NEUTRAL)
+	{
+		return _ecEnabledNeutral;
+	}
+	return false;
 }
 
 /**
@@ -706,7 +761,7 @@ int SavedBattleGame::getMapSizeXYZ() const
 
 /**
  * Converts a tile index to coordinates.
- * @param index The (unique) tileindex.
+ * @param index The (unique) tile index.
  * @param x Pointer to the X coordinate.
  * @param y Pointer to the Y coordinate.
  * @param z Pointer to the Z coordinate.
@@ -937,6 +992,13 @@ bool SavedBattleGame::canUseWeapon(const BattleItem* weapon, const BattleUnit* u
 	{
 		return false;
 	}
+	if (rule->isManaRequired() && unit->getOriginalFaction() == FACTION_PLAYER)
+	{
+		if (!_rule->isManaFeatureEnabled() || !_battleState->getGame()->getSavedGame()->isManaUnlocked(_rule))
+		{
+			return false;
+		}
+	}
 	if (getDepth() == 0 && rule->isWaterOnly())
 	{
 		return false;
@@ -976,6 +1038,35 @@ void SavedBattleGame::setBughuntMinTurn(int bughuntMinTurn)
 int SavedBattleGame::getBughuntMinTurn() const
 {
 	return _bughuntMinTurn;
+}
+
+/**
+ * Start first turn of battle.
+ */
+void SavedBattleGame::startFirstTurn()
+{
+	resetUnitTiles();
+
+	Tile *inventoryTile = getSelectedUnit()->getTile();
+	randomizeItemLocations(inventoryTile);
+	if (inventoryTile->getUnit())
+	{
+		// make sure we select the unit closest to the ramp.
+		setSelectedUnit(inventoryTile->getUnit());
+	}
+
+	// initialize xcom units for battle
+	for (auto u : *getUnits())
+	{
+		if (u->getOriginalFaction() != FACTION_PLAYER || u->isOut())
+		{
+			continue;
+		}
+
+		u->prepareNewTurn(false);
+	}
+
+	_turn = 1;
 }
 
 /**
@@ -1073,18 +1164,22 @@ void SavedBattleGame::endTurn()
 			(*i)->setVisible(false);
 		}
 
-		ModScript::NewTurnUnit::Output arg{};
-		ModScript::NewTurnUnit::Worker work{ (*i), this, this->getTurn(), _side };
+		ModScript::scriptCallback<ModScript::NewTurnUnit>((*i)->getArmor(), (*i), this, this->getTurn(), _side);
 
-		work.execute((*i)->getArmor()->getScript<ModScript::NewTurnUnit>(), arg);
+		if ((*i)->isJustRevivedByNewTurn())
+		{
+			(*i)->setJustRevivedByNewTurn(false);
+			if (getMod()->getTURecoveryWakeUpNewTurn() < 100)
+			{
+				int newTU = (*i)->getBaseStats()->tu * getMod()->getTURecoveryWakeUpNewTurn() / 100;
+				(*i)->setTimeUnits(newTU);
+			}
+		}
 	}
 
 	for (auto& item : _items)
 	{
-		ModScript::NewTurnItem::Output arg{};
-		ModScript::NewTurnItem::Worker work{ item, this, this->getTurn(), _side };
-
-		work.execute(item->getRules()->getScript<ModScript::NewTurnItem>(), arg);
+		ModScript::scriptCallback<ModScript::NewTurnItem>(item->getRules(), item, this, this->getTurn(), _side);
 	}
 
 	// re-run calculateFOV() *after* all aliens have been set not-visible
@@ -1096,7 +1191,7 @@ void SavedBattleGame::endTurn()
 
 /**
  * Get current animation frame number.
- * @return Numer of frame.
+ * @return Frame number.
  */
 int SavedBattleGame::getAnimFrame() const
 {
@@ -1104,7 +1199,7 @@ int SavedBattleGame::getAnimFrame() const
 }
 
 /**
- * Increase animation frame with warparound 705600.
+ * Increase animation frame with wrap around 705600.
  */
 void SavedBattleGame::nextAnimFrame()
 {
@@ -1118,7 +1213,7 @@ void SavedBattleGame::setDebugMode()
 {
 	for (int i = 0; i < _mapsize_z * _mapsize_y * _mapsize_x; ++i)
 	{
-		_tiles[i].setDiscovered(true, 2);
+		_tiles[i].setDiscovered(true, O_FLOOR);
 	}
 
 	_debugMode = true;
@@ -1282,9 +1377,9 @@ void SavedBattleGame::removeItem(BattleItem *item)
 }
 
 /**
- * Add buildin items from list to unit.
+ * Add built-in items from list to unit.
  * @param unit Unit that should get weapon.
- * @param fixed List of buildin items.
+ * @param fixed List of built-in items.
  */
 void SavedBattleGame::addFixedItems(BattleUnit *unit, const std::vector<std::string> &fixed)
 {
@@ -1354,10 +1449,15 @@ void SavedBattleGame::initUnit(BattleUnit *unit, size_t itemLevel)
 		}
 	}
 
-	ModScript::CreateUnit::Output arg{};
-	ModScript::CreateUnit::Worker work{ unit, this, this->getTurn(), };
+	ModScript::scriptCallback<ModScript::CreateUnit>(armor, unit, this, this->getTurn());
 
-	work.execute(armor->getScript<ModScript::CreateUnit>(), arg);
+	if (auto solder = unit->getGeoscapeSoldier())
+	{
+		for (auto bonus : *solder->getBonuses(nullptr))
+		{
+			ModScript::scriptCallback<ModScript::ApplySoldierBonuses>(bonus, unit, this, bonus);
+		}
+	}
 }
 
 /**
@@ -1366,10 +1466,7 @@ void SavedBattleGame::initUnit(BattleUnit *unit, size_t itemLevel)
  */
 void SavedBattleGame::initItem(BattleItem *item)
 {
-	ModScript::CreateItem::Output arg{};
-	ModScript::CreateItem::Worker work{ item, this, this->getTurn(), };
-
-	work.execute(item->getRules()->getScript<ModScript::CreateItem>(), arg);
+	ModScript::scriptCallback<ModScript::CreateItem>(item->getRules(), item, this, this->getTurn());
 }
 
 /**
@@ -1400,7 +1497,7 @@ BattleItem *SavedBattleGame::createItemForUnit(const RuleItem *rule, BattleUnit 
 }
 
 /**
- * Create new buildin item for unit.
+ * Create new built-in item for unit.
  */
 BattleItem *SavedBattleGame::createItemForUnitBuildin(RuleItem *rule, BattleUnit *unit)
 {
@@ -1522,7 +1619,7 @@ Node *SavedBattleGame::getSpawnNode(int nodeRank, BattleUnit *unit)
 				|| unit->getArmor()->getSize() == 1)				// the small unit bit is not set or the unit is small
 			&& (!((*i)->getType() & Node::TYPE_FLYING)
 				|| unit->getMovementType() == MT_FLY)				// the flying unit bit is not set or the unit can fly
-			&& (*i)->getPriority() > 0								// priority 0 is no spawnplace
+			&& (*i)->getPriority() > 0								// priority 0 is no spawn place
 			&& setUnitPosition(unit, (*i)->getPosition(), true))	// check if not already occupied
 		{
 			if ((*i)->getPriority() > highestPriority)
@@ -1820,7 +1917,15 @@ void SavedBattleGame::reviveUnconsciousUnits(bool noTU)
 					(*i)->turn(false); // makes the unit stand up again
 					(*i)->kneel(false);
 					(*i)->setAlreadyExploded(false);
-					if (noTU) (*i)->clearTimeUnits();
+					if (noTU)
+					{
+						(*i)->clearTimeUnits();
+					}
+					else
+					{
+						// changing TUs here would have no effect as they are modified later during the new turn preparation
+						(*i)->setJustRevivedByNewTurn(true);
+					}
 					removeUnconsciousBodyItem((*i));
 				}
 			}
@@ -2148,7 +2253,7 @@ bool SavedBattleGame::placeUnitNearPosition(BattleUnit *unit, const Position& en
  */
 void SavedBattleGame::resetTurnCounter()
 {
-	_turn = 1;
+	_turn = 0;
 	_cheating = false;
 	_side = FACTION_PLAYER;
 	_beforeGame = true;
@@ -2161,14 +2266,14 @@ void SavedBattleGame::resetTiles()
 {
 	for (int i = 0; i != getMapSizeXYZ(); ++i)
 	{
-		_tiles[i].setDiscovered(false, 0);
-		_tiles[i].setDiscovered(false, 1);
-		_tiles[i].setDiscovered(false, 2);
+		_tiles[i].setDiscovered(false, O_WESTWALL);
+		_tiles[i].setDiscovered(false, O_NORTHWALL);
+		_tiles[i].setDiscovered(false, O_FLOOR);
 	}
 }
 
 /**
- * @return the tilesearch vector for use in AI functions.
+ * @return the tile search vector for use in AI functions.
  */
 const std::vector<Position> &SavedBattleGame::getTileSearch() const
 {
@@ -2186,7 +2291,7 @@ bool SavedBattleGame::isCheating() const
 
 /**
  * Gets the TU reserved type.
- * @return A battleactiontype.
+ * @return A battle action type.
  */
 BattleActionType SavedBattleGame::getTUReserved() const
 {
@@ -2195,7 +2300,7 @@ BattleActionType SavedBattleGame::getTUReserved() const
 
 /**
  * Sets the TU reserved type.
- * @param reserved A battleactiontype.
+ * @param reserved A battle action type.
  */
 void SavedBattleGame::setTUReserved(BattleActionType reserved)
 {
@@ -2322,6 +2427,28 @@ int SavedBattleGame::getAmbientSound() const
 }
 
 /**
+ * Reset the current random ambient sound delay.
+ */
+void SavedBattleGame::resetCurrentAmbienceDelay()
+{
+	_currentAmbienceDelay = RNG::seedless(_minAmbienceRandomDelay * 10, _maxAmbienceRandomDelay * 10);
+	if (_currentAmbienceDelay < 10)
+		_currentAmbienceDelay = 10; // at least 1 second
+}
+
+/**
+ * Play a random ambient sound.
+ */
+void SavedBattleGame::playRandomAmbientSound()
+{
+	if (!_ambienceRandom.empty())
+	{
+		int soundIndex = RNG::seedless(0, _ambienceRandom.size() - 1);
+		getMod()->getSoundByDepth(_depth, _ambienceRandom.at(soundIndex))->play(3); // use fixed ambience channel; don't check if previous sound is still playing or not
+	}
+}
+
+/**
  * get ruleset.
  * @return the ruleset of game.
  */
@@ -2332,7 +2459,7 @@ const Mod *SavedBattleGame::getMod() const
 
 /**
  * get the list of items we're guaranteed to take with us (ie: items that were in the skyranger)
- * @return the list of items we're garaunteed.
+ * @return the list of items we're guaranteed.
  */
 std::vector<BattleItem*> *SavedBattleGame::getGuaranteedRecoveredItems()
 {

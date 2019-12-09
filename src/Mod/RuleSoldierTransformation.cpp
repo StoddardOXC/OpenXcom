@@ -30,8 +30,9 @@ RuleSoldierTransformation::RuleSoldierTransformation(const std::string &name) :
 	_name(name),
 	_keepSoldierArmor(false), _createsClone(false), _needsCorpseRecovered(true),
 	_allowsDeadSoldiers(false), _allowsLiveSoldiers(false), _allowsWoundedSoldiers(false),
-	_listOrder(0), _cost(0), _transferTime(0), _recoveryTime(0),
-	_useRandomStats(false), _lowerBoundAtMinStats(true), _upperBoundAtMaxStats(false), _upperBoundAtStatCaps(false)
+	_listOrder(0), _cost(0), _transferTime(0), _recoveryTime(0), _minRank(0),
+	_showMinMax(false), _lowerBoundAtMinStats(true), _upperBoundAtMaxStats(false), _upperBoundAtStatCaps(false),
+	_reset(false)
 {
 }
 
@@ -54,6 +55,7 @@ void RuleSoldierTransformation::load(const YAML::Node &node, int listOrder)
 
 	_requires = node["requires"].as<std::vector<std::string > >(_requires);
 	_requiresBaseFunc = node["requiresBaseFunc"].as<std::vector<std::string > >(_requiresBaseFunc);
+	_producedItem = node["producedItem"].as<std::string >(_producedItem);
 	_producedSoldierType = node["producedSoldierType"].as<std::string >(_producedSoldierType);
 	_producedSoldierArmor = node["producedSoldierArmor"].as<std::string >(_producedSoldierArmor);
 	_keepSoldierArmor = node["keepSoldierArmor"].as<bool >(_keepSoldierArmor);
@@ -67,16 +69,27 @@ void RuleSoldierTransformation::load(const YAML::Node &node, int listOrder)
 	_forbiddenPreviousTransformations = node["forbiddenPreviousTransformations"].as<std::vector<std::string > >(_forbiddenPreviousTransformations);
 	_requiredMinStats = node["requiredMinStats"].as<UnitStats >(_requiredMinStats);
 	_requiredItems = node["requiredItems"].as< std::map<std::string, int> >(_requiredItems);
+	_requiredCommendations = node["requiredCommendations"].as< std::map<std::string, int> >(_requiredCommendations);
 	_cost = node["cost"].as<int>(_cost);
 	_transferTime = node["transferTime"].as<int>(_transferTime);
 	_recoveryTime = node["recoveryTime"].as<int>(_recoveryTime);
+	_minRank = node["minRank"].as<int>(_minRank);
 	_flatOverallStatChange = node["flatOverallStatChange"].as<UnitStats >(_flatOverallStatChange);
 	_percentOverallStatChange = node["percentOverallStatChange"].as<UnitStats >(_percentOverallStatChange);
 	_percentGainedStatChange = node["percentGainedStatChange"].as<UnitStats >(_percentGainedStatChange);
-	_useRandomStats = node["useRandomStats"].as<bool >(_useRandomStats);
+	_flatMin = node["flatMin"].as<UnitStats >(_flatMin);
+	_flatMax = node["flatMax"].as<UnitStats >(_flatMax);
+	_percentMin = node["percentMin"].as<UnitStats >(_percentMin);
+	_percentMax = node["percentMax"].as<UnitStats >(_percentMax);
+	_percentGainedMin = node["percentGainedMin"].as<UnitStats >(_percentGainedMin);
+	_percentGainedMax = node["percentGainedMax"].as<UnitStats >(_percentGainedMax);
+	_showMinMax = node["showMinMax"].as<bool >(_showMinMax);
+	_rerollStats = node["rerollStats"].as<UnitStats >(_rerollStats);
 	_lowerBoundAtMinStats = node["lowerBoundAtMinStats"].as<bool >(_lowerBoundAtMinStats);
 	_upperBoundAtMaxStats = node["upperBoundAtMaxStats"].as<bool >(_upperBoundAtMaxStats);
 	_upperBoundAtStatCaps = node["upperBoundAtStatCaps"].as<bool >(_upperBoundAtStatCaps);
+	_reset = node["reset"].as<bool >(_reset);
+	_soldierBonusType = node["soldierBonusType"].as<std::string >(_soldierBonusType);
 
 	std::sort(_requiresBaseFunc.begin(), _requiresBaseFunc.end());
 }
@@ -110,7 +123,7 @@ const std::vector<std::string > &RuleSoldierTransformation::getRequiredResearch(
 
 /**
  * Gets the list of required base functions for this project
- * @return The list of required base funcs
+ * @return The list of required base functions
  */
 const std::vector<std::string > &RuleSoldierTransformation::getRequiredBaseFuncs() const
 {
@@ -235,6 +248,15 @@ const std::map<std::string, int> &RuleSoldierTransformation::getRequiredItems() 
 }
 
 /**
+ * Gets the list of commendations necessary to complete this project
+ * @return The list of required commendations
+ */
+const std::map<std::string, int> &RuleSoldierTransformation::getRequiredCommendations() const
+{
+	return _requiredCommendations;
+}
+
+/**
  * Gets the cash cost of the project
  * @return The cost
  */
@@ -259,6 +281,15 @@ int RuleSoldierTransformation::getTransferTime() const
 int RuleSoldierTransformation::getRecoveryTime() const
 {
 	return _recoveryTime;
+}
+
+/**
+ * Gets the minimum rank a soldier needs to be eligible for this project
+ * @return The rank requirement
+ */
+int RuleSoldierTransformation::getMinRank() const
+{
+	return _minRank;
 }
 
 /**
@@ -289,15 +320,6 @@ const UnitStats &RuleSoldierTransformation::getPercentGainedStatChange() const
 }
 
 /**
- * Gets whether or not this project should use randomized stats from the produced RuleSoldier or the input soldier's stats
- * @return Use random stat generation?
- */
-bool RuleSoldierTransformation::isUsingRandomStats() const
-{
-	return _useRandomStats;
-}
-
-/**
  * Gets whether or not this project should bound stat penalties at the produced RuleSoldier's minStats
  * @return Lower bound at minStats?
  */
@@ -322,6 +344,24 @@ bool RuleSoldierTransformation::hasUpperBoundAtMaxStats() const
 bool RuleSoldierTransformation::hasUpperBoundAtStatCaps() const
 {
 	return _upperBoundAtStatCaps;
+}
+
+/**
+ * Gets whether or not this project should reset info about all previous transformations and all previously assigned soldier bonuses
+ * @return Reset previous transformation info and soldier bonuses?
+ */
+bool RuleSoldierTransformation::getReset() const
+{
+	return _reset;
+}
+
+/**
+ * Gets the type of soldier bonus assigned by this project
+ * @return The soldier bonus type
+ */
+const std::string &RuleSoldierTransformation::getSoldierBonusType() const
+{
+	return _soldierBonusType;
 }
 
 }

@@ -31,7 +31,7 @@ namespace OpenXcom
 {
 
 /**
- * Creates a blank ruleunit for a certain
+ * Creates a blank RuleSoldier for a certain
  * type of soldier.
  * @param type String defining the type.
  */
@@ -56,31 +56,6 @@ RuleSoldier::~RuleSoldier()
 	for (std::vector<StatString*>::iterator i = _statStrings.begin(); i != _statStrings.end(); ++i)
 	{
 		delete *i;
-	}
-}
-
-/**
- * Loads a sound vector for a given attribute/node.
- * @param node YAML node.
- * @param mod Mod for the item.
- * @param vector Sound vector to load into.
- */
-void RuleSoldier::loadSoundVector(const YAML::Node &node, Mod *mod, std::vector<int> &vector)
-{
-	if (node)
-	{
-		vector.clear();
-		if (node.IsSequence())
-		{
-			for (YAML::const_iterator i = node.begin(); i != node.end(); ++i)
-			{
-				vector.push_back(mod->getSoundOffset(i->as<int>(), "BATTLE.CAT"));
-			}
-		}
-		else
-		{
-			vector.push_back(mod->getSoundOffset(node.as<int>(), "BATTLE.CAT"));
-		}
 	}
 }
 
@@ -141,12 +116,21 @@ void RuleSoldier::load(const YAML::Node &node, Mod *mod, int listOrder, const Mo
 	_transferTime = node["transferTime"].as<int>(_transferTime);
 	_moraleLossWhenKilled = node["moraleLossWhenKilled"].as<int>(_moraleLossWhenKilled);
 
-	loadSoundVector(node["deathMale"], mod, _deathSoundMale);
-	loadSoundVector(node["deathFemale"], mod, _deathSoundFemale);
-	loadSoundVector(node["panicMale"], mod, _panicSoundMale);
-	loadSoundVector(node["panicFemale"], mod, _panicSoundFemale);
-	loadSoundVector(node["berserkMale"], mod, _berserkSoundMale);
-	loadSoundVector(node["berserkFemale"], mod, _berserkSoundFemale);
+	mod->loadSoundOffset(_type, _deathSoundMale, node["deathMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _deathSoundFemale, node["deathFemale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _panicSoundMale, node["panicMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _panicSoundFemale, node["panicFemale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _berserkSoundMale, node["berserkMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _berserkSoundFemale, node["berserkFemale"], "BATTLE.CAT");
+
+	mod->loadSoundOffset(_type, _selectUnitSoundMale, node["selectUnitMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _selectUnitSoundFemale, node["selectUnitFemale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _startMovingSoundMale, node["startMovingMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _startMovingSoundFemale, node["startMovingFemale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _selectWeaponSoundMale, node["selectWeaponMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _selectWeaponSoundFemale, node["selectWeaponFemale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _annoyedSoundMale, node["annoyedMale"], "BATTLE.CAT");
+	mod->loadSoundOffset(_type, _annoyedSoundFemale, node["annoyedFemale"], "BATTLE.CAT");
 
 	for (YAML::const_iterator i = node["soldierNames"].begin(); i != node["soldierNames"].end(); ++i)
 	{
@@ -188,18 +172,9 @@ void RuleSoldier::load(const YAML::Node &node, Mod *mod, int listOrder, const Mo
 	}
 
 	_rankStrings = node["rankStrings"].as< std::vector<std::string> >(_rankStrings);
-	if (node["rankSprite"])
-	{
-		_rankSprite = mod->getSpriteOffset(node["rankSprite"].as<int>(_rankSprite), "BASEBITS.PCK");
-	}
-	if (node["rankBattleSprite"])
-	{
-		_rankSpriteBattlescape = mod->getSpriteOffset(node["rankBattleSprite"].as<int>(_rankSpriteBattlescape), "SMOKE.PCK");
-	}
-	if (node["rankTinySprite"])
-	{
-		_rankSpriteTiny = mod->getSpriteOffset(node["rankTinySprite"].as<int>(_rankSpriteTiny), "TinyRanks");
-	}
+	mod->loadSpriteOffset(_type, _rankSprite, node["rankSprite"], "BASEBITS.PCK");
+	mod->loadSpriteOffset(_type, _rankSpriteBattlescape, node["rankBattleSprite"], "SMOKE.PCK");
+	mod->loadSpriteOffset(_type, _rankSpriteTiny, node["rankTinySprite"], "TinyRanks");
 
 	_listOrder = node["listOrder"].as<int>(_listOrder);
 	if (!_listOrder)
@@ -594,9 +569,9 @@ void RuleSoldier::ScriptRegister(ScriptParserBase* parser)
 {
 	Bind<RuleSoldier> ra = { parser };
 
-	UnitStats::addGetStatsScript<RuleSoldier, &RuleSoldier::_statCaps>(ra, "StatsCap.");
-	UnitStats::addGetStatsScript<RuleSoldier, &RuleSoldier::_minStats>(ra, "StatsMin.");
-	UnitStats::addGetStatsScript<RuleSoldier, &RuleSoldier::_maxStats>(ra, "StatsMax.");
+	UnitStats::addGetStatsScript<&RuleSoldier::_statCaps>(ra, "StatsCap.");
+	UnitStats::addGetStatsScript<&RuleSoldier::_minStats>(ra, "StatsMin.");
+	UnitStats::addGetStatsScript<&RuleSoldier::_maxStats>(ra, "StatsMax.");
 
 	ra.addScriptValue<&RuleSoldier::_scriptValues>(false);
 	ra.addDebugDisplay<&debugDisplayScript>();

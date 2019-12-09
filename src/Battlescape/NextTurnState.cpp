@@ -23,7 +23,7 @@
 #include "../Engine/RNG.h"
 #include "../Engine/Screen.h"
 #include "../Mod/Mod.h"
-#include "../Mod/RuleStartingCondition.h"
+#include "../Mod/RuleEnviroEffects.h"
 #include "../Mod/RuleInterface.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/Palette.h"
@@ -43,8 +43,10 @@ namespace OpenXcom
  * @param battleGame Pointer to the saved game.
  * @param state Pointer to the Battlescape state.
  */
-NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *state) : _battleGame(battleGame), _state(state), _timer(0)
+NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *state) : _battleGame(battleGame), _state(state), _timer(0), _currentTurn(0)
 {
+	_currentTurn = _battleGame->getTurn() < 1 ? 1 : _battleGame->getTurn();
+
 	// Create objects
 	int y = state->getMap()->getMessageY();
 
@@ -80,7 +82,7 @@ NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *stat
 
 	// Note: un-hardcoded the color from 15 to ruleset value, default 15
 	int bgColor = 15;
-	auto sc = _battleGame->getStartingCondition();
+	auto sc = _battleGame->getEnviroEffects();
 	if (sc)
 	{
 		bgColor = sc->getMapBackgroundColor();
@@ -111,11 +113,11 @@ NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *stat
 	_txtTurn->setAlign(ALIGN_CENTER);
 	_txtTurn->setHighContrast(true);
 	std::stringstream ss;
-	ss << tr("STR_TURN").arg(_battleGame->getTurn());
+	ss << tr("STR_TURN").arg(_currentTurn);
 	if (battleGame->getTurnLimit() > 0)
 	{
 		ss << "/" << battleGame->getTurnLimit();
-		if (battleGame->getTurnLimit() - _battleGame->getTurn() <= 3)
+		if (battleGame->getTurnLimit() - _currentTurn <= 3)
 		{
 			// gonna borrow the inventory's "over weight" colour when we're down to the last three turns
 			_txtTurn->setColor(_game->getMod()->getInterface("inventory")->getElement("weight")->color2);
@@ -246,7 +248,7 @@ NextTurnState::~NextTurnState()
 void NextTurnState::checkBugHuntMode()
 {
 	// too early for bug hunt
-	if (_battleGame->getTurn() < _battleGame->getBughuntMinTurn()) return;
+	if (_currentTurn < _battleGame->getBughuntMinTurn()) return;
 
 	// bug hunt is already activated
 	if (_battleGame->getBughuntMode()) return;
@@ -292,10 +294,15 @@ void NextTurnState::checkBugHuntMode()
 */
 bool NextTurnState::applyEnvironmentalConditionToFaction(UnitFaction faction, EnvironmentalCondition condition)
 {
+	if (!_battleGame->getEnvironmentalConditionsEnabled(faction))
+	{
+		return false;
+	}
+
 	// Killing people before battle starts causes a crash
 	// Panicking people before battle starts causes endless loop
 	// Let's just avoid this instead of reworking everything
-	if (faction == FACTION_PLAYER && _battleGame->getTurn() <= 1)
+	if (faction == FACTION_PLAYER && _currentTurn <= 1)
 	{
 		return false;
 	}
@@ -313,7 +320,7 @@ bool NextTurnState::applyEnvironmentalConditionToFaction(UnitFaction faction, En
 
 	bool showMessage = false;
 
-	if (condition.chancePerTurn > 0 && condition.firstTurn <= _battleGame->getTurn() && _battleGame->getTurn() <= condition.lastTurn)
+	if (condition.chancePerTurn > 0 && condition.firstTurn <= _currentTurn && _currentTurn <= condition.lastTurn)
 	{
 		const RuleItem *weaponOrAmmo = _game->getMod()->getItem(condition.weaponOrAmmo);
 		const RuleDamageType *type = weaponOrAmmo->getDamageType();
@@ -355,7 +362,7 @@ bool NextTurnState::applyEnvironmentalConditionToFaction(UnitFaction faction, En
 	// now check for new casualties
 	_battleGame->getBattleGame()->checkForCasualties(nullptr, BattleActionAttack{ }, true, false);
 	// revive units if damage could give hp or reduce stun
-	_battleGame->reviveUnconsciousUnits(true);
+	//_battleGame->reviveUnconsciousUnits(true);
 
 	return showMessage;
 }
@@ -406,7 +413,7 @@ void NextTurnState::close()
 		_state->btnCenterClick(0);
 
 		// Autosave every set amount of turns
-		if ((_battleGame->getTurn() == 1 || _battleGame->getTurn() % Options::autosaveFrequency == 0) && _battleGame->getSide() == FACTION_PLAYER)
+		if ((_currentTurn == 1 || _currentTurn % Options::autosaveFrequency == 0) && _battleGame->getSide() == FACTION_PLAYER)
 		{
 			_state->autosave();
 		}

@@ -55,6 +55,7 @@
 #include "AlienBase.h"
 #include "AlienStrategy.h"
 #include "AlienMission.h"
+#include "GeoscapeEvent.h"
 #include "../Mod/RuleRegion.h"
 #include "../Mod/RuleSoldier.h"
 #include "BaseFacility.h"
@@ -71,9 +72,11 @@ const std::string SavedGame::AUTOSAVE_GEOSCAPE = "_autogeo_.asav",
 namespace
 {
 
-struct findRuleResearch : public std::unary_function<ResearchProject *,
-								bool>
+struct findRuleResearch
 {
+	typedef ResearchProject* argument_type;
+	typedef bool result_type;
+
 	RuleResearch * _toFind;
 	findRuleResearch(RuleResearch * toFind);
 	bool operator()(const ResearchProject *r) const;
@@ -88,9 +91,11 @@ bool findRuleResearch::operator()(const ResearchProject *r) const
 	return _toFind == r->getRules();
 }
 
-struct equalProduction : public std::unary_function<Production *,
-							bool>
+struct equalProduction
 {
+	typedef Production* argument_type;
+	typedef bool result_type;
+
 	RuleManufacture * _item;
 	equalProduction(RuleManufacture * item);
 	bool operator()(const Production * p) const;
@@ -188,6 +193,10 @@ SavedGame::~SavedGame()
 	}
 	delete _alienStrategy;
 	for (std::vector<AlienMission*>::iterator i = _activeMissions.begin(); i != _activeMissions.end(); ++i)
+	{
+		delete *i;
+	}
+	for (std::vector<GeoscapeEvent*>::iterator i = _geoscapeEvents.begin(); i != _geoscapeEvents.end(); ++i)
 	{
 		delete *i;
 	}
@@ -499,6 +508,23 @@ void SavedGame::load(const std::string &filename, Mod *mod)
 		}
 	}
 
+	const YAML::Node &geoEvents = doc["geoscapeEvents"];
+	for (YAML::const_iterator it = geoEvents.begin(); it != geoEvents.end(); ++it)
+	{
+		std::string eventName = (*it)["name"].as<std::string>();
+		if (mod->getEvent(eventName))
+		{
+			const RuleEvent &eventRule = *mod->getEvent(eventName);
+			GeoscapeEvent *event = new GeoscapeEvent(eventRule);
+			event->load(*it);
+			_geoscapeEvents.push_back(event);
+		}
+		else
+		{
+			Log(LOG_ERROR) << "Failed to load geoscape event " << eventName;
+		}
+	}
+
 	for (YAML::const_iterator i = doc["waypoints"].begin(); i != doc["waypoints"].end(); ++i)
 	{
 		Waypoint *w = new Waypoint();
@@ -555,6 +581,7 @@ void SavedGame::load(const std::string &filename, Mod *mod)
 	}
 	sortReserchVector(_discovered);
 
+	_generatedEvents = doc["generatedEvents"].as< std::map<std::string, int> >(_generatedEvents);
 	_ufopediaRuleStatus = doc["ufopediaRuleStatus"].as< std::map<std::string, int> >(_ufopediaRuleStatus);
 	_manufactureRuleStatus = doc["manufactureRuleStatus"].as< std::map<std::string, int> >(_manufactureRuleStatus);
 	_researchRuleStatus = doc["researchRuleStatus"].as< std::map<std::string, int> >(_researchRuleStatus);
@@ -760,6 +787,8 @@ void SavedGame::save(const std::string &filename, Mod *mod) const
 	if (_battleGame != 0)
 	{
 		brief["mission"] = _battleGame->getMissionType();
+		brief["target"] = _battleGame->getMissionTarget();
+		brief["craftOrBase"] = _battleGame->getMissionCraftOrBase();
 		brief["turn"] = _battleGame->getTurn();
 	}
 
@@ -829,6 +858,10 @@ void SavedGame::save(const std::string &filename, Mod *mod) const
 	{
 		node["ufos"].push_back((*i)->save(getMonthsPassed() == -1));
 	}
+	for (std::vector<GeoscapeEvent *>::const_iterator i = _geoscapeEvents.begin(); i != _geoscapeEvents.end(); ++i)
+	{
+		node["geoscapeEvents"].push_back((*i)->save());
+	}
 	for (std::vector<const RuleResearch *>::const_iterator i = _discovered.begin(); i != _discovered.end(); ++i)
 	{
 		node["discovered"].push_back((*i)->getName());
@@ -837,6 +870,7 @@ void SavedGame::save(const std::string &filename, Mod *mod) const
 	{
 		node["poppedResearch"].push_back((*i)->getName());
 	}
+	node["generatedEvents"] = _generatedEvents;
 	node["ufopediaRuleStatus"] = _ufopediaRuleStatus;
 	node["manufactureRuleStatus"] = _manufactureRuleStatus;
 	node["researchRuleStatus"] = _researchRuleStatus;
@@ -869,7 +903,7 @@ void SavedGame::save(const std::string &filename, Mod *mod) const
 		std::ostringstream oss;
 		oss << "globalCraftLoadout" << j;
 		std::string key = oss.str();
-		if (_globalCraftLoadout[j])
+		if (!_globalCraftLoadout[j]->getContents()->empty())
 		{
 			node[key] = _globalCraftLoadout[j]->save();
 		}
@@ -1085,12 +1119,14 @@ void SavedGame::setGlobeZoom(int zoom)
  */
 void SavedGame::monthlyFunding()
 {
-	_funds.back() += getCountryFunding() - getBaseMaintenance();
+	auto countryFunding = getCountryFunding();
+	auto baseMaintenance = getBaseMaintenance();
+	_funds.back() += (countryFunding - baseMaintenance);
 	_funds.push_back(_funds.back());
-	_maintenance.back() = getBaseMaintenance();
+	_maintenance.back() = baseMaintenance;
 	_maintenance.push_back(0);
-	_incomes.push_back(getCountryFunding());
-	_expenditures.push_back(getBaseMaintenance());
+	_incomes.push_back(countryFunding);
+	_expenditures.push_back(baseMaintenance);
 	_researchScores.push_back(0);
 
 	if (_incomes.size() > 12)
@@ -1426,7 +1462,7 @@ void SavedGame::addFinishedResearch(const RuleResearch * research, const Mod * m
 			// process "disables"
 			for (auto& dis : currentQueueItem->getDisabled())
 			{
-				removeDiscoveredResearch(dis); // un-research
+				removeDiscoveredResearch(dis); // unresearch
 				setResearchRuleStatus(dis->getName(), RuleResearch::RESEARCH_STATUS_DISABLED); // mark as permanently disabled
 			}
 		}
@@ -1620,7 +1656,7 @@ void SavedGame::getAvailableResearchProjects(std::vector<RuleResearch *> &projec
 			}
 		}
 
-		// Haleluja, all checks passed, add the research topic to the list
+		// Hallelujah, all checks passed, add the research topic to the list
 		projects.push_back(research);
 	}
 }
@@ -2024,6 +2060,22 @@ bool SavedGame::isResearched(const std::vector<const RuleResearch *> &research, 
 }
 
 /**
+ * Returns if a certain item has been obtained, i.e. is present directly in the base stores.
+ * Items in and on craft, in transfer, worn by soldiers, etc. are ignored!!
+ * @param itemType Item ID.
+ * @return Whether it's obtained or not.
+ */
+bool SavedGame::isItemObtained(const std::string &itemType) const
+{
+	for (auto base : _bases)
+	{
+		if (base->getStorageItems()->getItem(itemType) > 0)
+			return true;
+	}
+	return false;
+}
+
+/**
  * Returns pointer to the Soldier given it's unique ID.
  * @param id A soldier's unique id.
  * @return Pointer to Soldier.
@@ -2271,8 +2323,11 @@ bool SavedGame::getDebugMode() const
 /** @brief Match a mission based on region and type.
  * This function object will match alien missions based on region and type.
  */
-class matchRegionAndType: public std::unary_function<AlienMission *, bool>
+class matchRegionAndType
 {
+	typedef AlienMission* argument_type;
+	typedef bool result_type;
+
 public:
 	/// Store the region and type.
 	matchRegionAndType(const std::string &region, MissionObjective objective) : _region(region), _objective(objective) { }
@@ -2368,8 +2423,11 @@ void SavedGame::setWarned(bool warned)
 /** @brief Check if a point is contained in a region.
  * This function object checks if a point is contained inside a region.
  */
-class ContainsPoint: public std::unary_function<const Region *, bool>
+class ContainsPoint
 {
+	typedef const Region* argument_type;
+	typedef bool result_type;
+
 public:
 	/// Remember the coordinates.
 	ContainsPoint(double lon, double lat) : _lon(lon), _lat(lat) { /* Empty by design. */ }
@@ -2381,7 +2439,7 @@ private:
 
 /**
  * Find the region containing this location.
- * @param lon The longtitude.
+ * @param lon The longitude.
  * @param lat The latitude.
  * @return Pointer to the region, or 0.
  */
@@ -2505,6 +2563,25 @@ void SavedGame::removePoppedResearch(const RuleResearch* research)
 	}
 }
 
+/*
+ * remembers that this event has been generated
+ * @param event is the event we want to remember
+ */
+void SavedGame::addGeneratedEvent(const RuleEvent* event)
+{
+	_generatedEvents[event->getName()] += 1;
+}
+
+/*
+ * checks if an event has been generated previously
+ * @param eventName is the event we are checking for
+ * @return whether or not it has been generated previously
+ */
+bool SavedGame::wasEventGenerated(const std::string& eventName)
+{
+	return (_generatedEvents.find(eventName) != _generatedEvents.end());
+}
+
 /**
  * Returns the list of dead soldiers.
  * @return Pointer to soldier list.
@@ -2515,7 +2592,7 @@ std::vector<Soldier*> *SavedGame::getDeadSoldiers()
 }
 
 /**
- * Sets the last selected armour.
+ * Sets the last selected armor.
  * @param value The new value for last selected armor - Armor type string.
  */
 
@@ -2525,7 +2602,7 @@ void SavedGame::setLastSelectedArmor(const std::string &value)
 }
 
 /**
- * Gets the last selected armour
+ * Gets the last selected armor
  * @return last used armor type string
  */
 std::string SavedGame::getLastSelectedArmor() const
@@ -2743,6 +2820,35 @@ bool SavedGame::getDisableSoldierEquipment() const
 void SavedGame::setDisableSoldierEquipment(bool disableSoldierEquipment)
 {
 	_disableSoldierEquipment = disableSoldierEquipment;
+}
+
+/**
+ * Is the mana feature already unlocked?
+ */
+bool SavedGame::isManaUnlocked(Mod *mod) const
+{
+	auto researchName = mod->getManaUnlockResearch();
+	if (researchName.empty() || isResearched(researchName))
+	{
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Gets the current score based on research score and xcom/alien activity in regions.
+ */
+int SavedGame::getCurrentScore(int monthsPassed) const
+{
+	size_t invertedEntry = _funds.size() - 1;
+	int scoreTotal = _researchScores.at(invertedEntry);
+	if (monthsPassed > 1)
+		scoreTotal += 400;
+	for (auto region : _regions)
+	{
+		scoreTotal += region->getActivityXcom().at(invertedEntry) - region->getActivityAlien().at(invertedEntry);
+	}
+	return scoreTotal;
 }
 
 }

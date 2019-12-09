@@ -25,6 +25,7 @@
 #include "../Mod/RuleInterface.h"
 #include "../Mod/RuleItem.h"
 #include "../Mod/RuleManufacture.h"
+#include "../Mod/RuleMissionScript.h"
 #include "../Mod/RuleResearch.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/Options.h"
@@ -93,7 +94,7 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getMod()->getSurface("BACK05.SCR"));
+	setWindowBackground(_window, "techTreeViewer");
 
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
@@ -278,6 +279,14 @@ void TechTreeViewerState::initLists()
 					ss << std::get<1>(sym);
 				}
 			}
+			if (rule->getCost() < 10)
+			{
+				while (cost >= 1)
+				{
+					cost -= 1;
+					ss << ".";
+				}
+			}
 			_txtCostIndicator->setText(ss.str());
 		}
 		//
@@ -285,7 +294,7 @@ void TechTreeViewerState::initLists()
 		const std::vector<std::string> &researchList = _game->getMod()->getResearchList();
 		const std::vector<std::string> &manufactureList = _game->getMod()->getManufactureList();
 
-		// 0. common pre-calc
+		// 0. common pre-calculation
 		const std::vector<const RuleResearch*> reqs = rule->getRequirements();
 		const std::vector<const RuleResearch*> deps = rule->getDependencies();
 		std::vector<std::string> unlockedBy;
@@ -784,6 +793,76 @@ void TechTreeViewerState::initLists()
 				}
 			}
 		}
+
+		// 10. unlocks/disables alien missions
+		std::unordered_set<std::string> unlocksMissions, disablesMissions;
+		for (auto& missionScriptId : *_game->getMod()->getMissionScriptList())
+		{
+			auto missionScript = _game->getMod()->getMissionScript(missionScriptId, false);
+			if (missionScript)
+			{
+				for (auto& trigger : missionScript->getResearchTriggers())
+				{
+					if (trigger.first == _selectedTopic)
+					{
+						if (trigger.second)
+							unlocksMissions.insert(missionScriptId);
+						else
+							disablesMissions.insert(missionScriptId);
+					}
+				}
+			}
+		}
+		if (_game->getSavedGame()->getDebugMode())
+		{
+			if (!unlocksMissions.empty())
+			{
+				_lstRight->addRow(1, tr("STR_UNLOCKS_MISSIONS").c_str());
+				_lstRight->setRowColor(row, _blue);
+				_rightTopics.push_back("-");
+				_rightFlags.push_back(TTV_NONE);
+				++row;
+				for (auto& i : unlocksMissions)
+				{
+					std::ostringstream name;
+					name << "  " << tr(i);
+					_lstRight->addRow(1, name.str().c_str());
+					_lstRight->setRowColor(row, _white);
+					_rightTopics.push_back("-");
+					_rightFlags.push_back(TTV_NONE);
+					++row;
+				}
+			}
+			if (!disablesMissions.empty())
+			{
+				_lstRight->addRow(1, tr("STR_DISABLES_MISSIONS").c_str());
+				_lstRight->setRowColor(row, _blue);
+				_rightTopics.push_back("-");
+				_rightFlags.push_back(TTV_NONE);
+				++row;
+				for (auto& i : disablesMissions)
+				{
+					std::ostringstream name;
+					name << "  " << tr(i);
+					_lstRight->addRow(1, name.str().c_str());
+					_lstRight->setRowColor(row, _white);
+					_rightTopics.push_back("-");
+					_rightFlags.push_back(TTV_NONE);
+					++row;
+				}
+			}
+		}
+		else
+		{
+			if (!unlocksMissions.empty() || !disablesMissions.empty())
+			{
+				_lstRight->addRow(1, tr("STR_AFFECTS_GAME_PROGRESSION").c_str());
+				_lstRight->setRowColor(row, _gold);
+				_rightTopics.push_back("-");
+				_rightFlags.push_back(TTV_NONE);
+				++row;
+			}
+		}
 	}
 	else if (_selectedFlag == TTV_MANUFACTURING)
 	{
@@ -910,6 +989,45 @@ void TechTreeViewerState::initLists()
 				_rightTopics.push_back("-");
 				_rightFlags.push_back(TTV_NONE);
 				++row;
+			}
+		}
+
+		// 4b. random outputs
+		auto randomOutputs = rule->getRandomProducedItems();
+		if (randomOutputs.size() > 0)
+		{
+			_lstRight->addRow(1, tr("STR_RANDOM_PRODUCTION_DISCLAIMER").c_str());
+			_lstRight->setRowColor(row, _blue);
+			_rightTopics.push_back("-");
+			_rightFlags.push_back(TTV_NONE);
+			++row;
+			int total = 0;
+			for (auto& n : randomOutputs)
+			{
+				total += n.first;
+			}
+			for (auto& randomOutput : randomOutputs)
+			{
+				std::ostringstream chance;
+				chance << " " << randomOutput.first * 100 / total << "%";
+				_lstRight->addRow(1, chance.str().c_str());
+				_lstRight->setRowColor(row, _gold);
+				_rightTopics.push_back("-");
+				_rightFlags.push_back(TTV_NONE);
+				++row;
+				for (auto& i : randomOutput.second)
+				{
+					std::ostringstream name;
+					name << "  ";
+					name << tr(i.first->getType());
+					name << ": ";
+					name << i.second;
+					_lstRight->addRow(1, name.str().c_str());
+					_lstRight->setRowColor(row, _white);
+					_rightTopics.push_back("-");
+					_rightFlags.push_back(TTV_NONE);
+					++row;
+				}
 			}
 		}
 

@@ -42,6 +42,8 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shellapi.h>
+#include <wininet.h>
+#include <urlmon.h>
 #ifndef __NO_DBGHELP
 #include <dbghelp.h>
 #endif
@@ -53,6 +55,8 @@
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "wininet.lib")
+#pragma comment(lib, "urlmon.lib")
 #ifndef __NO_DBGHELP
 #pragma comment(lib, "dbghelp.lib")
 #endif
@@ -85,6 +89,7 @@
 #endif
 #include "FileMap.h"
 #include "SDL2Helpers.h"
+#include "../version.h"
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -111,7 +116,7 @@ void getErrorDialog()
 		if (getenv("KDE_SESSION_UID") && system("which kdialog 2>&1 > /dev/null") == 0)
 			errorDlg = "kdialog --error ";
 		else if (system("which zenity 2>&1 > /dev/null") == 0)
-			errorDlg = "zenity --error --text=";
+			errorDlg = "zenity --no-wrap --error --text=";
 		else if (system("which kdialog 2>&1 > /dev/null") == 0)
 			errorDlg = "kdialog --error ";
 		else if (system("which gdialog 2>&1 > /dev/null") == 0)
@@ -305,9 +310,11 @@ std::vector<std::string> findDataFolders()
  	list.push_back(path);
 
 	// Get global data folders
-	if (char *xdg_data_dirs = getenv("XDG_DATA_DIRS"))
+	if (char const *const xdg_data_dirs = getenv("XDG_DATA_DIRS"))
 	{
-		char *dir = strtok(xdg_data_dirs, ":");
+		char xdg_data_dirs_copy[strlen(xdg_data_dirs)+1];
+		strcpy(xdg_data_dirs_copy, xdg_data_dirs);
+		char *dir = strtok(xdg_data_dirs_copy, ":");
 		while (dir != 0)
 		{
 			snprintf(path, MAXPATHLEN, "%s/openxcom/", dir);
@@ -610,7 +617,11 @@ std::vector<std::tuple<std::string, bool, time_t>> getFolderContents(const std::
 	struct dirent *dirp;
 	while ((dirp = readdir(dp)) != 0) {
 		std::string filename = dirp->d_name;
-		if (filename == "." || filename == "..") { continue; }
+		if (filename[0] == '.') //allowed by C++11 for empty string as it equal '\0'
+		{
+			//skip ".", "..", ".git", ".svn", ".bashrc", ".ssh" etc.
+			continue;
+		}
 		if (!compareExt(filename, ext))	{ continue; }
 		std::string fullpath = path + "/" + filename;
 		bool is_directory = folderExists(fullpath);
@@ -1014,6 +1025,23 @@ bool moveFile(const std::string &src, const std::string &dest)
 }
 
 /**
+ * Copies a file from one path to another,
+ * replacing any existing file.
+ * @param src Source path.
+ * @param dest Destination path.
+ * @return True if the operation succeeded, False otherwise.
+ */
+bool copyFile(const std::string& src, const std::string& dest)
+{
+#ifdef _WIN32
+	auto srcW = pathToWindows(src);
+	auto dstW = pathToWindows(dest);
+	return (CopyFileW(srcW.c_str(), dstW.c_str(), false) != 0);
+#endif
+	return false;
+}
+
+/**
  * Writes a file.
  * @param filename - where to writeFile
  * @param data - what to writeFile
@@ -1366,7 +1394,7 @@ int getPointerState(int *x, int *y)
 void stackTrace(void *ctx)
 {
 #ifdef _WIN32
-#ifndef __NO_DBGHELP
+# ifndef __NO_DBGHELP
 	const int MAX_SYMBOL_LENGTH = 1024;
 	CONTEXT context;
 	if (ctx != 0)
@@ -1375,10 +1403,10 @@ void stackTrace(void *ctx)
 	}
 	else
 	{
-#ifdef _M_IX86
+#  ifdef _M_IX86
 		memset(&context, 0, sizeof(CONTEXT));
 		context.ContextFlags = CONTEXT_CONTROL;
-#ifdef __MINGW32__
+#   ifdef __MINGW32__
 		asm("Label:\n\t"
 			"movl %%ebp,%0;\n\t"
 			"movl %%esp,%1;\n\t"
@@ -1387,7 +1415,7 @@ void stackTrace(void *ctx)
 			: "=r" (context.Ebp), "=r" (context.Esp), "=r" (context.Eip)
 			: //no input
 			: "eax");
-#else
+#   else
 		_asm {
 		Label:
 			mov[context.Ebp], ebp;
@@ -1395,17 +1423,17 @@ void stackTrace(void *ctx)
 			mov eax, [Label];
 			mov[context.Eip], eax;
 		}
-#endif
-#else
+#   endif
+#  else /* no  _M_IX86 */
 		RtlCaptureContext(&context);
-#endif
+#  endif
 	}
 	HANDLE thread = GetCurrentThread();
 	HANDLE process = GetCurrentProcess();
 	STACKFRAME64 frame;
 	memset(&frame, 0, sizeof(STACKFRAME64));
 	DWORD image;
-#ifdef _M_IX86
+#  ifdef _M_IX86
 	image = IMAGE_FILE_MACHINE_I386;
 	frame.AddrPC.Offset = context.Eip;
 	frame.AddrPC.Mode = AddrModeFlat;
@@ -1413,7 +1441,7 @@ void stackTrace(void *ctx)
 	frame.AddrFrame.Mode = AddrModeFlat;
 	frame.AddrStack.Offset = context.Esp;
 	frame.AddrStack.Mode = AddrModeFlat;
-#elif _M_X64
+#  elif _M_X64
 	image = IMAGE_FILE_MACHINE_AMD64;
 	frame.AddrPC.Offset = context.Rip;
 	frame.AddrPC.Mode = AddrModeFlat;
@@ -1421,7 +1449,7 @@ void stackTrace(void *ctx)
 	frame.AddrFrame.Mode = AddrModeFlat;
 	frame.AddrStack.Offset = context.Rsp;
 	frame.AddrStack.Mode = AddrModeFlat;
-#elif _M_IA64
+#  elif _M_IA64
 	image = IMAGE_FILE_MACHINE_IA64;
 	frame.AddrPC.Offset = context.StIIP;
 	frame.AddrPC.Mode = AddrModeFlat;
@@ -1431,10 +1459,10 @@ void stackTrace(void *ctx)
 	frame.AddrBStore.Mode = AddrModeFlat;
 	frame.AddrStack.Offset = context.IntSp;
 	frame.AddrStack.Mode = AddrModeFlat;
-#else
+#  else
 	Log(LOG_FATAL) << "Unfortunately, no stack trace information is available";
 	return;
-#endif
+#  endif
 	SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO) + (MAX_SYMBOL_LENGTH - 1) * sizeof(TCHAR));
 	symbol->MaxNameLen = MAX_SYMBOL_LENGTH;
 	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
@@ -1447,7 +1475,7 @@ void stackTrace(void *ctx)
 		if (SymFromAddr(process, frame.AddrPC.Offset, NULL, symbol))
 		{
 			std::string symname = symbol->Name;
-#ifdef __MINGW32__
+#  ifdef __MINGW32__
 			symname = "_" + symname;
 			int status = 0;
 			size_t outSz = 0;
@@ -1462,7 +1490,7 @@ void stackTrace(void *ctx)
 			{
 				symname = symbol->Name;
 			}
-#endif
+#  endif
 			if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &displacement, line))
 			{
 				std::string filename = line->FileName;
@@ -1489,13 +1517,15 @@ void stackTrace(void *ctx)
 		Log(LOG_FATAL) << "Unfortunately, no stack trace information is available";
 	}
 	SymCleanup(process);
-#else
+# else /* __NO_DBGHELP */
 	Log(LOG_FATAL) << "Unfortunately, no stack trace information is available";
-#endif
+# endif
+#elif __CYGWIN__
+	Log(LOG_FATAL) << "Unfortunately, no stack trace information is available";
 #elif defined(__ANDROID__)
 #warning Stack trace not supported on Android yet!
 	Log(LOG_FATAL) << "Unfortunately, no stack trace information is available";
-#else
+#else    /* not _WIN32 or __CYGWIN__ */
 	void *frames[32];
 	char buf[1024];
 	int  frame_count = backtrace(frames, 32);
@@ -1576,7 +1606,7 @@ void crashDump(void *ex, const std::string &err)
 		error << cppException->what();
 		break;
 	case EXCEPTION_ACCESS_VIOLATION:
-		error << "Memory access violation. This usually indicates something missing in a mod.";
+		error << "Memory access violation.";
 		break;
 	default:
 		error << "code 0x" << std::hex << exception->ExceptionRecord->ExceptionCode;
@@ -1613,7 +1643,7 @@ void crashDump(void *ex, const std::string &err)
 		switch (signal)
 		{
 		case SIGSEGV:
-			error << "Segmentation fault. This usually indicates something missing in a mod.";
+			error << "Segmentation fault.";
 			break;
 		default:
 			error << "signal " << signal;
@@ -1625,8 +1655,13 @@ void crashDump(void *ex, const std::string &err)
 #endif
 	std::ostringstream msg;
 	msg << "OpenXcom has crashed: " << error.str() << std::endl;
-	msg << "More details here: " << getLogFileName() << std::endl;
-	msg << "If this error was unexpected, please report it to the developers.";
+	msg << "Log file: " << getLogFileName() << std::endl;
+	msg << "If this error was unexpected, please report it on OpenXcom forum or discord." << std::endl;
+	msg << "The following can help us solve the problem:" << std::endl;
+	msg << "1. a saved game from just before the crash (helps 98%)" << std::endl;
+	msg << "2. a detailed description how to reproduce the crash (helps 80%)" << std::endl;
+	msg << "3. a log file (helps 10%)" << std::endl;
+	msg << "4. a screenshot of this error message (helps 5%)";
 	showError(msg.str());
 }
 
@@ -1770,6 +1805,142 @@ SDL_RWops *getEmbeddedAsset(const std::string& assetName) {
 	/* Asset embedding disabled. */
 	Log(LOG_DEBUG) << log_ctx << "assets were not embedded.";
 	return NULL;
+#endif
+}
+
+/**
+ * Tests the internet connection.
+ * @param url URL to test.
+ * @return True if the operation succeeded, False otherwise.
+ */
+bool testInternetConnection(const std::string& url)
+{
+#ifdef _WIN32
+	auto urlW = pathToWindows(url, false);
+	bool bConnect = InternetCheckConnectionW(urlW.c_str(), FLAG_ICC_FORCE_CONNECTION, 0);
+	return bConnect;
+#else
+	return false;
+#endif
+}
+
+/**
+ * Downloads a file from a given URL to the filesystem.
+ * @param url Source URL.
+ * @param filename Destination file name.
+ * @return True if the operation succeeded, False otherwise.
+ */
+bool downloadFile(const std::string& url, const std::string& filename)
+{
+#ifdef _WIN32
+	auto urlW = pathToWindows(url, false);
+	auto filenameW = pathToWindows(filename, true);
+	DeleteUrlCacheEntryW(urlW.c_str());
+	HRESULT hr = URLDownloadToFileW(NULL, urlW.c_str(), filenameW.c_str(), 0, NULL);
+	return SUCCEEDED(hr);
+#else
+	return false;
+#endif
+}
+
+/**
+ * Is the given version number higher than the current version number?
+ * @param newVersion Version to compare.
+ * @return True if given version is higher than current version.
+ */
+bool isHigherThanCurrentVersion(const std::string& newVersion)
+{
+	bool isHigher = false;
+
+	std::vector<int> newOxceVersion;
+	std::string each;
+	char split_char = '.';
+	std::istringstream ss(newVersion);
+	while (std::getline(ss, each, split_char)) {
+		try {
+			int i = std::stoi(each);
+			newOxceVersion.push_back(i);
+		}
+		catch (...) {
+			newOxceVersion.push_back(0);
+		}
+	}
+	std::vector<int> currentOxceVersion = { OPENXCOM_VERSION_NUMBER };
+	int diff = currentOxceVersion.size() - newOxceVersion.size();
+	for (int j = 0; j < diff; ++j)
+	{
+		newOxceVersion.push_back(0);
+	}
+	for (size_t k = 0; k < currentOxceVersion.size(); ++k)
+	{
+		if (newOxceVersion[k] > currentOxceVersion[k])
+		{
+			isHigher = true;
+			break;
+		}
+		else if (newOxceVersion[k] < currentOxceVersion[k])
+		{
+			break;
+		}
+	}
+
+	return isHigher;
+}
+
+/**
+ * Gets the path to the executable file.
+ * @return Path to the EXE file.
+ */
+std::string getExeFolder()
+{
+#ifdef _WIN32
+	wchar_t dest[MAX_PATH + 1];
+	if (GetModuleFileNameW(NULL, dest, MAX_PATH) != 0)
+	{
+		PathRemoveFileSpecW(dest);
+		auto ret = pathFromWindows(dest) + "/";
+		return ret;
+	}
+#endif
+	return std::string();
+}
+
+/**
+ * Gets the file name of the executable file.
+ * @param includingPath Including full path or just the file name?
+ * @return Name of the EXE file.
+ */
+std::string getExeFilename(bool includingPath)
+{
+#ifdef _WIN32
+	wchar_t dest[MAX_PATH + 1];
+	if (GetModuleFileNameW(NULL, dest, MAX_PATH) != 0)
+	{
+		if (includingPath)
+		{
+			auto ret = pathFromWindows(dest);
+			return ret;
+		}
+		else
+		{
+			auto filename = PathFindFileNameW(dest);
+			auto ret = pathFromWindows(filename);
+			return ret;
+		}
+	}
+#endif
+	return std::string();
+}
+
+/**
+ * Starts the update process.
+ */
+void startUpdateProcess()
+{
+#ifdef _WIN32
+	auto operationW = pathToWindows("open", false);
+	auto fileW = pathToWindows("oxce-upd.bat", false);
+	ShellExecuteW(NULL, operationW.c_str(), fileW.c_str(), NULL, NULL, SW_SHOWNORMAL);
 #endif
 }
 

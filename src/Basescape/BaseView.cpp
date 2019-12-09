@@ -42,7 +42,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-BaseView::BaseView(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _base(0), _texture(0), _selFacility(0), _big(0), _small(0), _lang(0), _gridX(0), _gridY(0), _selSize(0), _selector(0), _blink(true)
+BaseView::BaseView(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _base(0), _texture(0), _selFacility(0), _big(0), _small(0), _lang(0), _gridX(0), _gridY(0), _selSize(0), _selector(0), _blink(true), _cellColor(0), _selectorColor(0)
 {
 	// Clear grid
 	for (int i = 0; i < BASE_SIZE; ++i)
@@ -213,7 +213,7 @@ void BaseView::setSelectable(int size)
  */
 int BaseView::getPlacementError(RuleBaseFacility *rule, BaseFacility *facilityBeingMoved) const
 {
-	// We'll need to know for the final check if we're upgrading an exisiting facility
+	// We'll need to know for the final check if we're upgrading an existing facility
 	bool buildingOverExisting = false;
 
 	// Check if square isn't occupied
@@ -529,6 +529,7 @@ void BaseView::draw()
 		}
 
 		// Draw crafts
+		(*i)->setCraftForDrawing(0);
 		if ((*i)->getBuildTime() == 0 && (*i)->getRules()->getCrafts() > 0)
 		{
 			if (craft != _base->getCrafts()->end())
@@ -541,15 +542,7 @@ void BaseView::draw()
 					frame->blitNShade(this, fx, fy);
 					(*i)->setCraftForDrawing(*craft);
 				}
-				else
-				{
-					(*i)->setCraftForDrawing(0);
-				}
 				++craft;
-			}
-			else
-			{
-				(*i)->setCraftForDrawing(0);
 			}
 		}
 

@@ -40,6 +40,8 @@ class Production;
 class Vehicle;
 class Ufo;
 
+enum UfoDetection : int;
+
 /**
  * Represents a player base on the globe.
  * Bases can contain facilities, personnel, crafts and equipment.
@@ -59,6 +61,7 @@ private:
 	std::vector<Production *> _productions;
 	bool _inBattlescape;
 	bool _retaliationTarget;
+	bool _fakeUnderwater;
 	std::vector<Vehicle*> _vehicles;
 	std::vector<Vehicle*> _vehiclesFromBase;
 	std::vector<BaseFacility*> _defenses;
@@ -76,6 +79,8 @@ public:
 	void load(const YAML::Node& node, SavedGame *save, bool newGame, bool newBattleGame = false);
 	/// Finishes loading the base (more specifically all craft in the base) from YAML.
 	void finishLoading(const YAML::Node& node, SavedGame *save);
+	/// Tests whether the base facilities are within the base boundaries and not overlapping.
+	bool isOverlappingOrOverflowing();
 	/// Saves the base to YAML.
 	YAML::Node save() const override;
 	/// Gets the base's type.
@@ -88,6 +93,8 @@ public:
 	std::vector<BaseFacility*> *getFacilities();
 	/// Gets the base's soldiers.
 	std::vector<Soldier*> *getSoldiers();
+	/// Pre-calculates soldier stats with various bonuses.
+	void prepareSoldierStatsWithBonuses();
 	/// Gets the base's crafts.
 	std::vector<Craft*> *getCrafts();
 	/// Gets the base's transfers.
@@ -103,9 +110,7 @@ public:
 	/// Sets the base's engineers.
 	void setEngineers(int engineers);
 	/// Checks if a target is detected by the base's radar.
-	int detect(Target *target) const;
-	/// Checks if a target is inside the base's radar range.
-	int insideRadarRange(Target *target) const;
+	UfoDetection detect(const Ufo *target, bool alreadyTracked) const;
 	/// Gets the base's available soldiers.
 	int getAvailableSoldiers(bool checkCombatReadiness = false, bool includeWounded = false) const;
 	/// Gets the base's total soldiers.
@@ -118,10 +123,8 @@ public:
 	int getAvailableEngineers() const;
 	/// Gets the base's total engineers.
 	int getTotalEngineers() const;
-	/// Gets the base's total other employees.
-	int getTotalOtherEmployees() const;
-	/// Gets the base's total cost of other employees.
-	int getTotalOtherEmployeeCost() const;
+	/// Gets the base's total number and cost of other staff & inventory.
+	int getTotalOtherStaffAndInventoryCost(int& staffCount, int& inventoryCount) const;
 	/// Gets the base's used living quarters.
 	int getUsedQuarters() const;
 	/// Gets the base's available living quarters.
@@ -168,8 +171,6 @@ public:
 	std::pair<int, int> getSoldierCountAndSalary(const std::string &soldier) const;
 	/// Gets the base's personnel maintenance.
 	int getPersonnelMaintenance() const;
-	/// Gets the base's item maintenance.
-	int getItemMaintenance() const;
 	/// Gets the base's facility maintenance.
 	int getFacilityMaintenance() const;
 	/// Gets the base's total monthly maintenance.
@@ -214,6 +215,10 @@ public:
 	void setRetaliationTarget(bool mark = true);
 	/// Gets the retaliation status of this base.
 	bool getRetaliationTarget() const;
+	/// Mark/unmark this base as a fake underwater base.
+	void setFakeUnderwater(bool fakeUnderwater) { _fakeUnderwater = fakeUnderwater; }
+	/// Is this a fake underwater base?
+	bool isFakeUnderwater() const { return _fakeUnderwater; }
 	/// Get the detection chance for this base.
 	size_t getDetectionChance() const;
 	/// Gets how many Grav Shields the base has
@@ -240,16 +245,20 @@ public:
 	std::vector<std::string> getProvidedBaseFunc(const BaseFacility *skip = 0) const;
 	/// Gets used base functionality.
 	std::vector<std::string> getRequireBaseFunc(const BaseFacility *skip = 0) const;
-	/// Gets forbiden base functionality.
+	/// Gets forbidden base functionality.
 	std::vector<std::string> getForbiddenBaseFunc() const;
 	/// Gets future base functionality.
 	std::vector<std::string> getFutureBaseFunc() const;
 	/// Checks if it is possible to build another facility of a given type.
 	bool isMaxAllowedLimitReached(RuleBaseFacility *rule) const;
+	/// Gets the base's mana recovery rate.
+	int getManaRecoveryPerDay() const;
 	/// Gets the amount of additional HP healed in this base due to sick bay facilities (in absolute number).
 	float getSickBayAbsoluteBonus() const;
 	/// Gets the amount of additional HP healed in this base due to sick bay facilities (as percentage of max HP per soldier).
 	float getSickBayRelativeBonus() const;
+	/// Removes a craft from the base.
+	std::vector<Craft*>::iterator removeCraft(Craft *craft, bool unload);
 };
 
 }

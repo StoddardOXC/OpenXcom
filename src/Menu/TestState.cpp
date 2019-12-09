@@ -30,6 +30,7 @@
 #include "../Engine/FileMap.h"
 #include "../Engine/Logger.h"
 #include "../Engine/Palette.h"
+#include "../Mod/Armor.h"
 #include "../Mod/ExtraSprites.h"
 #include "../Mod/RuleTerrain.h"
 #include "../Mod/MapBlock.h"
@@ -105,7 +106,7 @@ TestState::TestState()
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getMod()->getSurface("BACK05.SCR"));
+	setWindowBackground(_window, "tests");
 
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
@@ -138,8 +139,9 @@ TestState::TestState()
 	_txtTestCase->setText(tr("STR_TEST_CASE"));
 
 	_testCases.push_back("STR_BAD_NODES");
-	_testCases.push_back("STR_ZERO_COST_MOVEMENT");
+	_testCases.push_back("STR_MCD_CHECK");
 	_testCases.push_back("STR_PALETTE_CHECK");
+	_testCases.push_back("STR_SCRIPT_TAGS");
 
 	_cbxTestCase->setOptions(_testCases, true);
 	_cbxTestCase->onChange((ActionHandler)&TestState::cbxTestCaseChange);
@@ -193,6 +195,7 @@ void TestState::btnRunClick(Action *action)
 		case 0: testCase0(); break;
 		case 1: testCase1(); break;
 		case 2: testCase2(); break;
+		case 3: testCase3(); break;
 		default: break;
 	}
 }
@@ -218,6 +221,69 @@ void TestState::cbxPaletteAction(Action *action)
 	PaletteActionType type = (PaletteActionType)_cbxPaletteAction->getSelected();
 
 	_game->pushState(new TestPaletteState(palette, type));
+}
+
+void TestState::testCase3()
+{
+	_lstOutput->addRow(1, tr("STR_TESTS_STARTING").c_str());
+
+	std::map<const Armor *, std::map<std::string, int> > tagMatrix;
+	for (auto armorName : _game->getMod()->getArmorsList())
+	{
+		auto armorRule = _game->getMod()->getArmor(armorName, true);
+		auto tagValues = armorRule->getScriptValuesRaw().getValuesRaw();
+		ArgEnum index = ScriptParserBase::getArgType<ScriptTag<Armor>>();
+		auto tagNames = _game->getMod()->getScriptGlobal()->getTagNames().at(index);
+		for (size_t i = 0; i < tagValues.size(); ++i)
+		{
+			auto nameAsString = tagNames.values[i].name.toString().substr(4);
+			tagMatrix[armorRule][nameAsString] = tagValues.at(i);
+		}
+	}
+
+	std::map<std::string, bool> tagNames;
+	for (auto &a : tagMatrix)
+	{
+		for (auto &t : a.second)
+		{
+			tagNames[t.first] = true;
+		}
+	}
+
+	Log(LOG_INFO) << "----------------------------------------------";
+	Log(LOG_INFO) << "Copy/paste into a CSV file";
+	Log(LOG_INFO) << "----------------------------------------------";
+	{
+		std::ostringstream ssNames;
+		ssNames << ";Armor";
+		for (auto &n : tagNames)
+		{
+			ssNames << ";" << n.first;
+		}
+		Log(LOG_INFO) << ssNames.str();
+	}
+	for (auto armorName : _game->getMod()->getArmorsList())
+	{
+		auto armorRule = _game->getMod()->getArmor(armorName, true);
+		auto armorData = tagMatrix[armorRule];
+		std::ostringstream ss;
+		ss << ";" << armorName;
+		for (auto& t : tagNames)
+		{
+			ss << ";";
+			auto findIt = armorData.find(t.first);
+			if (findIt != armorData.end())
+			{
+				ss << (*findIt).second;
+			}
+		}
+		Log(LOG_INFO) << ss.str();
+	}
+	Log(LOG_INFO) << "----------------------------------------------";
+	Log(LOG_INFO) << "End of export";
+	Log(LOG_INFO) << "----------------------------------------------";
+
+	_lstOutput->addRow(1, tr("STR_TESTS_FINISHED").c_str());
 }
 
 void TestState::testCase2()
@@ -486,9 +552,41 @@ int TestState::checkMCD(RuleTerrain *terrainRule, std::map<std::string, std::set
 	for (auto myMapDataSet : *terrainRule->getMapDataSets())
 	{
 		int index = 0;
-		myMapDataSet->loadData();
-		for (auto myMapData : *myMapDataSet->getObjects())
+		myMapDataSet->loadData(_game->getMod()->getMCDPatch(myMapDataSet->getName()), false);
+		int size = (int)(myMapDataSet->getObjectsRaw()->size());
+		for (auto myMapData : *myMapDataSet->getObjectsRaw())
 		{
+			// Check for 0 armor
+			if (myMapData->getArmor() == 0)
+			{
+				std::ostringstream ss;
+				ss << "terrain: " << terrainRule->getName() << " dataset: " << myMapDataSet->getName() << " object " << index << " has armor: " << myMapData->getArmor();
+				std::string str = ss.str();
+				Log(LOG_ERROR) << "Error in " << str << ". Found using OXCE test cases.";
+				errors++;
+				uniqueResults[myMapDataSet->getName()].insert(index);
+			}
+
+			// Validate MCD references
+			if (myMapData->getDieMCD() >= size)
+			{
+				std::ostringstream ss;
+				ss << "terrain: " << terrainRule->getName() << " dataset: " << myMapDataSet->getName() << " object " << index << " has invalid DieMCD: " << myMapData->getDieMCD();
+				std::string str = ss.str();
+				Log(LOG_ERROR) << "Error in " << str << ". Found using OXCE test cases.";
+				errors++;
+				uniqueResults[myMapDataSet->getName()].insert(index);
+			}
+			if (myMapData->getAltMCD() >= size)
+			{
+				std::ostringstream ss;
+				ss << "terrain: " << terrainRule->getName() << " dataset: " << myMapDataSet->getName() << " object " << index << " has invalid AltMCD: " << myMapData->getAltMCD();
+				std::string str = ss.str();
+				Log(LOG_ERROR) << "Error in " << str << ". Found using OXCE test cases.";
+				errors++;
+				uniqueResults[myMapDataSet->getName()].insert(index);
+			}
+
 			if (myMapData->getObjectType() == O_FLOOR)
 			{
 				if (myMapData->getTUCost(MT_WALK) < 1)

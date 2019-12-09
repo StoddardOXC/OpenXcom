@@ -21,6 +21,8 @@
 #include "Mod.h"
 #include "MapScript.h"
 #include "../Battlescape/Position.h"
+#include "../Engine/Exception.h"
+
 
 namespace OpenXcom
 {
@@ -30,7 +32,12 @@ namespace OpenXcom
  * type of base facility.
  * @param type String defining the type.
  */
-RuleBaseFacility::RuleBaseFacility(const std::string &type) : _type(type), _spriteShape(-1), _spriteFacility(-1), _missileAttraction(100), _lift(false), _hyper(false), _mind(false), _grav(false), _size(1), _buildCost(0), _refundValue(0), _buildTime(0), _monthlyCost(0), _storage(0), _personnel(0), _aliens(0), _crafts(0), _labs(0), _workshops(0), _psiLabs(0), _radarRange(0), _radarChance(0), _defense(0), _hitRatio(0), _fireSound(0), _hitSound(0), _listOrder(0), _trainingRooms(0), _maxAllowedPerBase(0), _sickBayAbsoluteBonus(0.0f), _sickBayRelativeBonus(0.0f), _prisonType(0), _rightClickActionType(0), _verticalLevels(), _removalTime(0), _canBeBuiltOver(false), _destroyedFacility(0)
+RuleBaseFacility::RuleBaseFacility(const std::string &type) :
+	_type(type), _spriteShape(-1), _spriteFacility(-1), _missileAttraction(100), _fakeUnderwater(-1), _lift(false), _hyper(false), _mind(false), _grav(false), _mindPower(1),
+	_size(1), _buildCost(0), _refundValue(0), _buildTime(0), _monthlyCost(0), _storage(0), _personnel(0), _aliens(0), _crafts(0),
+	_labs(0), _workshops(0), _psiLabs(0), _radarRange(0), _radarChance(0), _defense(0), _hitRatio(0), _fireSound(0), _hitSound(0), _listOrder(0),
+	_trainingRooms(0), _maxAllowedPerBase(0), _manaRecoveryPerDay(0), _sickBayAbsoluteBonus(0.0f), _sickBayRelativeBonus(0.0f),
+	_prisonType(0), _rightClickActionType(0), _verticalLevels(), _removalTime(0), _canBeBuiltOver(false), _destroyedFacility(0)
 {
 }
 
@@ -63,19 +70,16 @@ void RuleBaseFacility::load(const YAML::Node &node, Mod *mod, int listOrder)
 	std::sort(_provideBaseFunc.begin(), _provideBaseFunc.end());
 	std::sort(_forbiddenBaseFunc.begin(), _forbiddenBaseFunc.end());
 
-	if (node["spriteShape"])
-	{
-		_spriteShape = mod->getSpriteOffset(node["spriteShape"].as<int>(_spriteShape), "BASEBITS.PCK");
-	}
-	if (node["spriteFacility"])
-	{
-		_spriteFacility = mod->getSpriteOffset(node["spriteFacility"].as<int>(_spriteFacility), "BASEBITS.PCK");
-	}
-	_missileAttraction = node["missileAttraction"].as<int>(_missileAttraction);
+
+	mod->loadSpriteOffset(_type, _spriteShape, node["spriteShape"], "BASEBITS.PCK");
+	mod->loadSpriteOffset(_type, _spriteFacility, node["spriteFacility"], "BASEBITS.PCK");
+
+	_fakeUnderwater = node["fakeUnderwater"].as<int>(_fakeUnderwater);
 	_lift = node["lift"].as<bool>(_lift);
 	_hyper = node["hyper"].as<bool>(_hyper);
 	_mind = node["mind"].as<bool>(_mind);
 	_grav = node["grav"].as<bool>(_grav);
+	_mindPower = node["mindPower"].as<int>(_mindPower);
 	_size = node["size"].as<int>(_size);
 	_buildCost = node["buildCost"].as<int>(_buildCost);
 	_refundValue = node["refundValue"].as<int>(_refundValue);
@@ -92,18 +96,15 @@ void RuleBaseFacility::load(const YAML::Node &node, Mod *mod, int listOrder)
 	_radarChance = node["radarChance"].as<int>(_radarChance);
 	_defense = node["defense"].as<int>(_defense);
 	_hitRatio = node["hitRatio"].as<int>(_hitRatio);
-	if (node["fireSound"])
-	{
-		_fireSound = mod->getSoundOffset(node["fireSound"].as<int>(_fireSound), "GEO.CAT");
-	}
-	if (node["hitSound"])
-	{
-		_hitSound = mod->getSoundOffset(node["hitSound"].as<int>(_hitSound), "GEO.CAT");
-	}
+
+	mod->loadSoundOffset(_type, _fireSound, node["fireSound"], "GEO.CAT");
+	mod->loadSoundOffset(_type, _hitSound, node["hitSound"], "GEO.CAT");
+
 	_mapName = node["mapName"].as<std::string>(_mapName);
 	_listOrder = node["listOrder"].as<int>(_listOrder);
 	_trainingRooms = node["trainingRooms"].as<int>(_trainingRooms);
 	_maxAllowedPerBase = node["maxAllowedPerBase"].as<int>(_maxAllowedPerBase);
+	_manaRecoveryPerDay = node["manaRecoveryPerDay"].as<int>(_manaRecoveryPerDay);
 	_sickBayAbsoluteBonus = node["sickBayAbsoluteBonus"].as<float>(_sickBayAbsoluteBonus);
 	_sickBayRelativeBonus = node["sickBayRelativeBonus"].as<float>(_sickBayRelativeBonus);
 	_prisonType = node["prisonType"].as<int>(_prisonType);
@@ -209,7 +210,7 @@ const std::vector<std::string> &RuleBaseFacility::getProvidedBaseFunc() const
 }
 
 /**
- * Gets the list of forbiden functions by this building.
+ * Gets the list of forbidden functions by this building.
  * @return List of function IDs.
  */
 const std::vector<std::string> &RuleBaseFacility::getForbiddenBaseFunc() const
@@ -246,6 +247,22 @@ int RuleBaseFacility::getSize() const
 }
 
 /**
+ * Is this facility allowed for a given type of base?
+ * @return True if allowed.
+ */
+bool RuleBaseFacility::isAllowedForBaseType(bool fakeUnderwaterBase) const
+{
+	if (_fakeUnderwater == -1)
+		return true;
+	else if (_fakeUnderwater == 0 && !fakeUnderwaterBase)
+		return true;
+	else if (_fakeUnderwater == 1 && fakeUnderwaterBase)
+		return true;
+
+	return false;
+}
+
+/**
  * Checks if this facility is the core access lift
  * of a base. Every base has an access lift and all
  * facilities have to be connected to it.
@@ -274,6 +291,15 @@ bool RuleBaseFacility::isHyperwave() const
 bool RuleBaseFacility::isMindShield() const
 {
 	return _mind;
+}
+
+/**
+ * Gets the mind shield power.
+ * @return Mind shield power.
+ */
+int RuleBaseFacility::getMindShieldPower() const
+{
+	return _mindPower;
 }
 
 /**
@@ -498,6 +524,15 @@ int RuleBaseFacility::getTrainingFacilities() const
 int RuleBaseFacility::getMaxAllowedPerBase() const
 {
 	return _maxAllowedPerBase;
+}
+
+/**
+ * Gets the facility's mana recovery rate.
+ * @return Mana per day.
+ */
+int RuleBaseFacility::getManaRecoveryPerDay() const
+{
+	return _manaRecoveryPerDay;
 }
 
 /**

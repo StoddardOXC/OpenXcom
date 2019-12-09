@@ -85,7 +85,7 @@ struct BattleAction : BattleActionCost
 	bool sprayTargeting; // Used to separate waypoint checks between confirm firing mode and the "spray" autoshot
 
 	/// Default constructor
-	BattleAction() : target(-1, -1, -1), targeting(false), value(0), strafe(false), run(false), diff(0), autoShotCounter(0), cameraPosition(0, 0, -1), desperate(false), finalFacing(-1), finalAction(false), number(0), sprayTargeting(false) { }
+	BattleAction() : target(-1, -1, -1), targeting(false), value(0), strafe(false), run(false), ignoreSpottedEnemies(false), diff(0), autoShotCounter(0), cameraPosition(0, 0, -1), desperate(false), finalFacing(-1), finalAction(false), number(0), sprayTargeting(false) { }
 
 	/// Get move type
 	BattleActionMove getMoveType() const
@@ -101,7 +101,7 @@ struct BattleActionAttack
 	BattleItem *weapon_item;
 	BattleItem *damage_item;
 
-	/// Defulat constructor.
+	/// Default constructor.
 	BattleActionAttack(BattleActionType action = BA_NONE, BattleUnit *unit = nullptr) : type{ action }, attacker{ unit }, weapon_item{ nullptr }, damage_item{ nullptr }
 	{
 
@@ -119,6 +119,36 @@ struct BattleActionAttack
  */
 class BattlescapeGame
 {
+	class SingleRun
+	{
+		bool _done = false;
+
+	public:
+
+		/**
+		 * Check if this function was already ran.
+		 * @return True if this is first time, False if any other until reseted.
+		 */
+		bool tryRun()
+		{
+			if (_done)
+			{
+				return false;
+			}
+
+			_done = true;
+			return true;
+		}
+
+		/**
+		 * Reset stat to starting condition.
+		 */
+		void reset()
+		{
+			_done = false;
+		}
+	};
+
 private:
 	SavedBattleGame *_save;
 	BattlescapeState *_parentState;
@@ -127,14 +157,17 @@ private:
 	int _AIActionCounter;
 	BattleAction _currentAction;
 	bool _AISecondMove, _playedAggroSound;
-	bool _endTurnRequested, _endTurnProcessed;
+	bool _endTurnRequested;
 	bool _endConfirmationHandled;
+
+	SingleRun _endTurnProcessed;
+	SingleRun _triggerProcessed;
 
 	/// Ends the turn.
 	void endTurn();
 	/// Picks the first soldier that is panicking.
 	bool handlePanickingPlayer();
-	/// Common function for hanlding panicking units.
+	/// Common function for handling panicking units.
 	bool handlePanickingUnit(BattleUnit *unit);
 	/// Determines whether there are any actions pending for the given unit.
 	bool noActionsPending(BattleUnit *bu);
@@ -216,7 +249,7 @@ public:
 	Map *getMap();
 	/// Gets the save.
 	SavedBattleGame *getSave();
-	/// Gets the tilengine.
+	/// Gets the tile engine.
 	TileEngine *getTileEngine();
 	/// Gets the pathfinding.
 	Pathfinding *getPathfinding();
@@ -254,6 +287,8 @@ public:
 	void playSound(int sound, const Position &pos);
 	/// Play sound on battlefield.
 	void playSound(int sound);
+	/// Play unit response sound on battlefield.
+	void playUnitResponseSound(BattleUnit *unit, int type);
 	/// Sets up a mission complete notification.
 	void missionComplete();
 	std::list<BattleState*> getStates();

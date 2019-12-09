@@ -86,21 +86,30 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 		return;
 	}
 
+	if (weapon->isManaRequired() && _action->actor->getOriginalFaction() == FACTION_PLAYER)
+	{
+		if (!_game->getMod()->isManaFeatureEnabled() || !_game->getSavedGame()->isManaUnlocked(_game->getMod()))
+		{
+			return;
+		}
+	}
+
 	// priming
 	if (weapon->getFuseTimerDefault() >= 0 )
 	{
+		auto normalWeapon = weapon->getBattleType() != BT_GRENADE && weapon->getBattleType() != BT_FLARE && weapon->getBattleType() != BT_PROXIMITYGRENADE;
 		if (_action->weapon->getFuseTimer() == -1)
 		{
 			if (weapon->getCostPrime().Time > 0)
 			{
-				addItem(BA_PRIME, weapon->getPrimeActionName(), &id, Options::keyBattleActionItem1); // FIXME: hotkey safety?!
+				addItem(BA_PRIME, weapon->getPrimeActionName(), &id, normalWeapon ? SDLK_UNKNOWN : Options::keyBattleActionItem1);
 			}
 		}
 		else
 		{
 			if (weapon->getCostUnprime().Time > 0 && !weapon->getUnprimeActionName().empty())
 			{
-				addItem(BA_UNPRIME, weapon->getUnprimeActionName(), &id, Options::keyBattleActionItem2); // FIXME: hotkey safety?!
+				addItem(BA_UNPRIME, weapon->getUnprimeActionName(), &id, normalWeapon ? SDLK_UNKNOWN : Options::keyBattleActionItem2);
 			}
 		}
 	}
@@ -219,7 +228,10 @@ void ActionMenuState::addItem(BattleActionType ba, const std::string &name, int 
 	s2 = tr("STR_TIME_UNITS_SHORT").arg(tu);
 	_actionMenu[*id]->setAction(ba, tr(name), s1, s2, tu);
 	_actionMenu[*id]->setVisible(true);
-	_actionMenu[*id]->onKeyboardPress((ActionHandler)&ActionMenuState::btnActionMenuItemClick, key);
+	if (key != SDLK_UNKNOWN)
+	{
+		_actionMenu[*id]->onKeyboardPress((ActionHandler)&ActionMenuState::btnActionMenuItemClick, key);
+	}
 	(*id)++;
 }
 
@@ -323,12 +335,22 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 			for (std::vector<BattleUnit*>::const_iterator i = units->begin(); i != units->end() && !targetUnit; ++i)
 			{
 				// we can heal a unit that is at the same position, unconscious and healable(=woundable)
-				if ((*i)->getPosition() == _action->actor->getPosition() && *i != _action->actor && (*i)->getStatus() == STATUS_UNCONSCIOUS && (*i)->isWoundable())
+				if ((*i)->getPosition() == _action->actor->getPosition() && *i != _action->actor && (*i)->getStatus() == STATUS_UNCONSCIOUS && ((*i)->isWoundable() || weapon->getAllowTargetImmune()) && weapon->getAllowTargetGround())
 				{
-					targetUnit = *i;
+					if ((*i)->getArmor()->getSize() != 1)
+					{
+						// never EVER apply anything to 2x2 units on the ground
+						continue;
+					}
+					if ((weapon->getAllowTargetFriendGround() && (*i)->getOriginalFaction() == FACTION_PLAYER) ||
+						(weapon->getAllowTargetNeutralGround() && (*i)->getOriginalFaction() == FACTION_NEUTRAL) ||
+						(weapon->getAllowTargetHostileGround() && (*i)->getOriginalFaction() == FACTION_HOSTILE))
+					{
+						targetUnit = *i;
+					}
 				}
 			}
-			if (!targetUnit)
+			if (!targetUnit && weapon->getAllowTargetStanding())
 			{
 				if (tileEngine->validMeleeRange(
 					_action->actor->getPosition(),
@@ -337,13 +359,18 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 					0, &_action->target, false))
 				{
 					Tile *tile = _game->getSavedGame()->getSavedBattle()->getTile(_action->target);
-					if (tile != 0 && tile->getUnit() && tile->getUnit()->isWoundable())
+					if (tile != 0 && tile->getUnit() && (tile->getUnit()->isWoundable() || weapon->getAllowTargetImmune()))
 					{
-						targetUnit = tile->getUnit();
+						if ((weapon->getAllowTargetFriendStanding() && tile->getUnit()->getOriginalFaction() == FACTION_PLAYER) ||
+							(weapon->getAllowTargetNeutralStanding() && tile->getUnit()->getOriginalFaction() == FACTION_NEUTRAL) ||
+							(weapon->getAllowTargetHostileStanding() && tile->getUnit()->getOriginalFaction() == FACTION_HOSTILE))
+						{
+							targetUnit = tile->getUnit();
+						}
 					}
 				}
 			}
-			if (!targetUnit && weapon->getAllowSelfHeal())
+			if (!targetUnit && weapon->getAllowTargetSelf())
 			{
 				targetUnit = _action->actor;
 			}

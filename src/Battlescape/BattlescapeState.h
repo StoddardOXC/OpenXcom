@@ -61,6 +61,7 @@ private:
 	InteractiveSurface *_btnVisibleUnit[VISIBLE_MAX];
 	NumberText *_numVisibleUnit[VISIBLE_MAX];
 	BattleUnit *_visibleUnit[VISIBLE_MAX];
+	InteractiveSurface* _btnToggleNV;
 	WarningMessage *_warning;
 	Text *_txtName;
 	NumberText *_numTimeUnits, *_numEnergy, *_numHealth, *_numMorale, *_numLayers;
@@ -68,7 +69,8 @@ private:
 	std::vector<NumberText*> _numMedikitLeft, _numMedikitRight;
 	NumberText *_numTwoHandedIndicatorLeft, *_numTwoHandedIndicatorRight;
 	Uint8 _twoHandedRed, _twoHandedGreen;
-	Bar *_barTimeUnits, *_barEnergy, *_barHealth, *_barMorale;
+	Bar *_barTimeUnits, *_barEnergy, *_barHealth, *_barMorale, *_barMana;
+	bool _manaBarVisible;
 	Timer *_animTimer, *_gameTimer;
 	SavedBattleGame *_save;
 	Text *_txtDebug, *_txtTooltip;
@@ -185,6 +187,8 @@ public:
 	void btnRightHandItemClick(Action *action);
 	/// Handler for clicking a visible unit button.
 	void btnVisibleUnitClick(Action *action);
+	/// Handler for clicking the Toggle Night Vision and Personal Lights button.
+	void btnToggleNightVisionAndPersonalLightsClick(Action* action);
 	/// Handler for clicking the launch rocket button.
 	void btnLaunchClick(Action *action);
 	/// Handler for clicking the use psi button.

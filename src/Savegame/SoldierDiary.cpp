@@ -65,9 +65,8 @@ void SoldierDiary::load(const YAML::Node& node, const Mod *mod)
 	{
 		for (YAML::const_iterator i = commendations.begin(); i != commendations.end(); ++i)
 		{
-			SoldierCommendations *sc = new SoldierCommendations(*i);
-			RuleCommendations *commendation = mod->getCommendation(sc->getType());
-			if (commendation)
+			SoldierCommendations *sc = new SoldierCommendations(*i, mod);
+			if (sc->getRule())
 			{
 				_commendations.push_back(sc);
 			}
@@ -236,6 +235,7 @@ void SoldierDiary::updateDiary(BattleUnitStatistics *unitStatistics, std::vector
 	_statGainTotal += unitStatistics->delta.firing;
 	_statGainTotal += unitStatistics->delta.throwing;
 	_statGainTotal += unitStatistics->delta.strength;
+	_statGainTotal += unitStatistics->delta.mana;
 	_statGainTotal += unitStatistics->delta.psiStrength;
 	_statGainTotal += unitStatistics->delta.melee;
 	_statGainTotal += unitStatistics->delta.psiSkill;
@@ -448,7 +448,7 @@ bool SoldierDiary::manageCommendations(Mod *mod, std::vector<MissionStatistics*>
 								}
 							}
 							// Skip kill-groups that we already got an award for.
-							// Skip kills that are inbetween turns.
+							// Skip kills that are in-between turns.
 							if ( thisTime == lastTime && goToNextTime && (*j).first != "killsWithCriteriaCareer")
 							{
 								continue;
@@ -518,9 +518,9 @@ bool SoldierDiary::manageCommendations(Mod *mod, std::vector<MissionStatistics*>
 						}
 					} /// End of AND loop.
 					if (andCriteriaMet)
-						break; // Stop looking, becuase we _are_ getting one, regardless of what's in the next OR block.
-				} /// End of OR loop. 
-				
+						break; // Stop looking, because we _are_ getting one, regardless of what's in the next OR block.
+				} /// End of OR loop.
+
 				if (!andCriteriaMet)
 					awardCommendationBool = false;
 
@@ -548,7 +548,7 @@ bool SoldierDiary::manageCommendations(Mod *mod, std::vector<MissionStatistics*>
 				}
 				if (newCommendation)
 				{
-					_commendations.push_back(new SoldierCommendations((*i).first, (*j)));
+					_commendations.push_back(new SoldierCommendations((*i).first, (*j), mod));
 				}
 			}
 			awardedCommendation = true;
@@ -574,29 +574,6 @@ void SoldierDiary::manageModularCommendations(std::map<std::string, int> &nextCo
 	if ((modularCommendations.count(statTotal.first) == 0 && statTotal.second >= criteria) || (modularCommendations.count(statTotal.first) != 0 && nextCommendationLevel.at(statTotal.first) >= criteria))
 	{
 		modularCommendations[statTotal.first]++;
-	}
-}
-
-/**
- * Award commendations to the soldier.
- * @param type string
- * @param noun string
- */
-void SoldierDiary::awardCommendation(const std::string& type, const std::string& noun)
-{
-	bool newCommendation = true;
-	for (std::vector<SoldierCommendations*>::iterator i = _commendations.begin() ; i != _commendations.end() ; ++i)
-	{
-		if ( (*i)->getType() == type && (*i)->getNoun() == noun)
-		{
-			(*i)->addDecoration();
-			newCommendation = false;
-			break;
-		}
-	}
-	if (newCommendation)
-	{
-		_commendations.push_back(new SoldierCommendations(type, noun));
 	}
 }
 
@@ -893,14 +870,14 @@ int SoldierDiary::getMonthsService() const
 /**
  * Award special commendation to the original 8 soldiers.
  */
-void SoldierDiary::awardOriginalEightCommendation()
+void SoldierDiary::awardOriginalEightCommendation(const Mod* mod)
 {
 	// TODO: Unhardcode this
-	_commendations.push_back(new SoldierCommendations("STR_MEDAL_ORIGINAL8_NAME", "NoNoun"));
+	_commendations.push_back(new SoldierCommendations("STR_MEDAL_ORIGINAL8_NAME", "NoNoun", mod));
 }
 
 /**
- * Award post-humous best-of commendation.
+ * Award posthumous best-of commendation.
  */
 void SoldierDiary::awardBestOfRank(int score)
 {
@@ -908,7 +885,7 @@ void SoldierDiary::awardBestOfRank(int score)
 }
 
 /**
- * Award post-humous best-of commendation.
+ * Award posthumous best-of commendation.
  */
 void SoldierDiary::awardBestOverall(int score)
 {
@@ -916,7 +893,7 @@ void SoldierDiary::awardBestOverall(int score)
 }
 
 /**
- * Award post-humous kills commendation.
+ * Award posthumous kills commendation.
  */
 void SoldierDiary::awardPostMortemKill(int kills)
 {
@@ -1161,7 +1138,7 @@ int SoldierDiary::getScoreTotal(std::vector<MissionStatistics*> *missionStatisti
 }
 
 /**
- *  Get the Valient Crux total.
+ *  Get the Valiant Crux total.
  *  @param Mission Statistics
  */
 int SoldierDiary::getValiantCruxTotal(std::vector<MissionStatistics*> *missionStatistics) const
@@ -1208,16 +1185,18 @@ int SoldierDiary::getLootValueTotal(std::vector<MissionStatistics*> *missionStat
  * Initializes a new commendation entry from YAML.
  * @param node YAML node.
  */
-SoldierCommendations::SoldierCommendations(const YAML::Node &node)
+SoldierCommendations::SoldierCommendations(const YAML::Node &node, const Mod* mod)
 {
 	load(node);
+	_rule = mod->getCommendation(_type, false); //TODO: during load we can load obsolete value, some else need cleanup
 }
 
 /**
  * Initializes a soldier commendation.
  */
-SoldierCommendations::SoldierCommendations(std::string commendationName, std::string noun) : _type(commendationName), _noun(noun), _decorationLevel(0), _isNew(true)
+SoldierCommendations::SoldierCommendations(std::string commendationName, std::string noun, const Mod* mod) : _type(commendationName), _noun(noun), _decorationLevel(0), _isNew(true)
 {
+	_rule = mod->getCommendation(_type, true); //if there is no commendation rule then someone messed up
 }
 
 /**
