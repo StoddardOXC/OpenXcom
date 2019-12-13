@@ -22,7 +22,8 @@
 /*
  * Based on http://www.libsdl.org/projects/flxplay/
  */
-#include <SDL.h>
+#include "SDL.h"
+#include "SDL_mixer.h"
 
 namespace OpenXcom
 {
@@ -34,13 +35,13 @@ class FlcPlayer
 {
 private:
 
-	Uint8 *_fileBuf;
-	Uint32 _fileSize;
+	SDL_RWops *_rwops;
+	Sint64 _fileSize;
 	Uint8 *_videoFrameData;
 	Uint8 *_chunkData;
 	Uint8 *_audioFrameData;
 	Uint16 _frameCount;    /* Frame Counter */
-	Uint32 _headerSize;    /* Fli file size */
+	Uint32 _headerFileSize;    /* Fli file size */
 	Uint16 _headerType;    /* Fli header check */
 	Uint16 _headerFrames;  /* Number of frames in flic */
 	Uint16 _headerWidth;   /* Fli width */
@@ -55,16 +56,15 @@ private:
 	Uint16 _delayOverride; /* FRAME_TYPE extension */
 	Uint32 _audioFrameSize;
 	Uint16 _audioFrameType;
+	Uint32 _currentTick;
 
-	void (*_frameCallBack)();
+	bool isPlaying; 		/* if it's playing */
 
-	SDL_Surface *_mainScreen;
-	Screen *_realScreen;
+	SDL_Surface *_frameBuffer;
 	SDL_Color _colors[256];
-	int _dx, _dy;
 	int _offset;
 	int _playingState;
-	bool _hasAudio, _useInternalAudio;
+	bool _hasAudio, _mute;
 	int _videoDelay;
 	double _volume;
 
@@ -90,17 +90,8 @@ private:
 
 	Game *_game;
 
-	void readU16(Uint16 &dst, const Uint8 *const src);
-	void readU32(Uint32 &dst, const Uint8 *const src);
-	void readS16(Sint16 &dst, const Sint8 *const src);
-	void readS32(Sint32 &dst, const Sint8 *const src);
-	void readFileHeader();
-
-	bool isValidFrame(Uint8 *frameHeader, Uint32 &frameSize, Uint16 &frameType);
 	void decodeVideo(bool skipLastFrame);
 	void decodeAudio(int frames);
-	void waitForNextFrame(Uint32 delay);
-	bool shouldQuit();
 
 	void playVideoFrame();
 	void color256();
@@ -111,32 +102,22 @@ private:
 	void color64();
 	void black();
 
-	void playAudioFrame(Uint16 sampleRate);
-	void initAudio(Uint16 format, Uint8 channels);
-	void deInitAudio();
-
-	bool isEndOfFile(Uint8 *pos);
-
-	static void audioCallback(void *userData, Uint8 *stream, int len);
+	/// decodes next frame; false on EOF
+	bool readChunk();
+	/// decodes video subchunks; false on EOF
+	bool readVideoData(Uint16 delayOverride);
+	/// decodes audio chunk; false on EOF
+	bool readAudioData();
 
 public:
 
 	FlcPlayer();
 	~FlcPlayer();
 
-	/// Open FLC or FLI file, read header, prepare to play it
-	bool init(const char *filename, void(*frameCallBack)(), Game *game, bool useAudio, int dx, int dy);
-	/// Play the loaded file; set flc.mainScreen first!
-	void play(bool skipLastFrame);
-	/// Free memory, free love, etc.
-	void deInit();
-	// Stop FLC Player
-	void stop();
-	/// Delay player at the end
-	void delay(Uint32 milliseconds);
-	void setHeaderSpeed(int speed);
-	int getFrameCount();
-	bool wasSkipped();
+	bool init(Game *game, SDL_RWops *buf, bool useInternalAudio);
+	bool frameAt(Uint32 tick, SDL_Surface **frame, Mix_Chunk **sample);
+	void fini();
+
 };
 
 }
