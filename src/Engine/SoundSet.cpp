@@ -216,6 +216,7 @@ void SoundSet::loadCatByIndex(CatFile &catFile, int index, bool tftd)
 		do_resample  = (samplerate < 11025);
 		samples = sound + 44;
 		samplecount = size - 44;
+		Log(LOG_INFO) << "SoundSet::loadCatByIndex(" << catFile.fileName() << ", " << index << ") size=" << size <<" , tftd="<<tftd<<" wav="<<wav<<" do_resample="<<do_resample<<" samplerate="<<samplerate;
 	} else { // skip DOS header
 		// UFO2000 style
 		samples = sound + 6;

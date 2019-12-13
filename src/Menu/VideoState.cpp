@@ -330,7 +330,7 @@ static struct AudioSequence
 
 	void operator()()
 	{
-		while (_flcPlayer->getFrameCount() >= introSoundTrack[trackPosition].frameNumber)
+		while (false /*_flcPlayer->getFrameCount() >= introSoundTrack[trackPosition].frameNumber*/)
 		{
 			int command = introSoundTrack[trackPosition].sound;
 
@@ -361,7 +361,7 @@ static struct AudioSequence
 			else if (command & 0x400)
 			{
 				int newSpeed = (command & 0xff);
-				_flcPlayer->setHeaderSpeed(newSpeed);
+//				_flcPlayer->setHeaderSpeed(newSpeed);
 				Log(LOG_DEBUG) << "Frame delay now: " << newSpeed;
 			}
 			else if (command <= 0x19)
@@ -388,15 +388,10 @@ static struct AudioSequence
 	}
 } *audioSequence = NULL;
 
-
-static void audioHandler()
-{
-	(*audioSequence)();
-}
-
 void VideoState::init()
 {
 	State::init();
+#if 0
 
 	bool ufoIntroSoundFileDosExists = false;
 	bool ufoIntroSoundFileWinExists = false;
@@ -421,9 +416,6 @@ void VideoState::init()
 		}
 	}
 	_game->getCursor()->setVisible(false);
-
-	int dx = _game->getScreen()->getDX();
-	int dy = _game->getScreen()->getDY();
 
 	const int FADE_DELAY = 45;
 	const int FADE_STEPS = 20;
@@ -456,22 +448,21 @@ void VideoState::init()
 			audioSequence = new AudioSequence(_game->getMod(), flcPlayer);
 		}
 
-		flcPlayer->init(videoFileName.c_str(),
-			 _useUfoAudioSequence ? &audioHandler : NULL,
-			 _game, useInternalAudio, dx, dy);
-		flcPlayer->play(_useUfoAudioSequence);
+		flcPlayer->init(_game, NULL /*videoFileName.c_str()*/, useInternalAudio);
+		//flcPlayer->play(_useUfoAudioSequence);
 		if (_useUfoAudioSequence)
 		{
-			flcPlayer->delay(10000);
+			//flcPlayer->delay(10000);
 			delete audioSequence;
 			audioSequence = NULL;
 		}
-		flcPlayer->deInit();
-
+		flcPlayer->fini();
+/*
 		if (flcPlayer->wasSkipped())
 		{
 			break;
 		}
+*/
 	}
 
 	if (flcPlayer)
@@ -528,6 +519,7 @@ void VideoState::init()
 #ifndef __NO_MUSIC
 	Sound::stop();
 	Music::stop();
+#endif
 #endif
 #ifdef __ANDROID__
 	// FIXME: This should go to the Game.cpp probably
