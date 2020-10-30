@@ -33,7 +33,9 @@ namespace OpenXcom
  * @param x Position on the x-axis.
  * @param y Position on the y-axis.
  */
-ActionMenuItem::ActionMenuItem(int id, Game *game, int x, int y) : InteractiveSurface(272, 40, x + 24, y - (id*40)), _highlighted(false), _action(BA_NONE), _skill(nullptr), _tu(0)
+ActionMenuItem::ActionMenuItem(int id, Game *game, int x, int y) :
+	InteractiveSurface(272, 40, x + 24, y - (id*40)),
+	_highlighted(false), _action(BA_NONE), _skill(nullptr), _tu(0)
 {
 	Font *big = game->getMod()->getFont("FONT_BIG"), *small = game->getMod()->getFont("FONT_SMALL");
 	Language *lang = game->getLanguage();
@@ -66,6 +68,7 @@ ActionMenuItem::ActionMenuItem(int id, Game *game, int x, int y) : InteractiveSu
 	_txtTU->setBig();
 	_txtTU->setHighContrast(true);
 	_txtTU->setColor(actionMenu->color);
+	Log(LOG_INFO) << "ActionMenuItem::ActionMenuItem(id="<<id<<") at "<<_x<<"x"<<_y<<"  dxy: "<<_dx<<"x"<<_dy;
 }
 
 /**
@@ -95,6 +98,8 @@ void ActionMenuItem::setAction(BattleActionType action, const std::string &descr
 	_txtTU->setText(timeunits);
 	_tu = tu;
 	_redraw = true;
+	Log(LOG_INFO) << "ActionMenuItem::ActionMenuItem() _y="<<_y<<" text="<<description;
+
 }
 
 /**
@@ -185,6 +190,9 @@ void ActionMenuItem::mouseOut(Action *action, State *state)
 	draw();
 	InteractiveSurface::mouseOut(action, state);
 }
-
-
+void ActionMenuItem::setOffset(int x, int y)
+{
+	Surface::setOffset(x, y);
+	Log(LOG_INFO) << "ActionMenuItem::setOffset("<<x<<", "<<y<<");";
+}
 }

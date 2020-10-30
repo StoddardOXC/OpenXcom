@@ -64,6 +64,9 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 {
 	_screen = false;
 	_screenMode = SC_BATTLESCAPE;
+	_game->setScreenMode(_screenMode);
+	Log(LOG_INFO) << "ActionMenuState::ActionMenuState(x, "<<x<<", "<<y<<");";
+
 
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
