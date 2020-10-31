@@ -202,8 +202,14 @@ BattlescapeState::BattlescapeState() :
 	_btnPsi->setVisible(false);
 	_btnSpecial = new BattlescapeButton(32, 24, _width - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
 	_btnSpecial->setVisible(false);
+#if 0
 	_btnSkills = new BattlescapeButton(32, 24, screenWidth - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
+#else
+	_btnSkills = new BattlescapeButton(32, 24, 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
+#endif
 	_btnSkills->setVisible(false);
+
+
 
 	// Create soldier stats summary
 	_rankTiny = new Surface(7, 7, x + 135, y + 33);
@@ -593,8 +599,10 @@ BattlescapeState::BattlescapeState() :
 	for (int i = 0; i < VISIBLE_MAX; ++i)
 	{
 		std::ostringstream tooltip;
+		/* FIXME: Why this consumerism is even needed ??
 		_btnVisibleUnit[i]->onMousePress((ActionHandler)&BattlescapeState::consumeEvent);
 		_btnVisibleUnit[i]->onMouseRelease((ActionHandler)&BattlescapeState::consumeEvent);
+		*/
 		_btnVisibleUnit[i]->onMouseClick((ActionHandler)&BattlescapeState::btnVisibleUnitClick);
 		_btnVisibleUnit[i]->onKeyboardPress((ActionHandler)&BattlescapeState::btnVisibleUnitClick, buttons[i]);
 		tooltip << "STR_CENTER_ON_ENEMY_" << (i+1);
@@ -1140,8 +1148,8 @@ void BattlescapeState::mapClick(Action *action)
 
 	if (_save->getTile(pos) != 0) // don't allow to click into void
 	{
-		if ((action->getMouseButton() == SDL_BUTTON_RIGHT && playableUnitSelected())
- //|| (action->getMouseButton() == SDL_BUTTON_LEFT && (action->getKeymods() & KMOD_ALT) != 0)) && playableUnitSelected())
+		if ((action->getMouseButton() == SDL_BUTTON_RIGHT && playableUnitSelected()))
+ //|| (action->getMouseButton() == SDL_BUTTON_LEFT && (action->getKeymods() & KMOD_ALT) != 0)) && playableUnitSelected()) FIXME WTDF
 		{
 			_battleGame->secondaryAction(pos);
 		}
@@ -1520,7 +1528,7 @@ void BattlescapeState::btnStatsClick(Action *action)
 		}
 		if (!scroll)
 		{
-			if (SDL_BUTTON_RIGHT == action->getDetails()->button.button)
+			if (SDL_BUTTON_RIGHT == action->getMouseButton())
 			{
 				_save->setNameDisplay(!_save->isNameDisplay());
 				updateSoldierInfo();
@@ -1563,7 +1571,7 @@ void BattlescapeState::btnLeftHandItemClick(Action *action)
 		_save->getSelectedUnit()->setActiveLeftHand();
 		_map->draw();
 
-		bool rightClick = action->getDetails()->button.button == SDL_BUTTON_RIGHT;
+		bool rightClick = action->getMouseButton() == SDL_BUTTON_RIGHT;
 		if (rightClick)
 		{
 			_save->getSelectedUnit()->toggleLeftHandForReactions();
@@ -1618,7 +1626,7 @@ void BattlescapeState::btnRightHandItemClick(Action *action)
 		_save->getSelectedUnit()->setActiveRightHand();
 		_map->draw();
 
-		bool rightClick = action->getDetails()->button.button == SDL_BUTTON_RIGHT;
+		bool rightClick = action->getMouseButton() == SDL_BUTTON_RIGHT;
 		if (rightClick)
 		{
 			_save->getSelectedUnit()->toggleRightHandForReactions();
@@ -1790,7 +1798,7 @@ void BattlescapeState::btnSkillsClick(Action *action)
 	{
 		popup(new SkillMenuState(_battleGame->getCurrentAction(), _icons->getX(), _icons->getY() + 16));
 	}
-	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	/// ASLO FCUKNGI FXMEI action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
 #ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
@@ -3467,6 +3475,7 @@ void BattlescapeState::btnZeroTUsRelease(Action *action)
 	_longPressTimer->stop();
 }
 
+// FUCKING FIXME
 void BattlescapeState::btnZeroTUsLongPress()
 {
 	_longPressTimer->stop();

@@ -162,6 +162,7 @@ void Game::run()
 
 	while (!_quit)
 	{
+		Uint32 timeFrameStarted = SDL_GetTicks();
 		// Clean up states
 		while (!_deleted.empty())
 		{
@@ -471,7 +472,7 @@ void Game::run()
 			// Process logic
 			_states.back()->think();
 			_fpsCounter->think();
-			if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
+			if (Options::FPS > 0)
 			{
 				// Update our FPS delay time based on the time of the last draw.
 				int fps = SDL_GetWindowFlags(getScreen()->getWindow()) & SDL_WINDOW_INPUT_FOCUS ? Options::FPS : Options::FPSInactive;
@@ -589,33 +590,6 @@ void Game::setVolume(int sound, int music, int ui)
 double Game::volumeExponent(int volume)
 {
 	return (exp(log(Game::VOLUME_GRADIENT + 1.0) * volume / (double)SDL_MIX_MAXVOLUME) -1.0 ) / Game::VOLUME_GRADIENT;
-}
-
-/**
- * Returns the display screen used by the game.
- * @return Pointer to the screen.
- */
-Screen *Game::getScreen() const
-{
-	return _screen;
-}
-
-/**
- * Returns the mouse cursor used by the game.
- * @return Pointer to the cursor.
- */
-Cursor *Game::getCursor() const
-{
-	return _cursor;
-}
-
-/**
- * Returns the FpsCounter used by the game.
- * @return Pointer to the FpsCounter.
- */
-FpsCounter *Game::getFpsCounter() const
-{
-	return _fpsCounter;
 }
 
 ScreenMode Game::getCurrentScreenMode() const

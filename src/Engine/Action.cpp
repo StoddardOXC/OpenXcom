@@ -20,6 +20,7 @@
 #include "Action.h"
 #include "CrossPlatform.h"
 #include "InteractiveSurface.h"
+#include "Exception.h"
 
 namespace OpenXcom
 {
@@ -38,7 +39,7 @@ Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBa
 	_mouseButton(0),  _sender(0)
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw Exception("bad stuff in action handling") ;
 
 	if (ev->type == SDL_MOUSEBUTTONUP || ev->type == SDL_MOUSEBUTTONDOWN)
 	{
@@ -324,6 +325,7 @@ float Action::getMultigestureDDist() const
 void Action::setConsumed(void)
 {
 	_ev = NULL;
+	CrossPlatform::stackTrace (NULL);
 }
 
 bool Action::isConsumed() const

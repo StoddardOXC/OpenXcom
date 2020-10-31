@@ -190,7 +190,8 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_txtFunds = new Text(59, 8, _width-61, _height/2-27);
 
 	int slackingIndicatorOffset = _game->getMod()->getInterface("geoscape")->getElement("slackingIndicator")->custom;
-	_txtSlacking = new Text(59, 17, screenWidth - 61, screenHeight / 2 - 100 + slackingIndicatorOffset);
+	// FIXME!!
+	_txtSlacking = new Text(59, 17, /* screenWidth - */61, /*screenHeight / 2*/ - 100 + slackingIndicatorOffset);
 
 	_timeSpeed = _btn5Secs;
 	_gameTimer = new Timer(Options::geoClockSpeed);
@@ -592,7 +593,7 @@ void GeoscapeState::handle(Action *action)
 				}
 			}
 			// "ctrl-7"
-			if (action->getDetails()->key.keysym.sym == SDLK_7)
+			if (action->getKeycode() == SDLK_7)
 			{
 				_txtDebug->setText("BIG BROTHER SEES ALL");
 				for (auto& ufo : *_game->getSavedGame()->getUfos())
@@ -3187,27 +3188,22 @@ void GeoscapeState::handleDogfightMultiAction(int button)
 		if (d->isMinimized())
 			continue;
 
-		SDL_Event ev;
-		ev.type = SDL_MOUSEBUTTONDOWN;
-		ev.button.button = SDL_BUTTON_LEFT;
-		Action a = Action(&ev, 0.0, 0.0, 0, 0);
-
 		switch (button)
 		{
 		case 0:
-			d->btnStandoffSimulateLeftPress(&a);
+			d->btnStandoffSimulateLeftPress();
 			break;
 		case 1:
-			d->btnCautiousSimulateLeftPress(&a);
+			d->btnCautiousSimulateLeftPress();
 			break;
 		case 2:
-			d->btnStandardSimulateLeftPress(&a);
+			d->btnStandardSimulateLeftPress();
 			break;
 		case 3:
-			d->btnAggressiveSimulateLeftPress(&a);
+			d->btnAggressiveSimulateLeftPress();
 			break;
 		case 4:
-			d->btnDisengageSimulateLeftPress(&a);
+			d->btnDisengageSimulateLeftPress();
 			break;
 		default:
 			break;

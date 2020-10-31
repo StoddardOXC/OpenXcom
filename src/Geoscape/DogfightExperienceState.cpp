@@ -62,8 +62,6 @@ DogfightExperienceState::DogfightExperienceState()
 	add(_txtPilots, "text2", "dogfightExperience");
 	add(_lstPilots, "list", "dogfightExperience");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "dogfightExperience");
 

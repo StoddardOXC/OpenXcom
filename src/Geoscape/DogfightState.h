@@ -106,23 +106,23 @@ public:
 	/// Handler for pressing the Standoff button.
 	void btnStandoffPress(Action *action);
 	void btnStandoffRightPress(Action *action);
-	void btnStandoffSimulateLeftPress(Action *action);
+	void btnStandoffSimulateLeftPress();
 	/// Handler for pressing the Cautious Attack button.
 	void btnCautiousPress(Action *action);
 	void btnCautiousRightPress(Action *action);
-	void btnCautiousSimulateLeftPress(Action *action);
+	void btnCautiousSimulateLeftPress();
 	/// Handler for pressing the Standard Attack button.
 	void btnStandardPress(Action *action);
 	void btnStandardRightPress(Action *action);
-	void btnStandardSimulateLeftPress(Action *action);
+	void btnStandardSimulateLeftPress();
 	/// Handler for pressing the Aggressive Attack button.
 	void btnAggressivePress(Action *action);
 	void btnAggressiveRightPress(Action *action);
-	void btnAggressiveSimulateLeftPress(Action *action);
+	void btnAggressiveSimulateLeftPress();
 	/// Handler for pressing the Disengage button.
 	void btnDisengagePress(Action *action);
 	void btnDisengageRightPress(Action *action);
-	void btnDisengageSimulateLeftPress(Action *action);
+	void btnDisengageSimulateLeftPress();
 	/// Handler for clicking the Ufo button.
 	void btnUfoClick(Action *action);
 	/// Handler for clicking the Preview graphic.

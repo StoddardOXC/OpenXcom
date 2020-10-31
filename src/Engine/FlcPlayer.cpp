@@ -168,42 +168,6 @@ bool FlcPlayer::readChunk() {
 
 	switch (frameType){
 		case FRAME_TYPE:
-<<<<<<< HEAD
-
-			Uint32 delay;
-
-			readU16(_frameChunks, _videoFrameData + 6);
-			readU16(_delayOverride, _videoFrameData + 8);
-
-			if (_headerType == FLI_TYPE)
-			{
-				delay = _delayOverride > 0 ? _delayOverride : _headerSpeed * (1000.0 / 70.0);
-			}
-			else if (_useInternalAudio && !_frameCallBack) // this means TFTD videos are playing
-			{
-				delay = _videoDelay;
-			}
-			else
-			{
-				delay = _headerSpeed;
-			}
-
-			waitForNextFrame(delay);
-
-			// Skip the frame header, we are not interested in the rest
-			_chunkData = _videoFrameData + 16;
-
-			_videoFrameData += _videoFrameSize;
-			// If this frame is the last one, don't play it
-			if(isEndOfFile(_videoFrameData))
-				_playingState = FINISHED;
-
-			if(!shouldQuit() || !skipLastFrame)
-				playVideoFrame();
-
-			videoFrameFound = true;
-
-=======
 		{
 			Uint16 chunkCount = SDL_ReadLE16(_rwops);
 			Uint16 delayOverride = SDL_ReadLE16(_rwops); // 0 = use header
@@ -215,7 +179,6 @@ bool FlcPlayer::readChunk() {
 				if (!readVideoData(delayOverride)) return false;
 			}
 		}
->>>>>>> rewriting FlcPlayer:
 			break;
 		case AUDIO_CHUNK:
 			if (!readAudioData()) return false;

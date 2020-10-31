@@ -1850,11 +1850,11 @@ void DogfightState::btnStandoffRightPress(Action *)
 	_state->handleDogfightMultiAction(0);
 }
 
-void DogfightState::btnStandoffSimulateLeftPress(Action *action)
+void DogfightState::btnStandoffSimulateLeftPress()
 {
 	if (_btnStandoff->getVisible())
 	{
-		_btnStandoff->mousePress(action, this);
+		btnStandoffPress(nullptr);
 	}
 }
 
@@ -1903,11 +1903,11 @@ void DogfightState::btnCautiousRightPress(Action *)
 	_state->handleDogfightMultiAction(1);
 }
 
-void DogfightState::btnCautiousSimulateLeftPress(Action *action)
+void DogfightState::btnCautiousSimulateLeftPress()
 {
 	if (_btnCautious->getVisible())
 	{
-		_btnCautious->mousePress(action, this);
+		btnCautiousRightPress(nullptr);
 	}
 }
 
@@ -1938,11 +1938,11 @@ void DogfightState::btnStandardRightPress(Action *)
 	_state->handleDogfightMultiAction(2);
 }
 
-void DogfightState::btnStandardSimulateLeftPress(Action *action)
+void DogfightState::btnStandardSimulateLeftPress()
 {
 	if (_btnStandard->getVisible())
 	{
-		_btnStandard->mousePress(action, this);
+		btnStandardPress(nullptr);
 	}
 }
 
@@ -1973,11 +1973,11 @@ void DogfightState::btnAggressiveRightPress(Action *)
 	_state->handleDogfightMultiAction(3);
 }
 
-void DogfightState::btnAggressiveSimulateLeftPress(Action *action)
+void DogfightState::btnAggressiveSimulateLeftPress()
 {
 	if (_btnAggressive->getVisible())
 	{
-		_btnAggressive->mousePress(action, this);
+		btnAggressiveRightPress(nullptr);
 	}
 }
 
@@ -2000,11 +2000,11 @@ void DogfightState::btnDisengageRightPress(Action *)
 	_state->handleDogfightMultiAction(4);
 }
 
-void DogfightState::btnDisengageSimulateLeftPress(Action *action)
+void DogfightState::btnDisengageSimulateLeftPress()
 {
 	if (_btnDisengage->getVisible())
 	{
-		_btnDisengage->mousePress(action, this);
+		btnDisengagePress(nullptr);
 	}
 }
 

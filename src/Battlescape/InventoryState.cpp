@@ -1125,7 +1125,7 @@ void InventoryState::btnCreateTemplateClick(Action *action)
 	refreshMouse(action);
 }
 
-void InventoryState::btnCreatePersonalTemplateClick(Action *)
+void InventoryState::btnCreatePersonalTemplateClick(Action *action)
 {
 	// cannot use this feature during the mission!
 	if (_tu)
@@ -1165,7 +1165,7 @@ void InventoryState::btnCreatePersonalTemplateClick(Action *)
 
 		// give audio feedback
 		_game->getMod()->getSoundByDepth(_battleGame->getDepth(), Mod::ITEM_DROP)->play();
-		refreshMouse();
+		/* FIXME */ refreshMouse(action);
 	}
 }
 

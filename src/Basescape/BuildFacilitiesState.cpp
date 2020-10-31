@@ -207,7 +207,7 @@ void BuildFacilitiesState::lstFacilitiesClick(Action *action)
 	}
 
 	_lstScroll = _lstFacilities->getScroll();
-	if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+	if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 	{
 		Ufopaedia::openArticle(_game, _facilities[index]->getType());
 		return;

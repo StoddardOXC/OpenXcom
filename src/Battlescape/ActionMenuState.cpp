@@ -295,7 +295,6 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 
 		handleAction();
 	}
-	action->getDetails()->type = SDL_FIRSTEVENT;
 }
 
 void ActionMenuState::handleAction()
@@ -520,7 +519,7 @@ void ActionMenuState::handleAction()
 			_game->getSavedGame()->getSavedBattle()->appendToHitLog(HITLOG_PLAYER_FIRING, FACTION_PLAYER, tr(weapon->getType()));
 		}
 	}
-	action->setConsumed();
+	//_action->setConsumed();
 }
 
 /**

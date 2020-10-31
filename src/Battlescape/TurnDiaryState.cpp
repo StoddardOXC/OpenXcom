@@ -54,8 +54,6 @@ TurnDiaryState::TurnDiaryState(const HitLog *hitLog)
 	add(_btnCancel, "messageWindowButtons", "battlescape");
 	add(_lstTurnDiary, "optionLists", "battlescape");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	_window->setHighContrast(true);
 	_window->setBackground(_game->getMod()->getSurface("TAC00.SCR"));

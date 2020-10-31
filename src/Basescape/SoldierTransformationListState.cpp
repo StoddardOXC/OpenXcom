@@ -82,8 +82,6 @@ SoldierTransformationListState::SoldierTransformationListState(Base *base, Combo
 	add(_cbxSoldierType, "button2", "transformationList");
 	add(_cbxSoldierStatus, "button2", "transformationList");
 
-	centerAllSurfaces();
-
 	// Set up objects
 	setWindowBackground(_window, "transformationList");
 
@@ -352,7 +350,7 @@ void SoldierTransformationListState::lstTransformationsClick(Action *action)
 {
 	int transformationIndex = _transformationIndices.at(_lstTransformations->getSelectedRow());
 
-	if (action->getDetails()->button.button == SDL_BUTTON_MIDDLE)
+	if (action->getMouseButton() == SDL_BUTTON_MIDDLE)
 	{
 		std::string articleId = _availableTransformations.at(transformationIndex)->getName();
 		Ufopaedia::openArticle(_game, articleId);
