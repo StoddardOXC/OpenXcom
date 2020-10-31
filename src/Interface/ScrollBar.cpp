@@ -163,7 +163,7 @@ void ScrollBar::handle(Action *action, State *state)
 	InteractiveSurface::handle(action, state);
 	if (_pressed && (action->getType() == SDL_MOUSEMOTION || action->getType() == SDL_MOUSEBUTTONDOWN))
 	{
-		int cursorY = action->getMouseX() - _dx - _x;
+		int cursorY = action->getMouseY() - _dy - _y;
 		int y = Clamp(cursorY + _offset, 0, getHeight() - _thumbRect.h + 1);
 		double scale = (double)_list->getRows() / getHeight();
 		int scroll = (int)Round(y * scale);
