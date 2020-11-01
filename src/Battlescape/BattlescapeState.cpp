@@ -104,11 +104,11 @@ BattlescapeState::BattlescapeState() :
 {
 	_screenMode = SC_BATTLESCAPE;
 	_game->setScreenMode(_screenMode); // done here only for states that depend on screen dimensions in their constructor.
+	_width = _game->getScreen()->getWidth(); // these two as above.
+	_height = _game->getScreen()->getHeight();
 
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
-	_width = _game->getScreen()->getWidth();
-	_height = _game->getScreen()->getHeight();
 	const int iconsWidth = _game->getMod()->getInterface("battlescape")->getElement("icons")->w;
 	const int iconsHeight = _game->getMod()->getInterface("battlescape")->getElement("icons")->h;
 	const int visibleMapHeight = _height - iconsHeight;
@@ -599,7 +599,7 @@ BattlescapeState::BattlescapeState() :
 	for (int i = 0; i < VISIBLE_MAX; ++i)
 	{
 		std::ostringstream tooltip;
-		/* FIXME: Why this consumerism is even needed ??
+		/* FIXME: Why this consumerism is even needed ?? It breaks onMouseClick
 		_btnVisibleUnit[i]->onMousePress((ActionHandler)&BattlescapeState::consumeEvent);
 		_btnVisibleUnit[i]->onMouseRelease((ActionHandler)&BattlescapeState::consumeEvent);
 		*/
@@ -1694,8 +1694,8 @@ void BattlescapeState::btnVisibleUnitClick(Action *action)
 		}
 		_map->getCamera()->centerOnPosition(position);
 	}
-
-//	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	// FIXME: maybe consume
+	action->setConsumed();
 #ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
@@ -1796,9 +1796,10 @@ void BattlescapeState::btnSkillsClick(Action *action)
 {
 	if (playableUnitSelected() && !_battleGame->isBusy())
 	{
-		popup(new SkillMenuState(_battleGame->getCurrentAction(), _icons->getX(), _icons->getY() + 16));
+		popup(new SkillMenuState(_battleGame->getCurrentAction(), 16));
 	}
-	/// ASLO FCUKNGI FXMEI action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+	// FIXME: maybe consume
+	action->setConsumed();
 #ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
@@ -2430,7 +2431,7 @@ void BattlescapeState::handleItemClick(BattleItem *item, bool middleClick)
                 }
             }
 #endif
-			popup(new ActionMenuState(_battleGame->getCurrentAction(), _icons->getX(), _icons->getY() + 16));
+			popup(new ActionMenuState(_battleGame->getCurrentAction(), 16));
 			if (item->getRules()->getBattleType() == BT_FIREARM)
 			{
 				_battleGame->playUnitResponseSound(_battleGame->getCurrentAction()->actor, 2); // "select weapon" sound
@@ -3475,7 +3476,7 @@ void BattlescapeState::btnZeroTUsRelease(Action *action)
 	_longPressTimer->stop();
 }
 
-// FUCKING FIXME
+// FIXME: remove the synth action
 void BattlescapeState::btnZeroTUsLongPress()
 {
 	_longPressTimer->stop();

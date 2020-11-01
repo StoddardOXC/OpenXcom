@@ -40,28 +40,20 @@ namespace OpenXcom
 /**
  * Initializes all the elements in the Skill Menu window.
  * @param action Pointer to the action.
- * @param x Position on the x-axis.
- * @param y position on the y-axis.
+ * @param upshift
  */
-SkillMenuState::SkillMenuState(BattleAction *action, int x, int y) : ActionMenuState(action)
-{
+SkillMenuState::SkillMenuState(BattleAction *action, int upshift) : ActionMenuState(action, upshift) { }
+
+/**
+ * Initializes all the elements in the Skill Menu window.
+ */
+void SkillMenuState::buildMenu() {
 	// Attention: back up the current _action members
+	// FIXME: this is wrong, BattleAction *action should be const,
+	// copy and mutate whatever then
 	BattleActionType currentActionType = _action->type;
 	BattleItem* currentWeapon = _action->weapon;
 	const RuleSkill* currentSkill = _action->skillRules;
-
-	_screen = false;
-
-	// Set palette
-	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
-
-	for (int i = 0; i < (int)std::size(_actionMenu); ++i)
-	{
-		_actionMenu[i] = new ActionMenuItem(i, _game, x, y);
-		add(_actionMenu[i]);
-		_actionMenu[i]->setVisible(false);
-		_actionMenu[i]->onMouseClick((ActionHandler)&SkillMenuState::btnActionMenuItemClick);
-	}
 
 	// Build up the popup menu
 	int id = 0;
@@ -76,7 +68,7 @@ SkillMenuState::SkillMenuState(BattleAction *action, int x, int y) : ActionMenuS
 	auto soldier = _action->actor->getGeoscapeSoldier();
 	for (auto skill : soldier->getRules()->getSkills())
 	{
-		if (!hotkeys.empty()
+		if (!hotkeys.empty()  // FIXME: how could it be empty at this point?
 			&& soldierHasAllRequiredBonusesForSkill(soldier, skill)
 			&& (skill->getCost().Time > 0 || skill->getCost().Mana > 0)
 			&& (!skill->isPsiRequired() || _action->actor->getBaseStats()->psiSkill > 0))

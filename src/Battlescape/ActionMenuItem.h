@@ -45,6 +45,9 @@ private:
 	Frame *_frame;
 	Text *_txtDescription, *_txtAcc, *_txtTU;
 public:
+	/// hardcode this here so that the values are accessible without an instance for positioning purposes
+	static const Sint32 width = 272;
+	static const Sint32 height = 40;
 	/// Creates a new ActionMenuItem.
 	ActionMenuItem(int id, Game *game, int x, int y);
 	/// Cleans up the ActionMenuItem.

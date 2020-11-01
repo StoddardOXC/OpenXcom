@@ -47,43 +47,48 @@ namespace OpenXcom
 {
 
 /**
- * Default constructor, used by SkillMenuState.
- */
-ActionMenuState::ActionMenuState(BattleAction *action) : _action(action)
-{
-}
-
-/**
  * Initializes all the elements in the Action Menu window.
  * @param game Pointer to the core game.
  * @param action Pointer to the action.
- * @param x Position on the x-axis.
- * @param y position on the y-axis.
+ * @param upshift Amount to shift the menu stack from the bottom edge
  */
-ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(action)
-{
+OpenXcom::ActionMenuState::ActionMenuState ( BattleAction* action, const int upshift ) {
 	_screen = false;
 	_screenMode = SC_BATTLESCAPE;
 	_game->setScreenMode(_screenMode);
-	Log(LOG_INFO) << "ActionMenuState::ActionMenuState(x, "<<x<<", "<<y<<");";
-
+	_width = _game->getScreen()->getWidth();  // FIXME: this actually should with SC_INHERIT
+	_height = _game->getScreen()->getHeight();
 
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
 #ifdef __MOBILE__
 	// Set an underlying InteractiveSurface to exit the menu
-	_outside = new InteractiveSurface(_game->getScreen()->getWidth(), _game->getScreen()->getHeight(), 0, 0);
+	// FIXME: this might also be useful for teh desktop
+	_outside = new InteractiveSurface(_width, _height, 0, 0);
 	_outside->onMouseClick((ActionHandler)&ActionMenuState::outsideClick);
 	add(_outside);
 #endif
-	for (int i = 0; i < 6; ++i)
+
+	const int ix = (_width - ActionMenuItem::width)/2;
+	int iy = _height - ActionMenuItem::height - upshift;
+
+	for (size_t i = 0; i < std::size(_actionMenu); ++i)
 	{
-		_actionMenu[i] = new ActionMenuItem(i, _game, x, y);
+		_actionMenu[i] = new ActionMenuItem(i, _game, ix, iy - i * ActionMenuItem::height);
 		add(_actionMenu[i]);
 		_actionMenu[i]->setVisible(false);
 		_actionMenu[i]->onMouseClick((ActionHandler)&ActionMenuState::btnActionMenuItemClick);
 	}
 
+	buildMenu();
+}
+
+/*
+ * Builds the buildmenu.
+ * TODO: do we actually need _action as a member? It looks like a const parameter to me.
+ */
+void ActionMenuState::buildMenu()
+{
 	// Build up the popup menu
 	int id = 0;
 	const RuleItem *weapon = _action->weapon->getRules();
@@ -165,7 +170,7 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 				name = "STR_STUN";
 			}
 			else
-			// melee weapon
+				// melee weapon
 			{
 				name = "STR_HIT_MELEE";
 			}
@@ -201,7 +206,6 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 	{
 		addItem(BA_USE, "STR_USE_MIND_PROBE", &id, Options::keyBattleActionItem1);
 	}
-
 }
 
 /**
@@ -519,7 +523,7 @@ void ActionMenuState::handleAction()
 			_game->getSavedGame()->getSavedBattle()->appendToHitLog(HITLOG_PLAYER_FIRING, FACTION_PLAYER, tr(weapon->getType()));
 		}
 	}
-	//_action->setConsumed();
+	//FIXME: is that needed? _action->setConsumed();
 }
 
 /**
@@ -529,7 +533,9 @@ void ActionMenuState::handleAction()
  */
 void ActionMenuState::resize(int &dX, int &dY)
 {
-	_y += dY * 2;  // FIXME? or NOT?
+	Log(LOG_INFO) << "ActionMenuState::resize("<<dX<<","<<dY<<"); _y: "<< _y<< " += " << dY*2;
+
+	_y += dY * 2;  // FIXME? or NOT? I forget, I forget again.
 }
 #ifdef __MOBILE__
 void ActionMenuState::outsideClick(Action *action)

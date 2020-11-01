@@ -30,11 +30,11 @@ namespace OpenXcom
  * Sets up an Action menu item.
  * @param id The unique identifier of the menu item.
  * @param game Pointer to the game.
- * @param x Position on the x-axis.
+ * @param x Position on the x-axis. Actually dx relative to parent (ActionMenuState) state
  * @param y Position on the y-axis.
  */
 ActionMenuItem::ActionMenuItem(int id, Game *game, int x, int y) :
-	InteractiveSurface(272, 40, x + 24, y - (id*40)),
+	InteractiveSurface(width, height, x, y),
 	_highlighted(false), _action(BA_NONE), _skill(nullptr), _tu(0)
 {
 	Font *big = game->getMod()->getFont("FONT_BIG"), *small = game->getMod()->getFont("FONT_SMALL");

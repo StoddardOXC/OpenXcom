@@ -69,7 +69,7 @@ to the logical screen.
 
 ## Work-in-progress:
 
-<https://github.com/StoddardOXC/OpenXcom/tree/android-pc5>
+<https://github.com/StoddardOXC/OpenXcom/tree/android-pc20>
 
 
 ### Known :

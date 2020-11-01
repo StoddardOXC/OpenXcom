@@ -35,9 +35,10 @@ private:
 	void addItem(const RuleSkill* skill, int *id, SDL_Keycode key);
 	/// Choose an action weapon based on given parameters.
 	void chooseWeaponForSkill(BattleAction* action, const std::vector<const RuleItem*> &compatibleWeaponTypes, BattleType compatibleWeaponType, bool checkHandsOnly);
+	virtual void buildMenu() override;
 public:
 	/// Creates the Skill Menu state.
-	SkillMenuState(BattleAction *action, int x, int y);
+	SkillMenuState(BattleAction *action, const int upshift);
 	/// Cleans up the Skill Menu state.
 	~SkillMenuState();
 	/// Handler for clicking a skill menu item.

@@ -38,14 +38,14 @@ protected:
 	void addItem(BattleActionType ba, const std::string &name, int *id, SDL_Keycode key);
 	/// Acts on the action instance that has been chosen and set.
 	void handleAction();
+	/// Actually builds the menu; overriden in SkillMenuAction
+	virtual void buildMenu();
 #ifdef __MOBILE__
 	InteractiveSurface *_outside;
 #endif
 public:
-	/// Default constructor, used by SkillMenuState.
-	ActionMenuState(BattleAction *action);
 	/// Creates the Action Menu state.
-	ActionMenuState(BattleAction *action, int x, int y);
+	ActionMenuState(BattleAction *action, const int upshift);
 	/// Cleans up the Action Menu state.
 	~ActionMenuState();
 	/// Init function.
@@ -54,7 +54,7 @@ public:
 	void handle(Action *action) override;
 	/// Handler for clicking a action menu item.
 	virtual void btnActionMenuItemClick(Action *action);
-	/// Update the resolution settings, we just resized the window.
+	/// Update the resolution settings, we just resized the window. FIXME: drop that obsolete shit.
 	void resize(int &dX, int &dY) override;
 #ifdef __MOBILE__
 	/// Pop the state in case of clicking.
