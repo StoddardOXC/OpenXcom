@@ -34,7 +34,6 @@ namespace OpenXcom
  * @param ev Pointer to SDL_event.
  */
 Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand) : _ev(ev),
-	_scaleX(scaleX), _scaleY(scaleY), _topBlackBand(topBlackBand), _leftBlackBand(leftBlackBand),
 	_mouseX(-1), _mouseY(-1), _surfaceX(-1), _surfaceY(-1), _mouseRelX(0), _mouseRelY(0),
 	_mouseButton(0),  _sender(0)
 {

@@ -34,8 +34,7 @@ class Action
 {
 private:
 	const SDL_Event *_ev;
-	double _scaleX, _scaleY;
-	int _topBlackBand, _leftBlackBand, _mouseX, _mouseY, _surfaceX, _surfaceY;
+	int _mouseX, _mouseY, _surfaceX, _surfaceY;
 	int _mouseRelX, _mouseRelY;
 	int _mouseButton;
 	InteractiveSurface *_sender;
