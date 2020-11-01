@@ -52,7 +52,7 @@ namespace OpenXcom
  * @param action Pointer to the action.
  * @param upshift Amount to shift the menu stack from the bottom edge
  */
-OpenXcom::ActionMenuState::ActionMenuState ( BattleAction* action, const int upshift ) {
+OpenXcom::ActionMenuState::ActionMenuState ( BattleAction* action, const int upshift ) : _action(action) {
 	_screen = false;
 	_screenMode = SC_BATTLESCAPE;
 	_game->setScreenMode(_screenMode);
