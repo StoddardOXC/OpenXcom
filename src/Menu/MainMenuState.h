@@ -71,7 +71,7 @@ public:
 	/// Handler for clicking the Update button.
 	void btnUpdateClick(Action* action);
 	/// Update the resolution settings, we just resized the window.
-	void resize(int &dX, int &dY) override;
+	void resize(const int dW, const int dH) override;
 	void init() override;
 };
 

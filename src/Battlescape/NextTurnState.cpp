@@ -434,9 +434,9 @@ void NextTurnState::close()
 	}
 }
 
-void NextTurnState::resize(int &dX, int &dY)
+void NextTurnState::resize(const int dW, const int dH)
 {
-	State::resize(dX, dY);
+	State::resize(dW, dH);
 	_bg->setX(0);
 	_bg->setY(0);
 }

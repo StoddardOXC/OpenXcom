@@ -97,7 +97,7 @@ public:
 	/// Clears the screen.
 	void clear();
 	/// sets the screen mode - battlescape, geoscape, startscreen, bigmenu, intro, etc..
-	void setMode(ScreenMode mode, int& dX, int& dY);
+	void setMode(ScreenMode mode, int& dW, int& dH);
 	/// this is the new real updateScale - to be called on window resize / renderer recreation only.
 	void updateScale(int& dX, int& dY);
 	/// Sets the screen's 8bpp palette.

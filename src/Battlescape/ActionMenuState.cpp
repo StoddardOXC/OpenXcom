@@ -531,11 +531,15 @@ void ActionMenuState::handleAction()
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void ActionMenuState::resize(int &dX, int &dY)
+void ActionMenuState::resize(const int dW, const int dH)
 {
-	Log(LOG_INFO) << "ActionMenuState::resize("<<dX<<","<<dY<<"); _y: "<< _y<< " += " << dY*2;
+	Log(LOG_INFO) << "ActionMenuState::resize("<<dW<<","<<dH<<"); _y: "<< _y<< " += " << dH*2;
 
-	_y += dY * 2;  // FIXME? or NOT? I forget, I forget again.
+	State::resize(dW, dH);
+	// now we have right _width and _height
+
+	_y += dH * 2;  // FIXME? or NOT? I forget, I forget again.
+
 }
 #ifdef __MOBILE__
 void ActionMenuState::outsideClick(Action *action)

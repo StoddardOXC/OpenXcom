@@ -346,17 +346,18 @@ void Screen::updateScale(int& dX, int& dY)
 /**
  * Depending on the mode this sets up scaling.
  * @param mode - new mode
- * @param dX   - change in Screen width, if any.
- * @param dY   - change in Screen height, if any.
+ * @param dW   - returns change in Screen width, if any, logical pixels.
+ * @param dH   - returns change in Screen height, if any, logical pixels.
  *
  * Operation depends on whether the call was triggered by
  * window resize event or video reset (_resizeAccountedFor == false)
  * or by changes in State stack ( == true).
  *
  */
-void Screen::setMode(ScreenMode mode, int& dX, int& dY)
+void Screen::setMode(ScreenMode mode, int& dW, int& dH)
 {
-	dX = 0; dY = 0;
+	dW = 0;
+    dH = 0;
 	if (mode == SC_INHERITED) {
 		// we can't handle this case here since it's popState()
 		// and friends' job to find something explicit to set.
@@ -402,7 +403,7 @@ void Screen::setMode(ScreenMode mode, int& dX, int& dY)
 	if (_resizeAccountedFor && type == _currentScaleType) {
 		return;
 	}
-	dX = _baseWidth; dY = _baseHeight;
+	dW = _baseWidth; dH = _baseHeight;
 	_currentScaleType = type;
 	// the type from above determines logical game screen size.
 	int target_width, target_height;
@@ -410,8 +411,8 @@ void Screen::setMode(ScreenMode mode, int& dX, int& dY)
 	Log(LOG_INFO) << "Screen::setMode(): output size " << target_width << "x" << target_height <<
 	 " nonSquare=" << Options::nonSquarePixelRatio << " keepAspect=" << Options::keepAspectRatio;
 
-	Options::displayWidth = target_width;   //FIXME: those obnoxious globals..
-	Options::displayHeight = target_height;
+	Options::displayWidth = target_width;   // FIXME: those obnoxious globals..
+	Options::displayHeight = target_height; // FIXME: in physical pixels to boot
 
 	switch (type) {
 		case SCALE_15X:
@@ -462,7 +463,7 @@ void Screen::setMode(ScreenMode mode, int& dX, int& dY)
 	if (_baseHeight < ORIGINAL_HEIGHT) { _baseHeight  = ORIGINAL_HEIGHT; }
 
 	Log(LOG_INFO) << "Screen::setMode(): logical size " << _baseWidth << "x" << _baseHeight;
-	dX = _baseWidth - dX; dY = _baseHeight - dY;
+	dW = _baseWidth - dW; dH = _baseHeight - dH;
 
 	// set the source rect for the renderer
 	SDL_Rect baseRect;

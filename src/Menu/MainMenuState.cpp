@@ -472,14 +472,14 @@ void MainMenuState::btnUpdateClick(Action*)
 #endif
 }
 
-/**
+/** FIXME: does nothing useful.
  * Updates the scale.
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void MainMenuState::resize(int &dX, int &dY)
+void MainMenuState::resize(const int dW, const int dH)
 {
-	State::resize(dX, dY);
+	State::resize(dW, dH);
 }
 
 }

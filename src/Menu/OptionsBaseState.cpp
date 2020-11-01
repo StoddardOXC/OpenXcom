@@ -347,11 +347,11 @@ void OptionsBaseState::txtTooltipOut(Action *action)
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void OptionsBaseState::resize(int &dX, int &dY)
+void OptionsBaseState::resize(const int dW, const int dH)
 {
 	Options::newDisplayWidth = Options::displayWidth;
 	Options::newDisplayHeight = Options::displayHeight;
-	State::resize(dX, dY);
+	State::resize(dW, dH);
 }
 
 }

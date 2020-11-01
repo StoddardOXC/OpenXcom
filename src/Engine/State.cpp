@@ -572,9 +572,9 @@ SDL_Color *State::getPalette()
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void State::resize(int &dX, int &dY)
+void State::resize(const int dW, const int dH)
 {
-	Log(LOG_INFO)<<"State::resize("<<typeid(*this).name()<<", dX="<<dX<<", dY="<<dY<<")";
+	Log(LOG_INFO)<<"State::resize("<<typeid(*this).name()<<", dW="<<dW<<", dH="<<dH<<")";
 	recenter();
 }
 

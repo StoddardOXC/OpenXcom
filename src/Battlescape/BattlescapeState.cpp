@@ -3713,25 +3713,25 @@ void BattlescapeState::txtTooltipOut(Action *action)
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void BattlescapeState::resize(int &dX, int &dY)
+void BattlescapeState::resize(const int dW, const int dH)
 {
 	_width = _game->getScreen()->getWidth();
 	_height = _game->getScreen()->getHeight();
 	_map->setWidth(_width);
 	_map->setHeight(_height);
 	_map->getCamera()->resize();
-	_map->getCamera()->jumpXY(dX/2, dY/2);
+	_map->getCamera()->jumpXY(dW/2, dH/2);
 
 	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
 	{
 		if (*i != _map && (*i) != _btnPsi && *i != _btnLaunch && *i != _btnSpecial && *i != _btnSkills && *i != _txtDebug)
 		{
-			(*i)->setX((*i)->getX() + dX / 2);
-			(*i)->setY((*i)->getY() + dY);
+			(*i)->setX((*i)->getX() + dW / 2);
+			(*i)->setY((*i)->getY() + dH);
 		}
 		else if (*i != _map && *i != _txtDebug)
 		{
-			(*i)->setX((*i)->getX() + dX);
+			(*i)->setX((*i)->getX() + dW);
 		}
 	}
 }

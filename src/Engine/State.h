@@ -124,8 +124,8 @@ public:
 	/// Gets the state's 8bpp palette.
 	SDL_Color *getPalette();
 
-	/// Let the state know the window has been resized.
-	virtual void resize(int &dX, int &dY);
+	/// Let the state know the state has been resized.
+	virtual void resize(const int dW, const int dH);
 	/// centers the state on the screen.
 	void recenter();
 	/// returns nominal position

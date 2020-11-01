@@ -343,14 +343,14 @@ void SelectDestinationState::btnCydoniaClick(Action *)
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void SelectDestinationState::resize(int &dX, int &dY)
+void SelectDestinationState::resize(const int dW, const int dH)
 {
 	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
 	{
-		(*i)->setX((*i)->getX() + dX / 2);
+		(*i)->setX((*i)->getX() + dW / 2);
 		if (*i != _window && *i != _btnCancel && *i != _txtTitle && *i != _btnCydonia)
 		{
-			(*i)->setY((*i)->getY() + dY / 2);
+			(*i)->setY((*i)->getY() + dH / 2);
 		}
 	}
 }

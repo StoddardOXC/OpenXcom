@@ -4104,7 +4104,7 @@ void GeoscapeState::btnTimerClick(Action *action)
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void GeoscapeState::resize(int &dX, int &dY)
+void GeoscapeState::resize(const int dW, const int dH)
 {
 	if (_game->getSavedGame()->getSavedBattle())
 		return;
@@ -4118,8 +4118,8 @@ void GeoscapeState::resize(int &dX, int &dY)
 	{
 		if (*i != _globe)
 		{
-			(*i)->setX((*i)->getX() + dX);
-			(*i)->setY((*i)->getY() + dY/2);
+			(*i)->setX((*i)->getX() + dW);
+			(*i)->setY((*i)->getY() + dH/2);
 		}
 	}
 

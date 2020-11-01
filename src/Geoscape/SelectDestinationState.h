@@ -85,7 +85,7 @@ public:
 	/// Handler for clicking the Cydonia mission button.
 	void btnCydoniaClick(Action *action);
 	/// Let the state know the window has been resized.
-	void resize(int &dX, int &dY) override;
+	void resize(const int dW, const int dH) override;
 
 };
 

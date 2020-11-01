@@ -55,7 +55,7 @@ public:
 	/// Handler for clicking a action menu item.
 	virtual void btnActionMenuItemClick(Action *action);
 	/// Update the resolution settings, we just resized the window. FIXME: drop that obsolete shit.
-	void resize(int &dX, int &dY) override;
+	void resize(const int dW, const int dH) override;
 #ifdef __MOBILE__
 	/// Pop the state in case of clicking.
 	void outsideClick(Action *action);
