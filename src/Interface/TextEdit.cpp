@@ -23,6 +23,7 @@
 #include "../Engine/Timer.h"
 #include "../Engine/Options.h"
 #include "../Engine/Language.h"
+#include "../Engine/Logger.h"
 #include "../fallthrough.h"
 
 namespace OpenXcom
@@ -497,7 +498,8 @@ void TextEdit::mousePress(Action *action, State *state)
 		}
 		else
 		{
-			int mouseX = action->getRelativeXMouse();
+			const int mouseX = action->getRelativeXMouse();
+
 			int w = 0;
 			int c = 0;
 			for (UString::iterator i = _value.begin(); i < _value.end(); ++i)
@@ -651,8 +653,8 @@ void TextEdit::onEnter(ActionHandler handler)
 
 void TextEdit::textInput(Action *action, State *state)
 {
-	// FIXME: This might not be consistent with current changes
 	std::string text(action->getText());
+	Log(LOG_INFO)<<"TextEdit::textInput(): got '" << text << "'";
 	UString wText = Unicode::convUtf8ToUtf32(text);
 	bool correct = true;
 	for(UString::iterator it = wText.begin(); it != wText.end(); ++it)
@@ -666,8 +668,8 @@ void TextEdit::textInput(Action *action, State *state)
 	}
 	if (correct)
 	{
-		_value += wText;
-		_caretPos = _value.length();
+		_value.insert(_caretPos, wText);
+		_caretPos += wText.length();
 	}
 	_redraw = true;
 	if (_change)
