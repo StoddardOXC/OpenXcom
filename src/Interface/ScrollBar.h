@@ -50,8 +50,6 @@ public:
 	void setX(int x) override;
 	/// Sets the Y position of the surface.
 	void setY(int y) override;
-	///
-	void setOffset(int x, int y) override;
 	/// Sets the height of the surface.
 	void setHeight(int height) override;
 	/// Sets the scrollbar's color.

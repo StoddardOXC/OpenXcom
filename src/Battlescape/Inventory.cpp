@@ -635,8 +635,8 @@ void Inventory::setMouseOverItem(Action *action)
 		_mouseOverItem = 0;
 		return;
 	}
-	int x = action->getMouseX() - _dx - _x;
-	int y = action->getMouseY() - _dy - _y;
+	int x = action->getMouseX() - _x;
+	int y = action->getMouseY() - _y;
 	RuleInventory *slot = getSlotInPosition(&x, &y);
 	if (slot != 0)
 	{
@@ -690,8 +690,8 @@ void Inventory::blit(SDL_Surface *surface)
  */
 void Inventory::mouseOver(Action *action, State *state)
 {
-	_selection->setX(action->getMouseX() - _dx - _x - _selection->getWidth()/2);
-	_selection->setY(action->getMouseY() - _dy - _x -_selection->getHeight()/2);
+	_selection->setX(action->getMouseX() - _x - _selection->getWidth()/2);
+	_selection->setY(action->getMouseY() - _x -_selection->getHeight()/2);
 
 	if (_selUnit == 0)
 		return;
@@ -732,8 +732,8 @@ void Inventory::mouseClick(Action *action, State *state)
 		// Pickup item
 		if (_selItem == 0)
 		{
-			int x = action->getMouseX() - _dx - _x;
-			int y = action->getMouseY() - _dy - _y;
+			int x = action->getMouseX() - _x;
+			int y = action->getMouseY() - _y;
 			RuleInventory *slot = getSlotInPosition(&x, &y);
 			if (slot != 0)
 			{

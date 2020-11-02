@@ -122,15 +122,6 @@ void ComboBox::setY(int y)
 	_list->setY(popupY + VERTICAL_MARGIN);
 }
 
-void ComboBox::setOffset(int x, int y)
-{
-	Surface::setOffset(x, y);
-	_button->setOffset(x, y);
-	_arrow->setOffset(x, y);
-	_window->setOffset(x, y);
-	_list->setOffset(x, y);
-}
-
 /**
  * Replaces a certain amount of colors in the palette of all
  * the text contained in the list.
@@ -307,7 +298,7 @@ void ComboBox::setDropdown(int options)
 {
 	int h = _button->getFont()->getHeight() + _button->getFont()->getSpacing();
 	/* what we do here is calculate how many items fit on the screen. h is the item height */
-	int max_height_available = _popupAboveButton ? _dy + _y : 200 - _y;
+	int max_height_available = _popupAboveButton ? _y : 200 - _y; /// FIXME: unhardcode 200.
 	int max_item_count = max_height_available / h - 1; // since VERTICAL_MARGIN * 2 always < h
 	int items = std::min(std::min(options, MAX_ITEMS), max_item_count);
 	int popupHeight = items * h + VERTICAL_MARGIN * 2;
@@ -368,10 +359,10 @@ void ComboBox::handle(Action *action, State *state)
 	_button->handle(action, state);
 	_list->handle(action, state);
 	InteractiveSurface::handle(action, state);
-	int topY = std::min(_y + _dy, _window->getY() + _dy);
+	int topY = std::min((int)_y, _window->getY());
 	if (_window->getVisible() && action->getType() == SDL_MOUSEBUTTONDOWN
 		&& !hit(action->getMouseX(), action->getMouseY(),
-				_x + _dx, topY, _width, _height + _window->getHeight()))
+				_x , topY, _width, _height + _window->getHeight()))
 	{
 		toggle();
 	}

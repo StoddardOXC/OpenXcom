@@ -114,8 +114,9 @@ void InteractiveSurface::handle(Action *action, State *state)
 
 	if (action->isMouseAction())
 	{
-		if ((action->getMouseX() >= _x + _dx && action->getMouseX() < _x + _dx + getWidth())
-		 && (action->getMouseY() >= _y + _dy && action->getMouseY() < _y + _dy + getHeight()))
+		// FIXME: that's actually getRelativeXYMouse but..
+		if ((action->getMouseX() >= _x && action->getMouseX() < _x + getWidth())
+		 && (action->getMouseY() >= _y && action->getMouseY() < _y + getHeight()))
 		{
 			if (!_isHovered)
 			{

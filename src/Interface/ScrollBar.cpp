@@ -74,12 +74,6 @@ void ScrollBar::setY(int y)
 	_thumb->setY(y);
 }
 
-void ScrollBar::setOffset(int x, int y)
-{
-	Surface::setOffset(x, y);
-	_track->setOffset(x, y);
-	_thumb->setOffset(x, y);
-}
 /**
  * Changes the height of the scrollbar.
  * @param height New height in pixels.
@@ -163,7 +157,7 @@ void ScrollBar::handle(Action *action, State *state)
 	InteractiveSurface::handle(action, state);
 	if (_pressed && (action->getType() == SDL_MOUSEMOTION || action->getType() == SDL_MOUSEBUTTONDOWN))
 	{
-		int cursorY = action->getMouseY() - _dy - _y;
+		int cursorY = action->getMouseY() - _y;
 		int y = Clamp(cursorY + _offset, 0, getHeight() - _thumbRect.h + 1);
 		double scale = (double)_list->getRows() / getHeight();
 		int scroll = (int)Round(y * scale);

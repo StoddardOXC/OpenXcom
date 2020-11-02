@@ -54,8 +54,6 @@ public:
 	void setX(int x) override;
 	/// Sets the Y position of the surface.
 	void setY(int y) override;
-	///
-	void setOffset(int x, int y) override;
 	/// Initializes the slider's resources.
 	void initText(Font *big, Font *small, Language *lang) override;
 	/// Sets the slider's high contrast color setting.

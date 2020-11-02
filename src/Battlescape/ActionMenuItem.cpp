@@ -190,9 +190,4 @@ void ActionMenuItem::mouseOut(Action *action, State *state)
 	draw();
 	InteractiveSurface::mouseOut(action, state);
 }
-void ActionMenuItem::setOffset(int x, int y)
-{
-	Surface::setOffset(x, y);
-	//Log(LOG_INFO) << "ActionMenuItem::setOffset("<<x<<", "<<y<<");";
-}
 }

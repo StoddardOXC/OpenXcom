@@ -93,7 +93,6 @@ void ActionMenuState::plonkButtons() {
 	for (size_t i = 0; i < std::size(_actionMenu); ++i)
 	{
 		y = (_margin < 0) ? sy + i * ActionMenuItem::height : sy - i * ActionMenuItem::height;
-		_actionMenu[i]->setOffset(0,0); // undo the default State::resize()
 		_actionMenu[i]->setX(x);
 		_actionMenu[i]->setY(y);
 		Log(LOG_INFO) << "ActionMenuState::plonkButtons(): "<<i<<" at <<"<<x << "," << y;

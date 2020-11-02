@@ -69,7 +69,6 @@ public:
 	void mouseIn(Action *action, State *state) override;
 	/// Processes a mouse hover out event.
 	void mouseOut(Action *action, State *state) override;
-	void setOffset(int x, int y) override;
 };
 
 }

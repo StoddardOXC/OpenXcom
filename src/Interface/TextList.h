@@ -78,8 +78,6 @@ public:
 	void setX(int x) override;
 	/// Sets the Y position of the surface.
 	void setY(int y) override;
-	///
-	void setOffset(int x, int y) override;
 	/// Gets the arrowsLeftEdge.
 	int getArrowsLeftEdge();
 	/// Gets the arrowsRightEdge.

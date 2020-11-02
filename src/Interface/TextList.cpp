@@ -114,18 +114,6 @@ void TextList::setY(int y)
 		_selector->setY(getY());
 }
 
-void TextList::setOffset(int x, int y)
-{
-	Surface::setOffset(x, y);
-	_up->setOffset(x, y);
-	_down->setOffset(x, y);
-	_scrollbar->setOffset(x, y);
-	if (_selector != 0)
-		_selector->setOffset(x, y);
-	for (auto i: _arrowLeft) { i->setOffset(x,y); }
-	for (auto i: _arrowRight) { i->setOffset(x,y); }
-}
-
 /**
  * Gets the arrowsLeftEdge.
  * @return arrowsLeftEdge.
@@ -681,8 +669,6 @@ void TextList::setBig()
 	_selector = new Surface(getWidth(), _font->getHeight() + _font->getSpacing(), getX() , getY());
 	_selector->setPalette(getPalette());
 	_selector->setVisible(false);
-	_selector->setOffset(_dx, _dy);
-
 	updateVisible();
 }
 
@@ -697,8 +683,6 @@ void TextList::setSmall()
 	_selector = new Surface(getWidth(), _font->getHeight() + _font->getSpacing(), getX(), getY());
 	_selector->setPalette(getPalette());
 	_selector->setVisible(false);
-	_selector->setOffset(_dx, _dy);
-
 	updateVisible();
 }
 
@@ -1177,7 +1161,7 @@ void TextList::mouseWheel(Action *action, State *state)
 	bool allowScroll = true;
 	if (Options::changeValueByMouseWheel != 0)
 	{
-		allowScroll = (action->getMouseX() < _arrowsLeftEdge + _dx || action->getMouseX() > _arrowsRightEdge + _dx);
+		allowScroll = (action->getMouseX() < _arrowsLeftEdge || action->getMouseX() > _arrowsRightEdge);
 	}
 //<<<<<<< HEAD
 //	if (isInsideNoScrollArea(action->getMouseX()))
@@ -1290,7 +1274,7 @@ void TextList::mouseOver(Action *action, State *state)
 	if (_selectable)
 	{
 		int rowHeight = _font->getHeight() + _font->getSpacing(); //theoretical line height
-		_selRow = _scroll + (action->getMouseY() - _dy - _y) / rowHeight;
+		_selRow = _scroll + (action->getMouseY() - _y) / rowHeight;
 		if (_selRow < _rows.size())
 		{
 			Text *selText = _texts[_rows[_selRow]].front();
