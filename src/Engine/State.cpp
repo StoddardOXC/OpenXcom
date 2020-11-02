@@ -590,7 +590,6 @@ void State::recenter()
 		Log(LOG_INFO) << "    recentering "<<typeid(*surf).name();
 		surf->setOffset ( _x, _y );
 	}
-
 }
 
 

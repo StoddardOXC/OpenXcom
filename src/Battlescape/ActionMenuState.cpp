@@ -50,13 +50,13 @@ namespace OpenXcom
  * Initializes all the elements in the Action Menu window.
  * @param game Pointer to the core game.
  * @param action Pointer to the action.
- * @param upshift Amount to shift the menu stack from the bottom edge
+ * @param margin bottom (positive or zero) or top (negative) margin
  */
-OpenXcom::ActionMenuState::ActionMenuState ( BattleAction* action, const int upshift ) : _action(action) {
+OpenXcom::ActionMenuState::ActionMenuState ( BattleAction* action, const int margin ) : _action(action), _margin(margin) {
 	_screen = false;
 	_screenMode = SC_BATTLESCAPE;
 	_game->setScreenMode(_screenMode);
-	_width = _game->getScreen()->getWidth();  // FIXME: this actually should with SC_INHERIT
+	_width = _game->getScreen()->getWidth();
 	_height = _game->getScreen()->getHeight();
 
 	// Set palette
@@ -69,20 +69,36 @@ OpenXcom::ActionMenuState::ActionMenuState ( BattleAction* action, const int ups
 	add(_outside);
 #endif
 
-	const int ix = (_width - ActionMenuItem::width)/2;
-	int iy = _height - ActionMenuItem::height - upshift;
-
 	for (size_t i = 0; i < std::size(_actionMenu); ++i)
 	{
-		_actionMenu[i] = new ActionMenuItem(i, _game, ix, iy - i * ActionMenuItem::height);
+		_actionMenu[i] = new ActionMenuItem(i, _game, 0, 0);
 		add(_actionMenu[i]);
 		_actionMenu[i]->setVisible(false);
 		_actionMenu[i]->onMouseClick((ActionHandler)&ActionMenuState::btnActionMenuItemClick);
 	}
-
+	plonkButtons();
 	buildMenu();
 }
 
+/**
+ * (re) position the buttons according to current State size
+ * @param upshift - bottom margin if zero or positive, top margin if negative
+ */
+void ActionMenuState::plonkButtons() {
+	_x = 0; _y = 0;
+	const int x = (_width - ActionMenuItem::width)/2;
+	const int sy = ( _margin < 0 ) ?  -_margin : _height - ActionMenuItem::height - _margin;
+	int y = sy;
+	Log(LOG_INFO) << "ActionMenuState::plonkButtons(): wh = "<<_width<<"x"<<_height<<" at "<<_x<<","<<_y;
+	for (size_t i = 0; i < std::size(_actionMenu); ++i)
+	{
+		y = (_margin < 0) ? sy + i * ActionMenuItem::height : sy - i * ActionMenuItem::height;
+		_actionMenu[i]->setOffset(0,0); // undo the default State::resize()
+		_actionMenu[i]->setX(x);
+		_actionMenu[i]->setY(y);
+		Log(LOG_INFO) << "ActionMenuState::plonkButtons(): "<<i<<" at <<"<<x << "," << y;
+	}
+}
 /*
  * Builds the buildmenu.
  * TODO: do we actually need _action as a member? It looks like a const parameter to me.
@@ -523,7 +539,6 @@ void ActionMenuState::handleAction()
 			_game->getSavedGame()->getSavedBattle()->appendToHitLog(HITLOG_PLAYER_FIRING, FACTION_PLAYER, tr(weapon->getType()));
 		}
 	}
-	//FIXME: is that needed? _action->setConsumed();
 }
 
 /**
@@ -536,10 +551,16 @@ void ActionMenuState::resize(const int dW, const int dH)
 	Log(LOG_INFO) << "ActionMenuState::resize("<<dW<<","<<dH<<"); _y: "<< _y<< " += " << dH*2;
 
 	State::resize(dW, dH);
+
+	// FIXME this is again somewhat related to whatever scaleMode is. or inherits from. or what
+	_width  = _game->getScreen()->getWidth();
+	_height = _game->getScreen()->getHeight();
+
+	// FIXME: resize _outside IntSurf for the mobile here i think
+
 	// now we have right _width and _height
-
-	_y += dH * 2;  // FIXME? or NOT? I forget, I forget again.
-
+	// and have to plonk down all the buttons.
+	plonkButtons();
 }
 #ifdef __MOBILE__
 void ActionMenuState::outsideClick(Action *action)

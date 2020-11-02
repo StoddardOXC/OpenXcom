@@ -33,6 +33,7 @@ class ActionMenuState : public State
 {
 protected:
 	BattleAction *_action;
+	int _margin;
 	ActionMenuItem *_actionMenu[6];
 	/// Adds a new menu item for an action.
 	void addItem(BattleActionType ba, const std::string &name, int *id, SDL_Keycode key);
@@ -40,12 +41,14 @@ protected:
 	void handleAction();
 	/// Actually builds the menu; overriden in SkillMenuAction
 	virtual void buildMenu();
+	/// Moves buttons where they belong at a resize
+	void plonkButtons();
 #ifdef __MOBILE__
 	InteractiveSurface *_outside;
 #endif
 public:
 	/// Creates the Action Menu state.
-	ActionMenuState(BattleAction *action, const int upshift);
+	ActionMenuState(BattleAction *action, const int margin);
 	/// Cleans up the Action Menu state.
 	~ActionMenuState();
 	/// Init function.

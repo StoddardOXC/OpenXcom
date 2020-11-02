@@ -631,6 +631,7 @@ void Game::pushState(State *state)
 	_states.push_back(state);
 	_init = false;
 	setScreenMode(getCurrentScreenMode()); // change in screen size is propagated if any
+	state->recenter();
 }
 
 /**
