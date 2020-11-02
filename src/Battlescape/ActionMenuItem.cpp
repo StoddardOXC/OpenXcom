@@ -68,7 +68,7 @@ ActionMenuItem::ActionMenuItem(int id, Game *game, int x, int y) :
 	_txtTU->setBig();
 	_txtTU->setHighContrast(true);
 	_txtTU->setColor(actionMenu->color);
-	Log(LOG_INFO) << "ActionMenuItem::ActionMenuItem(id="<<id<<") at "<<_x<<"x"<<_y<<"  dxy: "<<_dx<<"x"<<_dy;
+	//Log(LOG_INFO) << "ActionMenuItem::ActionMenuItem(id="<<id<<") at "<<_x<<"x"<<_y<<"  dxy: "<<_dx<<"x"<<_dy;
 }
 
 /**
@@ -98,7 +98,7 @@ void ActionMenuItem::setAction(BattleActionType action, const std::string &descr
 	_txtTU->setText(timeunits);
 	_tu = tu;
 	_redraw = true;
-	Log(LOG_INFO) << "ActionMenuItem::ActionMenuItem() _y="<<_y<<" text="<<description;
+	//Log(LOG_INFO) << "ActionMenuItem::ActionMenuItem() _y="<<_y<<" text="<<description;
 
 }
 
@@ -193,6 +193,6 @@ void ActionMenuItem::mouseOut(Action *action, State *state)
 void ActionMenuItem::setOffset(int x, int y)
 {
 	Surface::setOffset(x, y);
-	Log(LOG_INFO) << "ActionMenuItem::setOffset("<<x<<", "<<y<<");";
+	//Log(LOG_INFO) << "ActionMenuItem::setOffset("<<x<<", "<<y<<");";
 }
 }
