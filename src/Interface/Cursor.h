@@ -47,10 +47,6 @@ public:
 	Uint8 getColor() const;
 	/// Draws the cursor.
 	void draw() override;
-	/// Sets X
-	void setX(int x) override;
-	/// Sets Y
-	void setY(int y) override;
 };
 
 }

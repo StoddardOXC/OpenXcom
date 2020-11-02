@@ -105,12 +105,4 @@ void Cursor::draw()
 	this->setPixel(4, 8, --color);
 	unlock();
 }
-
-void Cursor::setX(int x) {
-	Surface::setX(x);
-}
-
-void Cursor::setY(int y) {
-	Surface::setY(y);
-}
 }
