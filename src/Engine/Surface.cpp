@@ -224,7 +224,7 @@ void Surface::UniqueSurfaceDeleter::operator ()(SDL_Surface* surf)
 /**
  * Default empty surface.
  */
-Surface::Surface() : _x{ }, _y{ }, _dx{ }, _dy{ }, _width{ }, _height{ }, _pitch{ }, _visible(true), _hidden(false), _redraw(false)
+Surface::Surface() : _x{ }, _y{ }, _width{ }, _height{ }, _pitch{ }, _visible(true), _hidden(false), _redraw(false)
 {
 
 }
@@ -246,7 +246,7 @@ const int Surface::AMASK = 0xFF000000;
  * @param y Y position in pixels.
  * @param bpp Bits-per-pixel depth.
  */
-Surface::Surface(int width, int height, int x, int y) : _x(x), _y(y), _dx(0), _dy(0), _visible(true), _hidden(false), _redraw(false)
+Surface::Surface(int width, int height, int x, int y) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false)
 {
 	std::tie(_alignedBuffer, _surface) = Surface::NewPair8Bit(width, height);
 	_width = _surface->w;
@@ -275,8 +275,6 @@ Surface::Surface(const Surface& other) : Surface{ }
 
 	_x = other._x;
 	_y = other._y;
-	_dx = other._dx;
-	_dy = other._dy;
 	_visible = other._visible;
 	_hidden = other._hidden;
 	_redraw = other._redraw;
@@ -681,8 +679,8 @@ void Surface::blit(SDL_Surface *surface)
 			draw();
 
 		SDL_Rect target {};
-		target.x = _x + _dx;
-		target.y = _y + _dy;
+		target.x = _x;
+		target.y = _y;
 		SDL_BlitSurface(_surface.get(), nullptr, surface, &target);
 	}
 }
@@ -982,11 +980,6 @@ void Surface::blitNShade(SurfaceRaw<Uint8> surface, int x, int y, int shade, Gra
 void Surface::invalidate(bool valid)
 {
 	_redraw = valid;
-}
-
-void Surface::setOffset(int x, int y)
-{
-	_dx = x; _dy = y;
 }
 
 /**
