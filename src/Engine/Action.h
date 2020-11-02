@@ -54,10 +54,8 @@ public:
 	/// Gets if action is mouse right click.
 	bool isMouseRightClick() const;
 	/// Gets the mouse's absolute X position, Screen coords.
-	int getAbsoluteXMouse() const;
 	int getMouseX() const;
 	/// Gets the mouse's absolute Y position, Screen coords.
-	int getAbsoluteYMouse() const;
 	int getMouseY() const;
 	/// Gets the mouse's relative X position, Screen coords. (relative to some surface)
 	int getRelativeXMouse() const;

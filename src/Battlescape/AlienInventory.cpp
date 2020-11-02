@@ -225,8 +225,8 @@ void AlienInventory::mouseClick(Action *action, State *state)
 		if (_selUnit == 0)
 			return;
 
-		int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
-			y = (int)floor(action->getAbsoluteYMouse()) - getY();
+		int x = (int)floor(action->getMouseX()) - getX(),
+			y = (int)floor(action->getMouseY()) - getY();
 
 		if (x >= Screen::ORIGINAL_WIDTH / 2)
 			x -= _dynamicOffset;

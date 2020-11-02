@@ -108,8 +108,8 @@ void Camera::mouseRelease(Action *action, State *)
 		_scrollMouseY = 0;
 		_scrollMouseTimer->stop();
 		_scrollTrigger = false;
-		int posX = action->getAbsoluteXMouse();
-		int posY = action->getAbsoluteYMouse();
+		int posX = action->getMouseX();
+		int posY = action->getMouseY();
 		if ((posX < SCROLL_BORDER && posX > 0)
 			|| (posX > _screenWidth - SCROLL_BORDER)
 			|| (posY < SCROLL_BORDER && posY > 0)
@@ -134,8 +134,8 @@ void Camera::mouseOver(Action *action, State *)
 
 	if (Options::battleEdgeScroll == SCROLL_AUTO || _scrollTrigger)
 	{
-		int posX = action->getAbsoluteXMouse();
-		int posY = action->getAbsoluteYMouse();
+		int posX = action->getMouseX();
+		int posY = action->getMouseY();
 		int scrollSpeed = Options::battleScrollSpeed;
 
 		//left scroll

@@ -189,7 +189,7 @@ void SelectDestinationState::handle(Action *action)
 void SelectDestinationState::globeClick(Action *action)
 {
 	double lon, lat;
-	int mouseX = (int)floor(action->getAbsoluteXMouse()), mouseY = (int)floor(action->getAbsoluteYMouse());
+	int mouseX = (int)floor(action->getMouseX()), mouseY = (int)floor(action->getMouseY());
 	_globe->cartToPolar(mouseX, mouseY, &lon, &lat);
 
 	// Ignore window clicks

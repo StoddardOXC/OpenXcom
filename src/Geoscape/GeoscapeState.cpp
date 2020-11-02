@@ -2817,7 +2817,7 @@ Globe *GeoscapeState::getGlobe() const
 
 void GeoscapeState::globeClick(Action *action)
 {
-	int mouseX = (int)floor(action->getAbsoluteXMouse()), mouseY = (int)floor(action->getAbsoluteYMouse());
+	int mouseX = (int)floor(action->getMouseX()), mouseY = (int)floor(action->getMouseY());
 
 	// Clicking markers on the globe
 	if (action->getMouseButton() == SDL_BUTTON_LEFT)

@@ -193,8 +193,8 @@ void BuildNewBaseState::handle(Action *action)
  */
 void BuildNewBaseState::globeHover(Action *action)
 {
-	_mousex = (int)floor(action->getAbsoluteXMouse());
-	_mousey = (int)floor(action->getAbsoluteYMouse());
+	_mousex = (int)floor(action->getMouseX());
+	_mousey = (int)floor(action->getMouseY());
 	if (!_hoverTimer->isRunning()) _hoverTimer->start();
 }
 
@@ -222,7 +222,7 @@ void BuildNewBaseState::hoverRedraw(void)
 void BuildNewBaseState::globeClick(Action *action)
 {
 	double lon, lat;
-	int mouseX = (int)floor(action->getAbsoluteXMouse()), mouseY = (int)floor(action->getAbsoluteYMouse());
+	int mouseX = (int)floor(action->getMouseX()), mouseY = (int)floor(action->getMouseY());
 	_globe->cartToPolar(mouseX, mouseY, &lon, &lat);
 
 	// Ignore window clicks

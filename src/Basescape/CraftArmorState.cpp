@@ -423,7 +423,7 @@ void CraftArmorState::btnOkClick(Action *)
  */
 void CraftArmorState::lstSoldiersClick(Action *action)
 {
-	double mx = action->getAbsoluteXMouse();
+	double mx = action->getMouseX();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
 		return;
@@ -492,8 +492,8 @@ void CraftArmorState::lstSoldiersMousePress(Action *action)
 	if (action->getMouseButton() == SDL_BUTTON_WHEELUP &&
 		row > 0)
 	{
-		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+		if (action->getMouseX() >= _lstSoldiers->getArrowsLeftEdge() &&
+			action->getMouseX() <= _lstSoldiers->getArrowsRightEdge())
 		{
 			moveSoldierUp(action, row);
 		}
@@ -501,8 +501,8 @@ void CraftArmorState::lstSoldiersMousePress(Action *action)
 	else if (action->getMouseButton() == SDL_BUTTON_WHEELDOWN &&
 		0 < numSoldiers && INT_MAX >= numSoldiers && row < numSoldiers - 1)
 	{
-		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+		if (action->getMouseX() >= _lstSoldiers->getArrowsLeftEdge() &&
+			action->getMouseX() <= _lstSoldiers->getArrowsRightEdge())
 		{
 			moveSoldierDown(action, row);
 		}

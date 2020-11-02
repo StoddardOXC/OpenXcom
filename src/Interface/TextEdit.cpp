@@ -76,8 +76,8 @@ void TextEdit::handle(Action *action, State *state)
 {
 	InteractiveSurface::handle(action, state);
 	if (_isFocused && _modal && action->getType() == SDL_MOUSEBUTTONDOWN &&
-		(action->getAbsoluteXMouse() < getX() || action->getAbsoluteXMouse() >= getX() + getWidth() ||
-		 action->getAbsoluteYMouse() < getY() || action->getAbsoluteYMouse() >= getY() + getHeight()))
+		(action->getMouseX() < getX() || action->getMouseX() >= getX() + getWidth() ||
+		 action->getMouseY() < getY() || action->getMouseY() >= getY() + getHeight()))
 	{
 		setFocus(false);
 	}

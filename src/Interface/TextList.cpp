@@ -1180,7 +1180,7 @@ void TextList::mouseWheel(Action *action, State *state)
 		allowScroll = (action->getMouseX() < _arrowsLeftEdge + _dx || action->getMouseX() > _arrowsRightEdge + _dx);
 	}
 //<<<<<<< HEAD
-//	if (isInsideNoScrollArea(action->getAbsoluteXMouse()))
+//	if (isInsideNoScrollArea(action->getMouseX()))
 //	{
 //		allowScroll = false;
 //	}

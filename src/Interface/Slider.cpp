@@ -281,7 +281,7 @@ void Slider::mousePress(Action *action, State *state)
 	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
 		_pressed = true;
-		int cursorX = action->getAbsoluteXMouse();
+		int cursorX = action->getMouseX();
 		if (cursorX >= _button->getX() && cursorX < _button->getX() + _button->getWidth())
 		{
 			_offsetX = _button->getX() - cursorX;

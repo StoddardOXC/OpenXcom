@@ -1022,8 +1022,8 @@ void Inventory::mouseClick(Action *action, State *state)
 			else
 			{
 				// try again, using the position of the mouse cursor, not the item (slightly more intuitive for stacking)
-				x = (int)floor(action->getAbsoluteXMouse()) - getX();
-				y = (int)floor(action->getAbsoluteYMouse()) - getY();
+				x = (int)floor(action->getMouseX()) - getX();
+				y = (int)floor(action->getMouseY()) - getY();
 				slot = getSlotInPosition(&x, &y);
 				if (slot != 0 && slot->getType() == INV_GROUND)
 				{
@@ -1055,8 +1055,8 @@ void Inventory::mouseClick(Action *action, State *state)
 			{
 				if (!_tu)
 				{
-					int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
-						y = (int)floor(action->getAbsoluteYMouse()) - getY();
+					int x = (int)floor(action->getMouseX()) - getX(),
+						y = (int)floor(action->getMouseY()) - getY();
 					RuleInventory *slot = getSlotInPosition(&x, &y);
 					if (slot != 0)
 					{
@@ -1115,8 +1115,8 @@ void Inventory::mouseClick(Action *action, State *state)
 		if (_selUnit == 0)
 			return;
 
-		int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
-			y = (int)floor(action->getAbsoluteYMouse()) - getY();
+		int x = (int)floor(action->getMouseX()) - getX(),
+			y = (int)floor(action->getMouseY()) - getY();
 		RuleInventory *slot = getSlotInPosition(&x, &y);
 		if (slot != 0)
 		{

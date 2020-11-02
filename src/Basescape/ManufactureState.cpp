@@ -256,7 +256,7 @@ void ManufactureState::lstManufactureClickMiddle(Action *)
 void ManufactureState::lstManufactureMousePress(Action *action)
 {
 	/*
-	if (!_lstManufacture->isInsideNoScrollArea(action->getAbsoluteXMouse()))
+	if (!_lstManufacture->isInsideNoScrollArea(action->getMouseX()))
 	{
 		return;
 	}

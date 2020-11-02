@@ -246,8 +246,8 @@ void OptionsModsState::lstModsHover(Action *)
 
 void OptionsModsState::lstModsClick(Action *action)
 {
-	if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
-		action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
+	if (action->getMouseX() >= _lstMods->getArrowsLeftEdge() &&
+		action->getMouseX() <= _lstMods->getArrowsRightEdge())
 	{
 		// don't count an arrow click as a mod enable toggle
 		return;
@@ -461,8 +461,8 @@ void OptionsModsState::lstModsMouseWheel(Action *action)
     if (action->getMouseWheelY() > 0 &&
 		row > 0)
     {
-		if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
+		if (action->getMouseX() >= _lstMods->getArrowsLeftEdge() &&
+			action->getMouseX() <= _lstMods->getArrowsRightEdge())
 		{
 			moveModUp(action, row);
         }
@@ -470,8 +470,8 @@ void OptionsModsState::lstModsMouseWheel(Action *action)
     else if (action->getMouseWheelY() < 0 &&
              0 < numMods && INT_MAX >= numMods && row < numMods - 1)
     {
-		if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
+		if (action->getMouseX() >= _lstMods->getArrowsLeftEdge() &&
+			action->getMouseX() <= _lstMods->getArrowsRightEdge())
         {
 			moveModDown(action, row);
         }

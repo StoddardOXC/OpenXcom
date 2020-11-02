@@ -232,13 +232,13 @@ void MiniMapView::mousePress(Action *action, State *state)
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
 		//CrossPlatform::getPointerState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
-		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
-		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
+		_xBeforeMouseScrolling = action->getMouseX();
+		_yBeforeMouseScrolling = action->getMouseY();
 		_posBeforeMouseScrolling = _camera->getCenterPosition();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{
-			_cursorPosition.x = action->getAbsoluteXMouse();
-			_cursorPosition.y = action->getAbsoluteYMouse();
+			_cursorPosition.x = action->getMouseX();
+			_cursorPosition.y = action->getMouseY();
 			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
 			_cursorPosition.z = 1;
 		}

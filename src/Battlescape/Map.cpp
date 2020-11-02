@@ -1778,8 +1778,8 @@ void Map::mouseOver(Action *action, State *state)
 {
 	InteractiveSurface::mouseOver(action, state);
 	_camera->mouseOver(action, state);
-	_mouseX = (int)action->getAbsoluteXMouse();
-	_mouseY = (int)action->getAbsoluteYMouse();
+	_mouseX = (int)action->getMouseX();
+	_mouseY = (int)action->getMouseY();
 	setSelectorPosition(_mouseX, _mouseY);
 }
 

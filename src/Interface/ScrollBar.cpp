@@ -196,7 +196,7 @@ void ScrollBar::mousePress(Action *action, State *state)
 	InteractiveSurface::mousePress(action, state);
 	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
-		int cursorY = action->getAbsoluteYMouse() - getY();
+		int cursorY = action->getMouseY() - getY();
 		if (cursorY >= _thumbRect.y && cursorY < _thumbRect.y + _thumbRect.h)
 		{
 			_offset = _thumbRect.y - cursorY;

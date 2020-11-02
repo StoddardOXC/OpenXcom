@@ -1795,7 +1795,7 @@ void Globe::blit(SDL_Surface *surface)
 void Globe::mouseOver(Action *action, State *state)
 {
 	double lon, lat;
-	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar((Sint16)floor(action->getMouseX()), (Sint16)floor(action->getMouseY()), &lon, &lat);
 
 	if (_isMouseScrolling && action->getType() == SDL_MOUSEMOTION)
 	{
@@ -1847,7 +1847,7 @@ void Globe::mouseOver(Action *action, State *state)
 	}
 
 	if (Options::touchEnabled == false && _isMouseScrolling &&
-		(action->getAbsoluteXMouse() != _xBeforeMouseScrolling || action->getAbsoluteYMouse() != _yBeforeMouseScrolling))
+		(action->getMouseX() != _xBeforeMouseScrolling || action->getMouseY() != _yBeforeMouseScrolling))
 	{
 		// FIXME: maybe warp is missing here
 		action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
@@ -1867,14 +1867,14 @@ void Globe::mouseOver(Action *action, State *state)
 void Globe::mousePress(Action *action, State *state)
 {
 	double lon, lat;
-	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar((Sint16)floor(action->getMouseX()), (Sint16)floor(action->getMouseY()), &lon, &lat);
 
 	if (action->getMouseButton() == Options::geoDragScrollButton)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
-		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
+		_xBeforeMouseScrolling = action->getMouseX();
+		_yBeforeMouseScrolling = action->getMouseY();
 		_lonBeforeMouseScrolling = _cenLon;
 		_latBeforeMouseScrolling = _cenLat;
 		_totalMouseMoveX = 0; _totalMouseMoveY = 0;
@@ -1896,7 +1896,7 @@ void Globe::mousePress(Action *action, State *state)
 void Globe::mouseRelease(Action *action, State *state)
 {
 	double lon, lat;
-	bool converted = cartToPolar(action->getAbsoluteXMouse(), action->getAbsoluteYMouse(), &lon, &lat);
+	bool converted = cartToPolar(action->getMouseX(), action->getMouseY(), &lon, &lat);
 	if (action->getMouseButton() == Options::geoDragScrollButton)
 	{
 		stopScrolling(action);
@@ -1937,7 +1937,7 @@ void Globe::mouseWheel(Action *action, State *state)
 void Globe::mouseClick(Action *action, State *state)
 {
 	double lon, lat;
-	bool converted = cartToPolar(action->getAbsoluteXMouse(), action->getAbsoluteYMouse(), &lon, &lat);
+	bool converted = cartToPolar(action->getMouseX(), action->getMouseY(), &lon, &lat);
 
 	// The following is the workaround for a rare problem where sometimes
 	// the mouse-release event is missed for any reason.

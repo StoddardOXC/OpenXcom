@@ -455,7 +455,7 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		return;
 	}
 #endif
-	double mx = action->getAbsoluteXMouse();
+	double mx = action->getMouseX();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
 		return;
@@ -532,16 +532,16 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 	{
 		if (action->getMouseWheelY() > 0 && row > 0)
 		{
-			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
-				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+			if (action->getMouseX() >= _lstSoldiers->getArrowsLeftEdge() &&
+				action->getMouseX() <= _lstSoldiers->getArrowsRightEdge())
 			{
 				moveSoldierUp(action, row);
 			}
 		}
 		else if (action->getMouseWheelY() < 0 && 0 < numSoldiers && row + 1 < numSoldiers)
 		{
-			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
-				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+			if (action->getMouseX() >= _lstSoldiers->getArrowsLeftEdge() &&
+				action->getMouseX() <= _lstSoldiers->getArrowsRightEdge())
 			{
 				moveSoldierDown(action, row);
 			}

@@ -971,13 +971,13 @@ void BattlescapeState::mapPress(Action *action)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
-		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
+		_xBeforeMouseScrolling = action->getMouseX();
+		_yBeforeMouseScrolling = action->getMouseY();
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{
-			_cursorPosition.x = action->getAbsoluteXMouse();
-			_cursorPosition.y = action->getAbsoluteYMouse();
+			_cursorPosition.x = action->getMouseX();
+			_cursorPosition.y = action->getMouseY();
 			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
 			_cursorPosition.z = 1;
 		}
@@ -1516,8 +1516,8 @@ void BattlescapeState::btnStatsClick(Action *action)
 		if (SCROLL_TRIGGER == Options::battleEdgeScroll &&
 			SDL_MOUSEBUTTONUP == action->getType() && SDL_BUTTON_LEFT == action->getMouseButton())
 		{
-			int posX = action->getAbsoluteXMouse();
-			int posY = action->getAbsoluteYMouse();
+			int posX = action->getMouseX();
+			int posY = action->getMouseY();
 			if ((posX < Camera::SCROLL_BORDER && posX > 0)
 				|| (posX > _map->getWidth() - Camera::SCROLL_BORDER)
 				|| (posY < Camera::SCROLL_BORDER && posY > 0)

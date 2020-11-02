@@ -52,8 +52,8 @@ void Cursor::handle(Action *action)
 {
 	if (action->getType() == SDL_MOUSEMOTION)
 	{
-		setX(action->getAbsoluteXMouse());
-		setY(action->getAbsoluteYMouse());
+		setX(action->getMouseX());
+		setY(action->getMouseY());
 	}
 }
 

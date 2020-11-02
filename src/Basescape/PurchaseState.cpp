@@ -702,8 +702,8 @@ void PurchaseState::lstItemsMousePress(Action *action)
 	}
 	else if (action->getMouseButton() == SDL_BUTTON_RIGHT)
 	{
-		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
+		if (action->getMouseX() >= _lstItems->getArrowsLeftEdge() &&
+			action->getMouseX() <= _lstItems->getArrowsRightEdge())
 		{
 			return;
 		}
@@ -758,8 +758,8 @@ void PurchaseState::lstItemsMouseWheel(Action *action)
 	{
 		_timerInc->stop();
 		_timerDec->stop();
-		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
+		if (action->getMouseX() >= _lstItems->getArrowsLeftEdge() &&
+			action->getMouseX() <= _lstItems->getArrowsRightEdge())
 		{
 			if (action->getMouseWheelY() > 0)
 				increaseByValue(Options::changeValueByMouseWheel);

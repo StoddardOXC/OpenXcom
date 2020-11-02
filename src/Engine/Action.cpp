@@ -116,17 +116,6 @@ bool  Action::isMouseRightClick() const
 }
 
 /**
- * Returns the absolute X position of the
- * mouse cursor relative to the game window,
- * corrected for screen scaling.
- * @return Mouse's absolute X position.
- */
-int Action::getAbsoluteXMouse() const
-{
-	return getMouseX();
-}
-
-/**
  * Returns the X position of the mouse cursor
  * in logical screen coordinates
  * @return Mouse's absolute X position.
@@ -136,17 +125,6 @@ int Action::getMouseX() const
 	if (_ev == NULL)
 		throw(Exception("bad stuff in action handling"));
 	return _mouseX;
-}
-
-/**
- * Returns the absolute Y position of the
- * mouse cursor relative to the game window,
- * corrected for screen scaling.
- * @return Mouse's absolute X position.
- */
-int Action::getAbsoluteYMouse() const
-{
-	return getMouseY();
 }
 
 /**
