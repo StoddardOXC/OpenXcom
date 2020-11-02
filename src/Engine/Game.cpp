@@ -630,16 +630,7 @@ void Game::pushState(State *state)
 {
 	_states.push_back(state);
 	_init = false;
-	setScreenMode(getCurrentScreenMode()); // change in screen size is propagated
-	// this shifts all State's surfaces so that the State
-	// gets centered on the Screen - ofc if Screen is larger
-	// than SC_ORIGINAL. Which obviously only makes sense after
-	// setMode() call and since we now call it here, this call
-	// also ends up here.  FUCK FUCKFUCK
-	// FIXME THE ABOVE.
-	state->recenter();
-	// TODO: would be nice to set State::_screen
-	// in case of SC_INFOSCREEN and maximizeinfoscreens
+	setScreenMode(getCurrentScreenMode()); // change in screen size is propagated if any
 }
 
 /**
