@@ -294,8 +294,8 @@ public:
 	void txtTooltipInEndTurn(Action *action);
 	/// Handler for hiding tooltip.
 	void txtTooltipOut(Action *action);
-	/// Update the resolution settings, we just resized the window.
-	void resize(const int dW, const int dH) override;
+	/// Put all elements in their proper place, Screen just got resized
+	void resize() override;
 
 	bool hasScrolled() const;
 	/// Move the mouse back to where it started after we finish drag scrolling.

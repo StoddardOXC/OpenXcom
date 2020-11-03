@@ -255,6 +255,7 @@ void ManufactureState::lstManufactureClickMiddle(Action *)
  */
 void ManufactureState::lstManufactureMousePress(Action *action)
 {
+	// FIXME: why is this commented out?
 	/*
 	if (!_lstManufacture->isInsideNoScrollArea(action->getMouseX()))
 	{

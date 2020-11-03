@@ -178,7 +178,7 @@ public:
 	/// Handles base defense
 	void handleBaseDefense(Base *base, Ufo *ufo);
 	/// Update the resolution settings, we just resized the window.
-	void resize(const int dW, const int dH) override;
+	void resize() override;
 private:
 	/// Handle alien mission generation.
 	void determineAlienMissions();

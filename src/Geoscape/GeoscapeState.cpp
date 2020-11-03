@@ -146,52 +146,49 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	// Create objects
 	Surface *hd = _game->getMod()->getSurface("ALTGEOBORD.SCR");
 	_bg = new Surface(hd->getWidth(), hd->getHeight(), 0, 0);
-	_sideLine = new Surface(64, _height, _width - 64, 0);
-	_sidebar = new Surface(64, 200, _width - 64, _height / 2 - 100);
+	_sideLine = new Surface(64, _height);
+	_sidebar = new Surface(64, 200);
 
-	_globe = new Globe(_game, ( _width-64)/2, _height/2, _width-64, _height, 0, 0);
-	_bg->setX((_globe->getWidth() - _bg->getWidth()) / 2);
-	_bg->setY((_globe->getHeight() - _bg->getHeight()) / 2);
+	_globe = new Globe(_game, ( _width-64)/2, _height/2, _width-64, _height);
 
-	_btnIntercept = new TextButton(63, 11, _width-63, _height/2-100);
-	_btnBases = new TextButton(63, 11, _width-63, _height/2-88);
-	_btnGraphs = new TextButton(63, 11, _width-63, _height/2-76);
-	_btnUfopaedia = new TextButton(63, 11, _width-63, _height/2-64);
-	_btnOptions = new TextButton(63, 11, _width-63, _height/2-52);
-	_btnFunding = new TextButton(63, 11, _width-63, _height/2-40);
+	_btnIntercept = new TextButton(63, 11);
+	_btnBases = new TextButton(63, 11);
+	_btnGraphs = new TextButton(63, 11);
+	_btnUfopaedia = new TextButton(63, 11);
+	_btnOptions = new TextButton(63, 11);
+	_btnFunding = new TextButton(63, 11);
 
-	_btn5Secs = new TextButton(31, 13, _width-63, _height/2+12);
-	_btn1Min = new TextButton(31, 13, _width-31, _height/2+12);
-	_btn5Mins = new TextButton(31, 13, _width-63, _height/2+26);
-	_btn30Mins = new TextButton(31, 13, _width-31, _height/2+26);
-	_btn1Hour = new TextButton(31, 13, _width-63, _height/2+40);
-	_btn1Day = new TextButton(31, 13, _width-31, _height/2+40);
+	_btn5Secs = new TextButton(31, 13);
+	_btn1Min = new TextButton(31, 13);
+	_btn5Mins = new TextButton(31, 13);
+	_btn30Mins = new TextButton(31, 13);
+	_btn1Hour = new TextButton(31, 13);
+	_btn1Day = new TextButton(31, 13);
 
-	_btnRotateLeft = new InteractiveSurface(12, 10, _width-61, _height/2+76);
-	_btnRotateRight = new InteractiveSurface(12, 10, _width-37, _height/2+76);
-	_btnRotateUp = new InteractiveSurface(13, 12, _width-49, _height/2+62);
-	_btnRotateDown = new InteractiveSurface(13, 12, _width-49, _height/2+87);
-	_btnZoomIn = new InteractiveSurface(23, 23, _width-25, _height/2+56);
-	_btnZoomOut = new InteractiveSurface(13, 17, _width-20, _height/2+82);
+	_btnRotateLeft = new InteractiveSurface(12, 10);
+	_btnRotateRight = new InteractiveSurface(12, 10);
+	_btnRotateUp = new InteractiveSurface(13, 12);
+	_btnRotateDown = new InteractiveSurface(13, 12);
+	_btnZoomIn = new InteractiveSurface(23, 23);
+	_btnZoomOut = new InteractiveSurface(13, 17);
 
-	int height = ( _height - Screen::ORIGINAL_HEIGHT) / 2 + 10;
-	_sideTop = new TextButton(63, height, _width-63, _sidebar->getY() - height - 1);
-	_sideBottom = new TextButton(63, height, _width-63, _sidebar->getY() + _sidebar->getHeight() + 1);
+	const int height = ( _height - Screen::ORIGINAL_HEIGHT) / 2 + 10;
+	_sideTop = new TextButton(63, height);
+	_sideBottom = new TextButton(63, height);
 
-	_txtHour = new Text(20, 16, _width-61, _height/2-26);
-	_txtHourSep = new Text(4, 16, _width-41, _height/2-26);
-	_txtMin = new Text(20, 16, _width-37, _height/2-26);
-	_txtMinSep = new Text(4, 16, _width-17, _height/2-26);
-	_txtSec = new Text(11, 8, _width-13, _height/2-20);
-	_txtWeekday = new Text(59, 8, _width-61, _height/2-13);
-	_txtDay = new Text(29, 8, _width-61, _height/2-6);
-	_txtMonth = new Text(29, 8, _width-32, _height/2-6);
-	_txtYear = new Text(59, 8, _width-61, _height/2+1);
-	_txtFunds = new Text(59, 8, _width-61, _height/2-27);
+	_txtHour = new Text(20, 16);
+	_txtHourSep = new Text(4, 16);
+	_txtMin = new Text(20, 16);
+	_txtMinSep = new Text(4, 16);
+	_txtSec = new Text(11, 8);
+	_txtWeekday = new Text(59, 8);
+	_txtDay = new Text(29, 8);
+	_txtMonth = new Text(29, 8);
+	_txtYear = new Text(59, 8);
+	_txtFunds = new Text(59, 8);
 
-	int slackingIndicatorOffset = _game->getMod()->getInterface("geoscape")->getElement("slackingIndicator")->custom;
-	// FIXME!!
-	_txtSlacking = new Text(59, 17, /* screenWidth - */61, /*screenHeight / 2*/ - 100 + slackingIndicatorOffset);
+	const int slackingIndicatorOffset = _game->getMod()->getInterface("geoscape")->getElement("slackingIndicator")->custom;
+	_txtSlacking = new Text(59, 17, _width - 61, _height / 2 - 100 + slackingIndicatorOffset);
 
 	_timeSpeed = _btn5Secs;
 	_gameTimer = new Timer(Options::geoClockSpeed);
@@ -201,9 +198,9 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_dogfightStartTimer = new Timer(Options::dogfightSpeed);
 	_dogfightTimer = new Timer(Options::dogfightSpeed);
 
-	_txtDebug = new Text(200, 32, 0, 0);
-	_cbxRegion = new ComboBox(this, 150, 16, 0, 36);
-	_cbxZone = new ComboBox(this, 100, 16, 154, 36);
+	_txtDebug = new Text(200, 32);
+	_cbxRegion = new ComboBox(this, 150, 16);
+	_cbxZone = new ComboBox(this, 100, 16);
 
 	// Set palette
 	setInterface("geoscape");
@@ -447,6 +444,8 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	}
 
 	timeDisplay();
+
+	resize(); // actually position all the stuff
 }
 
 /**
@@ -4100,11 +4099,9 @@ void GeoscapeState::btnTimerClick(Action *action)
 }
 
 /**
- * Updates the scale.
- * @param dX delta of X;
- * @param dY delta of Y;
+ * Repositions/resizes UI elements,
  */
-void GeoscapeState::resize(const int dW, const int dH)
+void GeoscapeState::resize()
 {
 	if (_game->getSavedGame()->getSavedBattle())
 		return;
@@ -4114,27 +4111,60 @@ void GeoscapeState::resize(const int dW, const int dH)
 
 	_globe->resize();
 
-	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		if (*i != _globe)
-		{
-			(*i)->setX((*i)->getX() + dW);
-			(*i)->setY((*i)->getY() + dH/2);
-		}
-	}
-
 	_bg->setX((_globe->getWidth() - _bg->getWidth()) / 2);
 	_bg->setY((_globe->getHeight() - _bg->getHeight()) / 2);
 
-	int height = _game->getScreen()->getDY() / 2 + 10;  /// FIXME!!! no DY in da code.
-	_sideTop->setHeight(height);
-	_sideTop->setY(_sidebar->getY() - height - 1);
-	_sideBottom->setHeight(height);
-	_sideBottom->setY(_sidebar->getY() + _sidebar->getHeight() + 1);
+	_btnIntercept->setX(_width-63);		_btnIntercept	->setY(_height/2-100);
+	_btnBases->setX(_width-63);			_btnBases->setY(_height/2-88);
+	_btnGraphs->setX(_width-63);		_btnGraphs->setY(_height/2-76);
+	_btnUfopaedia->setX(_width-63);		_btnUfopaedia->setY(_height/2-64);
+	_btnOptions->setX(_width-63);		_btnOptions->setY(_height/2-52);
+	_btnFunding->setX(_width-63);		_btnFunding->setY(_height/2-40);
 
-	_sideLine->setHeight(_game->getScreen()->getHeight());
-	_sideLine->setY(0);
+	_btn5Secs->setX(_width-63);			_btn5Secs->setY(_height/2+12);
+	_btn1Min->setX(_width-31);			_btn1Min->setY(_height/2+12);
+	_btn5Mins->setX(_width-63);			_btn5Mins->setY(_height/2+26);
+	_btn30Mins->setX(_width-31);		_btn30Mins->setY(_height/2+26);
+	_btn1Hour->setX(_width-63);			_btn1Hour->setY(_height/2+40);
+	_btn1Day->setX(_width-31);			_btn1Day->setY(_height/2+40);
+
+	_txtHour->setX(_width-61);			_txtHour->setY(_height/2-26);
+	_txtHourSep->setX(_width-41); 		_txtHourSep->setY(_height/2-26);
+	_txtMin->setX(_width-37); 			_txtMin->setY(_height/2-26);
+	_txtMinSep->setX(_width-17); 		_txtMinSep->setY(_height/2-26);
+	_txtSec->setX(_width-13); 			_txtSec->setY(_height/2-20);
+
+	_txtWeekday->setX(_width-61); 		_txtWeekday->setY(_height/2-13);
+	_txtDay->setX(_width-61); 			_txtDay->setY(_height/2-6);
+	_txtMonth->setX(_width-32); 		_txtMonth->setY(_height/2-6);
+	_txtYear->setX(_width-61); 			_txtYear->setY(_height/2+1);
+	_txtFunds->setX(_width-61); 		_txtFunds->setY(_height/2-27);
+
+	_btnRotateLeft->setX(_width-61);	_btnRotateLeft->setY(_height/2+76);
+	_btnRotateRight->setX(_width-37);	_btnRotateRight->setY(_height/2+76);
+	_btnRotateUp->setX(_width-49);		_btnRotateUp->setY(_height/2+62);
+	_btnRotateDown->setX(_width-49);	_btnRotateDown->setY(_height/2+87);
+
+	_btnZoomIn->setX(_width-25);		_btnZoomIn->setY(_height/2+56);
+	_btnZoomOut->setX(_width-20);		_btnZoomOut->setY(_height/2+82);
+
+	const int slackingIndicatorOffset = _game->getMod()->getInterface("geoscape")->getElement("slackingIndicator")->custom;
+	_txtSlacking->setX(_width-61); 		_txtSlacking->setY(_height / 2 - 100 + slackingIndicatorOffset);
+
+	const int sideHeight = ( _height - Screen::ORIGINAL_HEIGHT) / 2 + 10;
+	_sideTop->setHeight(sideHeight);	_sideBottom->setHeight(sideHeight);
+	_sideTop->setX(_width-63);			_sideTop->setY(_sidebar->getY() - sideHeight - 1);
+	_sideBottom->setX(_width-63);		_sideBottom->setY(_sidebar->getY() + _sidebar->getHeight() + 1);
+
+	_sideLine->setHeight(_height);
 	_sideLine->drawRect(0, 0, _sideLine->getWidth(), _sideLine->getHeight(), 15);
+	_sideLine->setX(_width - 64);		_sideLine->setY(0);
+	_sidebar->setX(_width - 64);		_sidebar->setY(_height / 2 - 100);
+
+	_txtDebug->setX(0); 				_txtDebug->setY(0);
+	_cbxRegion->setX(0);				_cbxRegion->setY(36);
+	_cbxZone->setX(154); 				_cbxZone->setY(36);
+
 }
 bool GeoscapeState::buttonsDisabled()
 {

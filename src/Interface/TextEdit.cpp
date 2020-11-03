@@ -498,7 +498,7 @@ void TextEdit::mousePress(Action *action, State *state)
 		}
 		else
 		{
-			const int mouseX = action->getRelativeXMouse();
+			const int mouseX = action->getMouseX();
 
 			int w = 0;
 			int c = 0;
@@ -654,7 +654,6 @@ void TextEdit::onEnter(ActionHandler handler)
 void TextEdit::textInput(Action *action, State *state)
 {
 	std::string text(action->getText());
-	Log(LOG_INFO)<<"TextEdit::textInput(): got '" << text << "'";
 	UString wText = Unicode::convUtf8ToUtf32(text);
 	bool correct = true;
 	for(UString::iterator it = wText.begin(); it != wText.end(); ++it)

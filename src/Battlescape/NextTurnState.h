@@ -60,7 +60,6 @@ public:
 	void think() override;
 	/// Closes the window.
 	void close();
-	void resize(const int dW, const int dH) override;
 };
 
 }

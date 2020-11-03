@@ -110,13 +110,13 @@ void InteractiveSurface::handle(Action *action, State *state)
 	if (!_visible || _hidden || action->isConsumed())
 		return;
 
-	action->setSender(this);
+	action->setSender(this, state);
 
 	if (action->isMouseAction())
 	{
-		// FIXME: that's actually getRelativeXYMouse but..
-		if ((action->getMouseX() >= _x && action->getMouseX() < _x + getWidth())
-		 && (action->getMouseY() >= _y && action->getMouseY() < _y + getHeight()))
+		int mx, my;
+		std::tie(mx, my) = action->getMouseXY();
+		if ((mx >= 0) && (mx < getWidth()) && (my >= 0) && (my < getHeight()))
 		{
 			if (!_isHovered)
 			{

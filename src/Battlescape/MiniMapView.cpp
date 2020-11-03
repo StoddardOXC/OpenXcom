@@ -304,8 +304,8 @@ void MiniMapView::mouseClick(Action *action, State *state)
 
 	if (action->getMouseButton() == SDL_BUTTON_LEFT)
 	{
-		int origX = action->getRelativeXMouse();
-		int origY = action->getRelativeYMouse();
+		int origX, origY;
+		std::tie(origX, origY) = action->getMouseXY();
 		// get offset (in cells) of the click relative to center of screen
 		int xOff = (origX / CELL_WIDTH) - ((getWidth() / 2) / CELL_WIDTH);
 		int yOff = (origY / CELL_HEIGHT) - ((getHeight() / 2) / CELL_HEIGHT);
@@ -397,6 +397,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		if (Options::touchEnabled == false)
 		{
 			// We don't want to see the mouse-cursor jumping :)
+			// FIXME: maybe warp is missing here
 			if (Options::battleDragScrollInvert)
 			{
 				action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);

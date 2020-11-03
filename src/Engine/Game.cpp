@@ -392,9 +392,8 @@ void Game::run()
 							// SDL_WINDOWEVENT_RESIZED - external change.
 							// SDL_WINDOWEVENT_SIZE_CHANGED: external or internal change.
 							{
-								int dW = 0, dH = 0;
-								_screen->updateScale(dW, dH);
-								propagateResize(dW, dH);
+								_screen->updateScale();
+								propagateResize();
 							}
 							break;
 						case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -652,12 +651,10 @@ void Game::popState()
  * Notifies states that the screen size changed
  * (not window size, mind)
  */
-void Game::propagateResize(const int dW, const int dH)
+void Game::propagateResize()
 {
-	if (dW != 0 || dH != 0) {
 		for (const auto& s : _states) {
-			s->resize(dW, dH);
-		}
+			s->resize();
 	}
 }
 
@@ -714,16 +711,14 @@ void Game::handle(Action *action)
 /// resets video according to Options and handles resize propagation.
 void Game::resetVideo()
 {
-	int dW, dH;
-	_screen->resetVideo(dW, dH);
-	propagateResize(dW, dH);
+	_screen->resetVideo();
+	propagateResize();
 }
 /// sets screenMode and handles resize propagation
 void Game::setScreenMode(ScreenMode mode)
 {
-	int dW, dH;
-	_screen->setMode(mode, dW, dH);
-	propagateResize(dW, dH);
+	_screen->setMode(mode);
+	propagateResize();
 }
 
 

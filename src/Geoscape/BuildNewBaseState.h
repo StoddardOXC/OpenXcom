@@ -91,8 +91,8 @@ public:
 	void btnZoomOutRightClick(Action *action);
 	/// Handler for clicking the Cancel button.
 	void btnCancelClick(Action *action);
-	/// Let the state know the window has been resized.
-	void resize(const int dW, const int dH) override;
+	/// Let the state know the Screen has been resized.
+	void resize() override;
 };
 
 }

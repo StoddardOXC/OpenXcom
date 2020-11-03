@@ -130,11 +130,12 @@ MedikitState::MedikitState (BattleUnit *targetUnit, BattleAction *action, TileEn
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
 
-	if (_game->getScreen()->getDY() > 50)
+	if (_game->getScreen()->getDY() > 50) // FIXME this condition must be made more explicit.
 	{
 		_screen = false;
 		_bg->drawRect(67, 44, 190, 100, Palette::blockOffset(15)+15);
 	}
+
 	_partTxt = new Text(62, 9, 82, 120);
 	_woundTxt = new Text(14, 9, 145, 120);
 	_medikitView = new MedikitView(52, 58, 95, 60, _game, _targetUnit, _partTxt, _woundTxt);

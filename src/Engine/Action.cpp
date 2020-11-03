@@ -21,6 +21,7 @@
 #include "CrossPlatform.h"
 #include "InteractiveSurface.h"
 #include "Exception.h"
+#include "Logger.h"
 
 namespace OpenXcom
 {
@@ -38,7 +39,7 @@ Action::Action(const SDL_Event *ev, double scaleX, double scaleY, int topBlackBa
 	_mouseButton(0),  _sender(0)
 {
 	if (_ev == NULL)
-		throw Exception("bad stuff in action handling") ;
+		throw Exception("Use of consumed or synthetic Action") ;
 
 	if (ev->type == SDL_MOUSEBUTTONUP || ev->type == SDL_MOUSEBUTTONDOWN)
 	{
@@ -74,7 +75,7 @@ Action::~Action()
 void Action::setMousePosition(int mouseX, int mouseY)
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	switch(_ev->type) {
 		case SDL_MOUSEMOTION:
 		case SDL_MOUSEBUTTONDOWN:
@@ -95,7 +96,7 @@ void Action::setMousePosition(int mouseX, int mouseY)
 bool Action::isMouseAction() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _mouseX != -1;
 }
 
@@ -117,52 +118,74 @@ bool  Action::isMouseRightClick() const
 
 /**
  * Returns the X position of the mouse cursor
- * in logical screen coordinates
- * @return Mouse's absolute X position.
+ * in sender's coordinates
+ * @return Mouse's X position.
  */
 int Action::getMouseX() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
+	return _mouseX - _surfaceX;
+}
+
+/**
+ * Returns the Y position of the mouse cursor
+ * in sender's coordinates
+ * @return Mouse's Y position.
+ */
+int Action::getMouseY() const
+{
+	if (_ev == NULL)
+		throw(Exception("Use of consumed or synthetic Action"));
+	return _mouseY - _surfaceY;
+}
+
+/**
+ * Returns the position of the mouse cursor
+ * in sender's coordinates
+ * @return Mouse's position.
+ */
+std::tuple<int, int> Action::getMouseXY() const
+{
+	if (_ev == NULL)
+		throw(Exception("Use of consumed or synthetic Action"));
+	return std::tuple<int, int>(_mouseX - _surfaceX, _mouseY - _surfaceY);
+}
+
+/**
+ * Returns the X position of the mouse cursor
+ * in Screen coordinates
+ * @return Mouse's X position.
+ */
+int Action::getAbsoluteMouseX() const
+{
+	if (_ev == NULL)
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _mouseX;
 }
 
 /**
  * Returns the Y position of the mouse cursor
- * in logical screen coordinates
- * @return Mouse's absolute X position.
+ * in Screen coordinates
+ * @return Mouse's Y position.
  */
-int Action::getMouseY() const
+int Action::getAbsoluteMouseY() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _mouseY;
 }
 
 /**
- * Returns the relative X position of the
- * mouse cursor relative to the surface that
- * triggered the action, corrected for screen scaling.
- * @return Mouse's relative X position.
+ * Returns the position of the mouse cursor
+ * in Screen coordinates
+ * @return Mouse's position.
  */
-int Action::getRelativeXMouse() const
+std::tuple<int, int> Action::getAbsoluteMouseXY() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
-	return _mouseX - _surfaceX;
-}
-
-/**
- * Returns the relative X position of the
- * mouse cursor relative to the surface that
- * triggered the action, corrected for screen scaling.
- * @return Mouse's relative X position.
- */
-int Action::getRelativeYMouse() const
-{
-	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
-	return _mouseY - _surfaceY;
+		throw(Exception("Use of consumed or synthetic Action"));
+	return std::tuple<int, int>(_mouseX, _mouseY);
 }
 
 /**
@@ -173,7 +196,7 @@ int Action::getRelativeYMouse() const
 InteractiveSurface *Action::getSender() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _sender;
 }
 
@@ -182,34 +205,34 @@ InteractiveSurface *Action::getSender() const
  * this action (the sender).
  * @param sender Pointer to interactive surface.
  */
-void Action::setSender(InteractiveSurface *sender)
+void Action::setSender(InteractiveSurface *sender, const State *state)
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	_sender = sender;
-	_surfaceX = sender->getX();
-	_surfaceY = sender->getY();
+	_surfaceX = sender->getX() + state->getX();
+	_surfaceY = sender->getY() + state->getY();
 }
 
 /// Gets the mouse's position delta x (relative motion), Screen coords.
 int Action::getXMouseMotion() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _mouseRelX;
 }
 /// Gets the mouse's position delta y (relative motion), Screen coords.
 int Action::getYMouseMotion() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _mouseRelY;
 }
 /// Sets the mouse motion
 void Action::setMouseMotion(int mx, int my)
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	_mouseRelX = mx;
 	_mouseRelY = my;
 }
@@ -227,14 +250,14 @@ Uint32 Action::getType() const
 int Action::getMouseButton() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _mouseButton;
 }
 /// Gets the key sym if that's a key press or release
 SDL_Keycode Action::getKeycode() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	switch (_ev->type) {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -248,7 +271,7 @@ SDL_Keycode Action::getKeycode() const
 Uint16 Action::getKeymods() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	switch (_ev->type) {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -261,7 +284,7 @@ Uint16 Action::getKeymods() const
 SDL_Scancode Action::getScancode() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	switch (_ev->type) {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -273,14 +296,14 @@ SDL_Scancode Action::getScancode() const
 const char *Action::getText() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _ev->type == SDL_TEXTINPUT ? _ev->text.text : NULL;
 }
 /// Gets the wheel motion in y axis
 Sint32 Action::getMouseWheelY() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _ev->type == SDL_MOUSEWHEEL ? _ev->wheel.y : 0;
 }
 
@@ -288,20 +311,21 @@ Sint32 Action::getMouseWheelY() const
 float Action::getMultigestureY() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _ev->type == SDL_MULTIGESTURE ? _ev->mgesture.y : 0.0;
 }
 /// SDL_MULTIGESTURE dDist
 float Action::getMultigestureDDist() const
 {
 	if (_ev == NULL)
-		throw(Exception("bad stuff in action handling"));
+		throw(Exception("Use of consumed or synthetic Action"));
 	return _ev->type == SDL_MULTIGESTURE ? _ev->mgesture.dDist : 0.0;
 }
 
 void Action::setConsumed(void)
 {
 	_ev = NULL;
+	Log(LOG_INFO) << "Action::setConsumed(void):";
 	CrossPlatform::stackTrace (NULL);
 }
 

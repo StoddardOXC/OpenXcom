@@ -24,6 +24,7 @@ namespace OpenXcom
 
 class Screen;
 class InteractiveSurface;
+class State;
 
 /**
  * Container for all the information associated with a
@@ -38,14 +39,22 @@ private:
 	int _mouseRelX, _mouseRelY;
 	int _mouseButton;
 	InteractiveSurface *_sender;
+	int _stateX, _stateY; // state posn for
 protected:
-	friend class Screen; // factory-construction only, in Screen::makeAction()
+	// factory-construction only, in Screen::makeAction()
+	friend class Screen;
 	/// Creates an action with given event data.
 	Action(const SDL_Event* ev, double scaleX, double scaleY, int topBlackBand, int leftBlackBand);
+
+	// only allow setting sender from there
+	friend class InteractiveSurface;
+	/// Sets the sender of the action.
+	void setSender(InteractiveSurface *sender, const State *state);
+
 public:
 	/// Cleans up the action.
 	~Action();
-	/// Sets the action as a mouse action.
+	/// Sets mouse position if this action was in any way related to mouse  FIXME: maybe also do warp here too
 	void setMousePosition(int mouseX, int mouseY);
 	/// Gets if the action is a mouse action.
 	bool isMouseAction() const;
@@ -53,14 +62,17 @@ public:
 	bool isMouseLeftClick() const;
 	/// Gets if action is mouse right click.
 	bool isMouseRightClick() const;
-	/// Gets the mouse's absolute X position, Screen coords.
+
+	/// Gets mouse position on the Screen (absolute)
+	std::tuple<int, int> getAbsoluteMouseXY() const;
+	int getAbsoluteMouseX() const;
+	int getAbsoluteMouseY() const;
+
+	/// Gets mouse position in the sender (minus State's and sender's positions)
+	std::tuple<int, int> getMouseXY() const;
 	int getMouseX() const;
-	/// Gets the mouse's absolute Y position, Screen coords.
 	int getMouseY() const;
-	/// Gets the mouse's relative X position, Screen coords. (relative to some surface)
-	int getRelativeXMouse() const;
-	/// Gets the mouse's relative Y position, Screen coords.
-	int getRelativeYMouse() const;
+
 	/// Gets the mouse's position delta x (relative motion), Screen coords.
 	int getXMouseMotion() const;
 	/// Gets the mouse's position delta y (relative motion), Screen coords.
@@ -69,8 +81,6 @@ public:
 	void setMouseMotion(int, int);
 	/// Gets the sender of the action.
 	InteractiveSurface *getSender() const;
-	/// Sets the sender of the action.
-	void setSender(InteractiveSurface *sender);
 	/// Gets the action / event type
 	Uint32 getType() const;
 	/// Gets mouse button number if that's a click or release

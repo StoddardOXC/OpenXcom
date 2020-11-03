@@ -1838,8 +1838,8 @@ void Globe::mouseOver(Action *action, State *state)
 
 		if (Options::touchEnabled == false)
 		{
-			// We don't want to see the mouse-cursor jumping :)
-			// FIXME: maybe warp is missing here
+			// FIXME: maybe warp is extra here
+			_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 			action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		}
 
@@ -1849,7 +1849,8 @@ void Globe::mouseOver(Action *action, State *state)
 	if (Options::touchEnabled == false && _isMouseScrolling &&
 		(action->getMouseX() != _xBeforeMouseScrolling || action->getMouseY() != _yBeforeMouseScrolling))
 	{
-		// FIXME: maybe warp is missing here
+		// FIXME: maybe warp is extra here
+		_game->warpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		action->setMousePosition(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	}
 	// Check for errors
@@ -2054,8 +2055,8 @@ void Globe::toggleRadarLines()
 void Globe::resize()
 {
 	Surface *surfaces[4] = {this, _markers, _countries, _radars};
-	int width = _game->getScreen()->getWidth() - 64;
-	int height = _game->getScreen()->getHeight();
+	const int width = _game->getScreen()->getWidth() - 64;
+	const int height = _game->getScreen()->getHeight();
 
 	for (int i = 0; i < 4; ++i)
 	{

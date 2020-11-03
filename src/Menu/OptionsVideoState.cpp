@@ -620,9 +620,9 @@ void OptionsVideoState::updateBattlescapeScale(Action *)
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void OptionsVideoState::resize(const int dW, const int dH)
+void OptionsVideoState::resize()
 {
-	OptionsBaseState::resize(dW, dH);
+	OptionsBaseState::resize();
 	std::ostringstream ss;
 	ss << Options::displayWidth;
 	_txtDisplayWidth->setText(ss.str());

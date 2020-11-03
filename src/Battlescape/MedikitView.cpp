@@ -101,9 +101,10 @@ void MedikitView::draw()
  */
 void MedikitView::mouseClick (Action *action, State *)
 {
+	// FIXME: this only works IFF the surfaces are at 0,0 relative to the view
 	SurfaceSet *set = _game->getMod()->getSurfaceSet("MEDIBITS.DAT");
-	int x = action->getRelativeXMouse();
-	int y = action->getRelativeYMouse();
+	int x, y;
+	std::tie(x, y) = action->getMouseXY();
 	for (unsigned int i = 0; i < set->getTotalFrames(); i++)
 	{
 		Surface * surface = set->getFrame (i);

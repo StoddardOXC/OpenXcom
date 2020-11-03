@@ -423,7 +423,7 @@ void CraftArmorState::btnOkClick(Action *)
  */
 void CraftArmorState::lstSoldiersClick(Action *action)
 {
-	double mx = action->getMouseX();
+	int mx = action->getMouseX();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
 		return;
@@ -484,6 +484,7 @@ void CraftArmorState::lstSoldiersClick(Action *action)
  */
 void CraftArmorState::lstSoldiersMousePress(Action *action)
 {
+	// FIXME: why is this commented out?
 	/*
 	if (Options::changeValueByMouseWheel == 0)
 		return;

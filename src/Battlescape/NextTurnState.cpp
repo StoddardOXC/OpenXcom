@@ -47,6 +47,7 @@ namespace OpenXcom
  */
 NextTurnState::NextTurnState(SavedBattleGame *battleGame, BattlescapeState *state) : _battleGame(battleGame), _state(state), _timer(0), _currentTurn(0)
 {
+	_screenMode = SC_INFOSCREEN;
 	_currentTurn = _battleGame->getTurn() < 1 ? 1 : _battleGame->getTurn();
 
 	// Create objects
@@ -433,12 +434,4 @@ void NextTurnState::close()
 		}
 	}
 }
-
-void NextTurnState::resize(const int dW, const int dH)
-{
-	State::resize(dW, dH);
-	_bg->setX(0);
-	_bg->setY(0);
-}
-
 }

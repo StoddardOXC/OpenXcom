@@ -545,20 +545,21 @@ void ActionMenuState::handleAction()
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void ActionMenuState::resize(const int dW, const int dH)
+void ActionMenuState::resize()
 {
-	Log(LOG_INFO) << "ActionMenuState::resize("<<dW<<","<<dH<<"); _y: "<< _y<< " += " << dH*2;
-
-	State::resize(dW, dH);
-
-	// FIXME this is again somewhat related to whatever scaleMode is. or inherits from. or what
+	// We're a fullscreen overlay in fact. So resize ourselves
 	_width  = _game->getScreen()->getWidth();
 	_height = _game->getScreen()->getHeight();
 
-	// FIXME: resize _outside IntSurf for the mobile here i think
+	// Sort of not needed, since we're fullscreen anyway
+	State::resize();
 
+#ifdef __MOBILE__
+	// resize _outside IntSurf for the mobile here i think
+	_outside->resize(_width, _height);
+#endif
 	// now we have right _width and _height
-	// and have to plonk down all the buttons.
+	// and can replonk all the buttons.
 	plonkButtons();
 }
 #ifdef __MOBILE__

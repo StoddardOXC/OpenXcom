@@ -82,9 +82,9 @@ public:
 	Screen(const std::string& title);
 	/// Cleans up the display screen.
 	~Screen();
-	/// Get horizontal offset.
+	/// Get horizontal offset to the top-left of a centered 320x200 rectangle.
 	int getDX() const;
-	/// Get vertical offset.
+	/// Get vertical offset to the top-left of a centered 320x200 rectangle.
 	int getDY() const;
 	/// Gets the internal buffer.
 	SDL_Surface *getSurface();
@@ -97,9 +97,9 @@ public:
 	/// Clears the screen.
 	void clear();
 	/// sets the screen mode - battlescape, geoscape, startscreen, bigmenu, intro, etc..
-	void setMode(ScreenMode mode, int& dW, int& dH);
+	void setMode(ScreenMode mode);
 	/// this is the new real updateScale - to be called on window resize / renderer recreation only.
-	void updateScale(int& dX, int& dY);
+	void updateScale();
 	/// Sets the screen's 8bpp palette.
 	void setPalette(const SDL_Color *colors, int firstcolor = 0, int ncolors = 256, bool immediately = false);
 	/// Gets the screen's 8bpp palette.
@@ -109,7 +109,7 @@ public:
 	/// Gets the screen's height, logical pixels.
 	int getHeight() const;
 	/// Actually resets the video stuff.
-	void resetVideo(int& dX, int& dY);
+	void resetVideo();
 	/// Takes a screenshot.
 	void screenshot(const std::string &filename);
 	/// Get the pointer for our current window

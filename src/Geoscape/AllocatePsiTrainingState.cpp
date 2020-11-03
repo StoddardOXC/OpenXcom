@@ -449,7 +449,7 @@ void AllocatePsiTrainingState::moveSoldierDown(Action *action, unsigned int row,
  */
 void AllocatePsiTrainingState::lstSoldiersClick(Action *action)
 {
-	double mx = action->getMouseX();
+	int mx = action->getMouseX();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
 		return;

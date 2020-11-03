@@ -58,8 +58,7 @@ Screen::Screen(const std::string& title) : _window(NULL), _renderer(NULL),
 	_currentScaleType(SCALE_SCREEN), _currentScaleMode(SC_STARTSTATE), _resizeAccountedFor(false),
 	_title(title)
 {
-	int dX, dY; // those are nowhere to propagate at the moment, so ignored.
-	resetVideo(dX, dY);
+	resetVideo();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
 
@@ -251,7 +250,7 @@ int Screen::getHeight() const
 /**
  * Recreates video: both renderer and the window
  */
-void Screen::resetVideo(int& dX, int& dY)
+void Screen::resetVideo()
 {
 	Log(LOG_INFO) << "Screen::resetVideo()";
 	if (_renderer) { delete _renderer; }
@@ -301,7 +300,7 @@ void Screen::resetVideo(int& dX, int& dY)
 
 	// fix up scaling.
 	_resizeAccountedFor = false;
-	setMode(_currentScaleMode, dX, dY);
+	setMode(_currentScaleMode);
 }
 
 /**
@@ -337,10 +336,10 @@ int Screen::getDY() const
  * Updates scaling in case the window got resized.
  * returns the delta in dX and dY.
  */
-void Screen::updateScale(int& dX, int& dY)
+void Screen::updateScale()
 {
 	_resizeAccountedFor = false;
-	setMode(_currentScaleMode, dX, dY);
+	setMode(_currentScaleMode);
 }
 
 /**
@@ -354,10 +353,8 @@ void Screen::updateScale(int& dX, int& dY)
  * or by changes in State stack ( == true).
  *
  */
-void Screen::setMode(ScreenMode mode, int& dW, int& dH)
+void Screen::setMode(ScreenMode mode)
 {
-	dW = 0;
-    dH = 0;
 	if (mode == SC_INHERITED) {
 		// we can't handle this case here since it's popState()
 		// and friends' job to find something explicit to set.
@@ -403,7 +400,6 @@ void Screen::setMode(ScreenMode mode, int& dW, int& dH)
 	if (_resizeAccountedFor && type == _currentScaleType) {
 		return;
 	}
-	dW = _baseWidth; dH = _baseHeight;
 	_currentScaleType = type;
 	// the type from above determines logical game screen size.
 	int target_width, target_height;
@@ -463,7 +459,6 @@ void Screen::setMode(ScreenMode mode, int& dW, int& dH)
 	if (_baseHeight < ORIGINAL_HEIGHT) { _baseHeight  = ORIGINAL_HEIGHT; }
 
 	Log(LOG_INFO) << "Screen::setMode(): logical size " << _baseWidth << "x" << _baseHeight;
-	dW = _baseWidth - dW; dH = _baseHeight - dH;
 
 	// set the source rect for the renderer
 	SDL_Rect baseRect;

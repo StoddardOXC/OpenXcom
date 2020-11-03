@@ -136,6 +136,7 @@ BattlescapeState::BattlescapeState() :
 
 	// Create the battlemap view
 	// the actual map height is the total height minus the height of the buttonbar
+	// FIXME: is this not so?
 	_map = new Map(_game, _width, _height, 0, 0, visibleMapHeight);
 
 	_numLayers = new NumberText(3, 5, x + 232, y + 6);
@@ -196,20 +197,14 @@ BattlescapeState::BattlescapeState() :
 	_numVisibleUnit[9]->setX(_numVisibleUnit[9]->getX() - 2); // center number 10
 	_btnToggleNV = new InteractiveSurface(12, 12, x + 2, y - 23);
 	_warning = new WarningMessage(224, 24, x + 48, y + 32);
-	_btnLaunch = new BattlescapeButton(32, 24, _width - 32, 0); // we need screenWidth, because that is independent of the black bars on the screen
+	_btnLaunch = new BattlescapeButton(32, 24, _width - 32, 0);
 	_btnLaunch->setVisible(false);
-	_btnPsi = new BattlescapeButton(32, 24, _width - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
+	_btnPsi = new BattlescapeButton(32, 24, _width - 32, 25);
 	_btnPsi->setVisible(false);
-	_btnSpecial = new BattlescapeButton(32, 24, _width - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
+	_btnSpecial = new BattlescapeButton(32, 24, _width - 32, 25);
 	_btnSpecial->setVisible(false);
-#if 0
-	_btnSkills = new BattlescapeButton(32, 24, screenWidth - 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
-#else
-	_btnSkills = new BattlescapeButton(32, 24, 32, 25); // we need screenWidth, because that is independent of the black bars on the screen
-#endif
+	_btnSkills = new BattlescapeButton(32, 24, _width - 32, 25);
 	_btnSkills->setVisible(false);
-
-
 
 	// Create soldier stats summary
 	_rankTiny = new Surface(7, 7, x + 135, y + 33);
@@ -971,14 +966,13 @@ void BattlescapeState::mapPress(Action *action)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		_xBeforeMouseScrolling = action->getMouseX();
-		_yBeforeMouseScrolling = action->getMouseY();
+		std::tie(_xBeforeMouseScrolling, _yBeforeMouseScrolling) = action->getAbsoluteMouseXY();
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{
-			_cursorPosition.x = action->getMouseX();
-			_cursorPosition.y = action->getMouseY();
+			std::tie(_cursorPosition.x, _cursorPosition.y) = action->getAbsoluteMouseXY();
 			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
+			// FIXME get rid of this hack
 			_cursorPosition.z = 1;
 		}
 		_totalMouseMoveX = 0; _totalMouseMoveY = 0;
@@ -1516,8 +1510,10 @@ void BattlescapeState::btnStatsClick(Action *action)
 		if (SCROLL_TRIGGER == Options::battleEdgeScroll &&
 			SDL_MOUSEBUTTONUP == action->getType() && SDL_BUTTON_LEFT == action->getMouseButton())
 		{
-			int posX = action->getMouseX();
-			int posY = action->getMouseY();
+			// FIXME: this might as well relative mouse posn NB: document edge scroll
+			// in any case BattlescapeState size is always eq to Screen size
+			int posX, posY;
+			std::tie(posX, posY) = action->getAbsoluteMouseXY();
 			if ((posX < Camera::SCROLL_BORDER && posX > 0)
 				|| (posX > _map->getWidth() - Camera::SCROLL_BORDER)
 				|| (posY < Camera::SCROLL_BORDER && posY > 0)
@@ -3709,31 +3705,31 @@ void BattlescapeState::txtTooltipOut(Action *action)
 }
 
 /**
- * Updates the scale.
- * @param dX delta of X;
- * @param dY delta of Y;
+ * Repositions the UI elements according to the new Screen size
  */
-void BattlescapeState::resize(const int dW, const int dH)
+void BattlescapeState::resize()
 {
+	const int dW = _width - _game->getScreen()->getWidth();
+	const int dH = _height - _game->getScreen()->getHeight();
 	_width = _game->getScreen()->getWidth();
 	_height = _game->getScreen()->getHeight();
-	_map->setWidth(_width);
-	_map->setHeight(_height);
+
+	// TODO: put all this map/camera stuff into _map->resize()
+	_map->setWidth(_width);			_map->setHeight(_height);
 	_map->getCamera()->resize();
+	// that should keep camera looking at the same spot
 	_map->getCamera()->jumpXY(dW/2, dH/2);
 
-	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		if (*i != _map && (*i) != _btnPsi && *i != _btnLaunch && *i != _btnSpecial && *i != _btnSkills && *i != _txtDebug)
-		{
-			(*i)->setX((*i)->getX() + dW / 2);
-			(*i)->setY((*i)->getY() + dH);
-		}
-		else if (*i != _map && *i != _txtDebug)
-		{
-			(*i)->setX((*i)->getX() + dW);
-		}
-	}
+	// replonk stuff where it belongs.
+	// _map at (0,0) and _txtDebug at (20,0) always stay put.
+	const int x = (_width - _icons->getWidth())/2;
+	const int y = _height - _icons->getHeight();
+	_icons->setX(x); 				_icons->setY(y);
+	_btnToggleNV->setX(x + 2);		_btnToggleNV->setY(y - 23);
+	_btnLaunch->setX(_width - 32);	_btnLaunch->setY(0);
+	_btnPsi->setX(_width - 32); 	_btnPsi->setY(25);
+	_btnSpecial->setX(_width - 32); _btnSpecial->setY(25);
+	_btnSkills->setX(_width - 32); 	_btnSkills->setY(25);
 }
 
 bool BattlescapeState::hasScrolled() const

@@ -52,26 +52,22 @@ namespace OpenXcom
  */
 BuildNewBaseState::BuildNewBaseState(Base *base, Globe *globe, bool first) : _base(base), _globe(globe), _first(first), _oldlat(0), _oldlon(0), _mousex(0), _mousey(0)
 {
-	int dx = _game->getScreen()->getDX();
-	int dy = _game->getScreen()->getDY();
 	_screen = false;
 
 	_oldshowradar = Options::globeRadarLines;
 	if (!_oldshowradar)
 		Options::globeRadarLines = true;
 	// Create objects
-	_btnRotateLeft = new InteractiveSurface(12, 10, 259 + dx * 2, 176 + dy);
-	_btnRotateRight = new InteractiveSurface(12, 10, 283 + dx * 2, 176 + dy);
-	_btnRotateUp = new InteractiveSurface(13, 12, 271 + dx * 2, 162 + dy);
-	_btnRotateDown = new InteractiveSurface(13, 12, 271 + dx * 2, 187 + dy);
-	_btnZoomIn = new InteractiveSurface(23, 23, 295 + dx * 2, 156 + dy);
-	_btnZoomOut = new InteractiveSurface(13, 17, 300 + dx * 2, 182 + dy);
+	_btnRotateLeft = new InteractiveSurface(12, 10);
+	_btnRotateRight = new InteractiveSurface(12, 10);
+	_btnRotateUp = new InteractiveSurface(13, 12);
+	_btnRotateDown = new InteractiveSurface(13, 12);
+	_btnZoomIn = new InteractiveSurface(23, 23);
+	_btnZoomOut = new InteractiveSurface(13, 17);
 
-	_window = new Window(this, 256, 28, 0, 0);
-	_window->setX(dx);
-	_window->setDY(0);
-	_btnCancel = new TextButton(54, 12, 186 + dx, 8);
-	_txtTitle = new Text(180, 16, 8 + dx, 6);
+	_window = new Window(this, 256, 28);
+	_btnCancel = new TextButton(54, 12);
+	_txtTitle = new Text(180, 16);
 
 	_hoverTimer = new Timer(50);
 	_hoverTimer->onTimer((StateHandler)&BuildNewBaseState::hoverRedraw);
@@ -142,6 +138,8 @@ BuildNewBaseState::BuildNewBaseState(Base *base, Globe *globe, bool first) : _ba
 	{
 		_btnCancel->setVisible(false);
 	}
+
+	resize();
 }
 
 /**
@@ -393,20 +391,23 @@ void BuildNewBaseState::btnCancelClick(Action *)
 }
 
 /**
- * Updates the scale.
- * @param dX delta of X;
- * @param dY delta of Y;
+ * Updates varius shite.
  */
-void BuildNewBaseState::resize(const int dW, const int dH)
+void BuildNewBaseState::resize()
 {
-	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		(*i)->setX((*i)->getX() + dW / 2);
-		if (*i != _window && *i != _btnCancel && *i != _txtTitle)
-		{
-			(*i)->setY((*i)->getY() + dH / 2);
-		}
-	}
+	const int dx = _game->getScreen()->getDX();
+	const int dy = _game->getScreen()->getDY();
+
+	_btnRotateLeft->setX(259 + dx * 2);	_btnRotateLeft->setY(176 + dy);
+	_btnRotateRight->setX(283 + dx * 2);_btnRotateRight->setY(176 + dy);
+	_btnRotateUp->setX(271 + dx * 2);	_btnRotateUp->setY(162 + dy);
+	_btnRotateDown->setX(271 + dx * 2);	_btnRotateDown->setY(187 + dy);
+	_btnZoomIn->setX(295 + dx * 2);		_btnZoomIn->setY(156 + dy);
+	_btnZoomOut->setX(300 + dx * 2);	_btnZoomOut->setY(182 + dy);
+
+	_window->setX(dx);					_window->setY(0);
+	_btnCancel->setX(186 + dx);			_btnCancel->setY(8);
+	_txtTitle->setX( 8 + dx);			_txtTitle->setY(6);
 }
 
 }

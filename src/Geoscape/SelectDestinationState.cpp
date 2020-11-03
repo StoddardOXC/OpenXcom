@@ -47,24 +47,20 @@ namespace OpenXcom
  */
 SelectDestinationState::SelectDestinationState(Craft *craft, Globe *globe) : _craft(craft), _globe(globe)
 {
-	int dx = _game->getScreen()->getDX();
-	int dy = _game->getScreen()->getDY();
 	_screen = false;
 
 	// Create objects
-	_btnRotateLeft = new InteractiveSurface(12, 10, 259 + dx * 2, 176 + dy);
-	_btnRotateRight = new InteractiveSurface(12, 10, 283 + dx * 2, 176 + dy);
-	_btnRotateUp = new InteractiveSurface(13, 12, 271 + dx * 2, 162 + dy);
-	_btnRotateDown = new InteractiveSurface(13, 12, 271 + dx * 2, 187 + dy);
-	_btnZoomIn = new InteractiveSurface(23, 23, 295 + dx * 2, 156 + dy);
-	_btnZoomOut = new InteractiveSurface(13, 17, 300 + dx * 2, 182 + dy);
+	_btnRotateLeft = new InteractiveSurface(12, 10);
+	_btnRotateRight = new InteractiveSurface(12, 10);
+	_btnRotateUp = new InteractiveSurface(13, 12);
+	_btnRotateDown = new InteractiveSurface(13, 12);
+	_btnZoomIn = new InteractiveSurface(23, 23);
+	_btnZoomOut = new InteractiveSurface(13, 17);
 
-	_window = new Window(this, 256, 28, 0, 0);
-	_window->setX(dx);
-	_window->setDY(0);
-	_btnCancel = new TextButton(60, 12, 110 + dx, 8);
-	_btnCydonia = new TextButton(60, 12, 180 + dx, 8);
-	_txtTitle = new Text(100, 16, 10 + dx, 6);
+	_window = new Window(this, 256, 28);
+	_btnCancel = new TextButton(60, 12);
+	_btnCydonia = new TextButton(60, 12);
+	_txtTitle = new Text(100, 16);
 
 	// Set palette
 	setInterface("geoscape");
@@ -143,6 +139,8 @@ SelectDestinationState::SelectDestinationState(Craft *craft, Globe *globe) : _cr
 		_globe->setCraftRange(_craft->getLongitude(), _craft->getLatitude(), _craft->getBaseRange());
 		_globe->invalidate();
 	}
+
+	resize();
 }
 
 /**
@@ -343,16 +341,22 @@ void SelectDestinationState::btnCydoniaClick(Action *)
  * @param dX delta of X;
  * @param dY delta of Y;
  */
-void SelectDestinationState::resize(const int dW, const int dH)
+void SelectDestinationState::resize()
 {
-	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-	{
-		(*i)->setX((*i)->getX() + dW / 2);
-		if (*i != _window && *i != _btnCancel && *i != _txtTitle && *i != _btnCydonia)
-		{
-			(*i)->setY((*i)->getY() + dH / 2);
-		}
-	}
+	const int dx = _game->getScreen()->getDX();
+	const int dy = _game->getScreen()->getDY();
+
+	_btnRotateLeft->setX(259 + dx * 2); 	_btnRotateLeft->setY(176 + dy);
+	_btnRotateRight->setX(283 + dx * 2);	_btnRotateRight->setY(176 + dy);
+	_btnRotateUp->setX(271 + dx * 2); 		_btnRotateUp->setY(162 + dy);
+	_btnRotateDown->setX(271 + dx * 2);		_btnRotateDown->setY(187 + dy);
+	_btnZoomIn->setX(295 + dx * 2); 		_btnZoomIn->setY(156 + dy);
+	_btnZoomOut->setX(300 + dx * 2); 		_btnZoomOut->setY(182 + dy);
+
+	_window->setX(dx);						_window->setY(0);
+	_btnCancel->setX(110 + dx);				_btnCancel->setY(8);
+	_btnCydonia->setX(180 + dx);			_btnCydonia->setY(8);
+	_txtTitle->setX(10 + dx);				_txtTitle->setY(6);
 }
 
 }

@@ -471,15 +471,4 @@ void MainMenuState::btnUpdateClick(Action*)
 	_game->quit();
 #endif
 }
-
-/** FIXME: does nothing useful.
- * Updates the scale.
- * @param dX delta of X;
- * @param dY delta of Y;
- */
-void MainMenuState::resize(const int dW, const int dH)
-{
-	State::resize(dW, dH);
-}
-
 }

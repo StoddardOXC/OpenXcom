@@ -455,7 +455,7 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		return;
 	}
 #endif
-	double mx = action->getMouseX();
+	int mx = action->getMouseX();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
 		return;

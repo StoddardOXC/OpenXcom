@@ -90,7 +90,7 @@ public:
 	/// Handler for updating the selected geoscape scale.
 	void updateGeoscapeScale(Action *action);
 	/// Update the resolution settings, we just resized the window.
-	void resize(const int dW, const int dH) override;
+	void resize() override;
 	/// Update the game's resolution
 	void updateGameResolution();
 	/// Handles keypresses.

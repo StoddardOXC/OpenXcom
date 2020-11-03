@@ -45,6 +45,8 @@ ScannerState::ScannerState (BattleAction *action) : _action(action)
 	_scan = new Surface(320, 200);
 	_scannerView = new ScannerView(152, 152, 56, 24, _game, _action->actor);
 
+
+	// FIXME: this condition must be made more explicit
 	if (_game->getScreen()->getDY() > 50)
 	{
 		_screen = false;

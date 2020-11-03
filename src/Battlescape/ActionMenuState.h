@@ -57,8 +57,8 @@ public:
 	void handle(Action *action) override;
 	/// Handler for clicking a action menu item.
 	virtual void btnActionMenuItemClick(Action *action);
-	/// Update the resolution settings, we just resized the window. FIXME: drop that obsolete shit.
-	void resize(const int dW, const int dH) override;
+	/// Put all elements in their proper place, Screen just got resized
+	void resize() override;
 #ifdef __MOBILE__
 	/// Pop the state in case of clicking.
 	void outsideClick(Action *action);

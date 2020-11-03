@@ -288,8 +288,6 @@ void State::init()
 			_soundPlayed = true;
 		}
 	}
-	Log(LOG_INFO)<<"State::State("<<typeid(*this).name()<<").";
-
 }
 
 /**
@@ -335,7 +333,7 @@ void State::handle(Action *action)
 void State::blit()
 {
 	for (std::vector<Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-		(*i)->blit(_game->getScreen()->getSurface());
+		(*i)->blit(_game->getScreen()->getSurface(), _x, _y);
 }
 
 /**
@@ -567,29 +565,23 @@ SDL_Color *State::getPalette()
 }
 
 /**
- * Each state will probably need its own resize handling,
- * so this space intentionally left blank
- * @param dX delta of X;
- * @param dY delta of Y;
+ * A hook for the Screen resize event.
+ * By default, all states get recentered, but override at will.
  */
-void State::resize(const int dW, const int dH)
+void State::resize()
 {
-	Log(LOG_INFO)<<"State::resize("<<typeid(*this).name()<<", dW="<<dW<<", dH="<<dH<<")";
 	recenter();
 }
 
+/**
+ * Centers the State on the Screen
+ */
 void State::recenter()
 {
-	if (_surfaces.size() == 0) { return; }
 	int sw = _game->getScreen()->getWidth();
 	int sh = _game->getScreen()->getHeight();
 	_x = (sw - _width )/2;
 	_y = (sh - _height )/2;
-	Log(LOG_INFO)<<"State::recenter("<<typeid(*this).name()<<"): screen= "<<sw<<"x"<<sh<<" state="<<_width<<"x"<<_height<<"@"<<_x<<"x"<<_y;
-	for (auto surf: _surfaces) {
-		Log(LOG_INFO) << "    recentering "<<typeid(*surf).name();
-		surf->setX(surf->getX() + _x), surf->setY(surf->getY() + _y);
-	}
 }
 
 

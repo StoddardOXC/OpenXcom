@@ -119,7 +119,9 @@ Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) 
 
 	_spriteWidth = _game->getMod()->getSurfaceSet("BLANKS.PCK")->getFrame(0)->getWidth();
 	_spriteHeight = _game->getMod()->getSurfaceSet("BLANKS.PCK")->getFrame(0)->getHeight();
+
 	_message = new BattlescapeMessage(320, (visibleMapHeight < 200)? visibleMapHeight : 200, 0, 0);
+	// the two below are not really needed, yes? FIXME. where the fuck this message shoulda appear?
 	_message->setX(_game->getScreen()->getDX());
 	_message->setY((visibleMapHeight - _message->getHeight()) / 2);
 	_message->setTextColor(_messageColor);
@@ -1778,8 +1780,7 @@ void Map::mouseOver(Action *action, State *state)
 {
 	InteractiveSurface::mouseOver(action, state);
 	_camera->mouseOver(action, state);
-	_mouseX = (int)action->getMouseX();
-	_mouseY = (int)action->getMouseY();
+	std::tie(_mouseX, _mouseY) = action->getMouseXY();
 	setSelectorPosition(_mouseX, _mouseY);
 }
 

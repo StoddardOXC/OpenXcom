@@ -74,8 +74,8 @@ public:
 	void txtTooltipIn(Action *action);
 	/// Handler for hiding tooltip.
 	void txtTooltipOut(Action *action);
-	/// Update the resolution settings, we just resized the window.
-	void resize(const int dW, const int dH) override;
+	/// Update the resolution settings, we just resized the Screen.
+	void resize() override;
 };
 
 }

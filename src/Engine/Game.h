@@ -59,8 +59,8 @@ private:
 
 	/// Gets effective screen/scale mode
 	ScreenMode getCurrentScreenMode() const;
-	/// Propagates resize through the state stack
-	void propagateResize(const int dW, const int dH);
+	/// Propagates resize event through the state stack
+	void propagateResize();
 	/// Handles fullscreen toggle and slowdown
 	void handle(Action *action);
 public:
