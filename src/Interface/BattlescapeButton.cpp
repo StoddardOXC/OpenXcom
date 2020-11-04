@@ -29,8 +29,13 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _inverted(false), _toggleMode(INVERT_NONE), _altSurface(0)
+BattlescapeButton::BattlescapeButton(int width, int height, int x, int y, Surface *src) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _inverted(false), _toggleMode(INVERT_NONE), _altSurface(0)
 {
+	if (src) {
+		//setPalette(src->getPalette());
+		copy(src); // this takes into account src's _x and _y so make sure they're zero.
+		initSurfaces();
+	}
 }
 
 /**
@@ -48,6 +53,7 @@ BattlescapeButton::~BattlescapeButton()
 void BattlescapeButton::setColor(Uint8 color)
 {
 	_color = color;
+	initSurfaces();
 }
 
 /**
@@ -196,12 +202,14 @@ void BattlescapeButton::initSurfaces()
 			Uint8 pixel = getPixel(x, y);
 			if (pixel > 0)
 			{
-				_altSurface->setPixelIterative(&x, &y, pixel + 2 * ((int)_color + 3 - (int)pixel));
+				pixel = pixel + 2 * ((int)_color + 3 - (int)pixel);
 			}
 			else
 			{
-				_altSurface->setPixelIterative(&x, &y, 0);
+				pixel = 0;
 			}
+			_altSurface->setPixelIterative(&x, &y, pixel);
+
 		}
 	}
 

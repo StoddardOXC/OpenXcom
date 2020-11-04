@@ -325,7 +325,7 @@ float Action::getMultigestureDDist() const
 void Action::setConsumed(void)
 {
 	_ev = NULL;
-	Log(LOG_INFO) << "Action::setConsumed(void):";
+	Log(LOG_INFO) << "Action::setConsumed(void): "<< this << " at";
 	CrossPlatform::stackTrace (NULL);
 }
 

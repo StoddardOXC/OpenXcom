@@ -364,19 +364,19 @@ DogfightState::DogfightState(GeoscapeState *state, Craft *craft, Ufo *ufo, bool 
 	add(_damage);
 	add(_craftShield);
 	add(_btnMinimize);
-	add(_btnStandoff, "standoffButton", "dogfight", _window);
-	add(_btnCautious, "cautiousButton", "dogfight", _window);
-	add(_btnStandard, "standardButton", "dogfight", _window);
-	add(_btnAggressive, "aggressiveButton", "dogfight", _window);
-	add(_btnDisengage, "disengageButton", "dogfight", _window);
-	add(_btnUfo, "ufoButton", "dogfight", _window);
+	add(_btnStandoff, "standoffButton", "dogfight");
+	add(_btnCautious, "cautiousButton", "dogfight");
+	add(_btnStandard, "standardButton", "dogfight");
+	add(_btnAggressive, "aggressiveButton", "dogfight");
+	add(_btnDisengage, "disengageButton", "dogfight");
+	add(_btnUfo, "ufoButton", "dogfight");
 	for(int i = 0; i < _weaponNum; ++i)
 	{
-		add(_txtAmmo[i], "numbers", "dogfight", _window);
+		add(_txtAmmo[i], "numbers", "dogfight");
 	}
-	add(_txtDistance, "distance", "dogfight", _window);
+	add(_txtDistance, "distance", "dogfight");
 	add(_preview);
-	add(_txtStatus, "text", "dogfight", _window);
+	add(_txtStatus, "text", "dogfight");
 	add(_btnMinimizedIcon);
 	add(_txtInterceptionNumber, "minimizedNumber", "dogfight");
 

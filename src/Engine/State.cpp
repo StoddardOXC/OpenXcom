@@ -164,34 +164,18 @@ void State::add(Surface *surface)
  * @param surface Child surface.
  * @param id the ID of the element defined in the ruleset, if any.
  * @param category the category of elements this interface is associated with.
- * @param parent the surface to base the coordinates of this element off.
  * @note if no parent is defined the element will not be moved.
  */
-void State::add(Surface *surface, const std::string &id, const std::string &category, Surface *parent)
+void State::add(Surface *surface, const std::string &id, const std::string &category)
 {
 	// Set palette
 	surface->setPalette(_palette);
-
-	// this only works if we're dealing with a battlescape button
-	BattlescapeButton *bsbtn = dynamic_cast<BattlescapeButton*>(surface);
 
 	if (_game->getMod()->getInterface(category))
 	{
 		Element *element = _game->getMod()->getInterface(category)->getElement(id);
 		if (element)
 		{
-			if (parent && element->w != INT_MAX && element->h != INT_MAX)
-			{
-				surface->setWidth(element->w);
-				surface->setHeight(element->h);
-			}
-
-			if (parent && element->x != INT_MAX && element->y != INT_MAX)
-			{
-				surface->setX(parent->getX() + element->x);
-				surface->setY(parent->getY() + element->y);
-			}
-
 			auto inter = dynamic_cast<InteractiveSurface*>(surface);
 			if (inter)
 			{
@@ -211,13 +195,6 @@ void State::add(Surface *surface, const std::string &id, const std::string &cate
 				surface->setBorderColor(element->border);
 			}
 		}
-	}
-
-	if (bsbtn)
-	{
-		// this will initialize the graphics and settings of the battlescape button.
-		bsbtn->copy(parent);
-		bsbtn->initSurfaces();
 	}
 
 	// Set default text resources
@@ -332,8 +309,15 @@ void State::handle(Action *action)
  */
 void State::blit()
 {
-	for (std::vector<Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
-		(*i)->blit(_game->getScreen()->getSurface(), _x, _y);
+	for (std::vector<Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i) {
+		// now this is horrible.
+		//(*i)->blit(_game->getScreen()->getSurface(), _x, _y);
+		auto surf = *i;
+		auto ox = surf->getX(), oy = surf->getY();
+		surf->setX(ox + _x); surf->setY(oy + _y);
+		surf->blit(_game->getScreen()->getSurface());
+		surf->setX(ox); surf->setY(oy);
+	}
 }
 
 /**

@@ -671,8 +671,7 @@ void Surface::draw()
  * that is blitted.
  * @param surface Pointer to surface to blit onto.
  */
-void Surface::blit(SDL_Surface *surface) { blit(surface, 0, 0); }
-void Surface::blit(SDL_Surface *surface, int x, int y)
+void Surface::blit(SDL_Surface *surface)
 {
 	if (_visible && !_hidden)
 	{
@@ -680,8 +679,8 @@ void Surface::blit(SDL_Surface *surface, int x, int y)
 			draw();
 
 		SDL_Rect target {};
-		target.x = _x + x;
-		target.y = _y + y;
+		target.x = _x;
+		target.y = _y;
 		SDL_BlitSurface(_surface.get(), nullptr, surface, &target);
 	}
 }

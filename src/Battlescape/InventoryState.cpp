@@ -77,8 +77,10 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 {
 	_battleGame = _game->getSavedGame()->getSavedBattle();
 	_screenMode = SC_INFOSCREEN;
-	// Create objects
+
 	_bg = new Surface(320, 200, 0, 0);
+	_game->getMod()->getSurface("TAC01.SCR")->blitNShade(_bg, 0, 0);
+
 	_soldier = new Surface(320, 200, 0, 0);
 	_txtName = new TextEdit(this, 210, 17, 28, 6);
 	_txtTus = new Text(40, 9, 245, 24);
@@ -89,15 +91,15 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	_txtStatLine4 = new Text(70, 9, 245, 56);
 	_txtItem = new Text(160, 9, 128, 140);
 	_txtAmmo = new Text(66, 24, 254, 64);
-	_btnOk = new BattlescapeButton(35, 22, 237, 1);
-	_btnPrev = new BattlescapeButton(23, 22, 273, 1);
-	_btnNext = new BattlescapeButton(23, 22, 297, 1);
-	_btnUnload = new BattlescapeButton(32, 25, 288, 32);
-	_btnGround = new BattlescapeButton(32, 15, 289, 137);
-	_btnRank = new BattlescapeButton(26, 23, 0, 0);
+	_btnOk = new BattlescapeButton(35, 22, 237, 1, _bg);
+	_btnPrev = new BattlescapeButton(23, 22, 273, 1, _bg);
+	_btnNext = new BattlescapeButton(23, 22, 297, 1, _bg);
+	_btnUnload = new BattlescapeButton(32, 25, 288, 32, _bg);
+	_btnGround = new BattlescapeButton(32, 15, 289, 137, _bg);
+	_btnRank = new BattlescapeButton(26, 23, 0, 0, _bg);
 	_btnArmor = new BattlescapeButton(RuleInventory::PAPERDOLL_W, RuleInventory::PAPERDOLL_H, RuleInventory::PAPERDOLL_X, RuleInventory::PAPERDOLL_Y);
-	_btnCreateTemplate = new BattlescapeButton(32, 22, _templateBtnX, _createTemplateBtnY);
-	_btnApplyTemplate = new BattlescapeButton(32, 22, _templateBtnX, _applyTemplateBtnY);
+	_btnCreateTemplate = new BattlescapeButton(32, 22, _templateBtnX, _createTemplateBtnY, _bg);
+	_btnApplyTemplate = new BattlescapeButton(32, 22, _templateBtnX, _applyTemplateBtnY, _bg);
 	_selAmmo = new Surface(RuleInventory::HAND_W * RuleInventory::SLOT_W, RuleInventory::HAND_H * RuleInventory::SLOT_H, 272, 88);
 	_inv = new Inventory(_game, 320, 200, 0, 0, _parent == 0);
 	_btnQuickSearch = new TextEdit(this, 40, 9, 244, 140);
@@ -108,28 +110,28 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	add(_bg);
 
 	// Set up objects
-	_game->getMod()->getSurface("TAC01.SCR")->blitNShade(_bg, 0, 0);
-	add(_btnArmor, "buttonOK", "inventory", _bg);
+
+	add(_btnArmor, "buttonOK", "inventory");
 
 	add(_soldier);
 	add(_btnQuickSearch, "textItem", "inventory");
-	add(_txtName, "textName", "inventory", _bg);
-	add(_txtTus, "textTUs", "inventory", _bg);
-	add(_txtWeight, "textWeight", "inventory", _bg);
-	add(_txtStatLine1, "textStatLine1", "inventory", _bg);
-	add(_txtStatLine2, "textStatLine2", "inventory", _bg);
-	add(_txtStatLine3, "textStatLine3", "inventory", _bg);
-	add(_txtStatLine4, "textStatLine4", "inventory", _bg);
-	add(_txtItem, "textItem", "inventory", _bg);
-	add(_txtAmmo, "textAmmo", "inventory", _bg);
-	add(_btnOk, "buttonOK", "inventory", _bg);
-	add(_btnPrev, "buttonPrev", "inventory", _bg);
-	add(_btnNext, "buttonNext", "inventory", _bg);
-	add(_btnUnload, "buttonUnload", "inventory", _bg);
-	add(_btnGround, "buttonGround", "inventory", _bg);
-	add(_btnRank, "rank", "inventory", _bg);
-	add(_btnCreateTemplate, "buttonCreate", "inventory", _bg);
-	add(_btnApplyTemplate, "buttonApply", "inventory", _bg);
+	add(_txtName, "textName", "inventory");
+	add(_txtTus, "textTUs", "inventory");
+	add(_txtWeight, "textWeight", "inventory");
+	add(_txtStatLine1, "textStatLine1", "inventory");
+	add(_txtStatLine2, "textStatLine2", "inventory");
+	add(_txtStatLine3, "textStatLine3", "inventory");
+	add(_txtStatLine4, "textStatLine4", "inventory");
+	add(_txtItem, "textItem", "inventory");
+	add(_txtAmmo, "textAmmo", "inventory");
+	add(_btnOk, "buttonOK", "inventory");
+	add(_btnPrev, "buttonPrev", "inventory");
+	add(_btnNext, "buttonNext", "inventory");
+	add(_btnUnload, "buttonUnload", "inventory");
+	add(_btnGround, "buttonGround", "inventory");
+	add(_btnRank, "rank", "inventory");
+	add(_btnCreateTemplate, "buttonCreate", "inventory");
+	add(_btnApplyTemplate, "buttonApply", "inventory");
 	add(_selAmmo);
 	add(_inv);
 

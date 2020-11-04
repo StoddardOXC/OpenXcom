@@ -147,19 +147,19 @@ MedikitState::MedikitState (BattleUnit *targetUnit, BattleAction *action, TileEn
 	_stimulantTxt = new MedikitTxt (88);
 	_healTxt = new MedikitTxt (124);
 	add(_bg);
-	add(_medikitView, "body", "medikit", _bg);
-	add(_endButton, "buttonEnd", "medikit", _bg);
-	add(new MedikitTitle (37, tr("STR_PAIN_KILLER")), "textPK", "medikit", _bg);
-	add(new MedikitTitle (73, tr("STR_STIMULANT")), "textStim", "medikit", _bg);
-	add(new MedikitTitle (109, tr("STR_HEAL")), "textHeal", "medikit", _bg);
-	add(_healButton, "buttonHeal", "medikit", _bg);
-	add(_stimulantButton, "buttonStim", "medikit", _bg);
-	add(_pkButton, "buttonPK", "medikit", _bg);
-	add(_pkText, "numPK", "medikit", _bg);
-	add(_stimulantTxt, "numStim", "medikit", _bg);
-	add(_healTxt, "numHeal", "medikit", _bg);
-	add(_partTxt, "textPart", "medikit", _bg);
-	add(_woundTxt, "numWounds", "medikit", _bg);
+	add(_medikitView, "body", "medikit");
+	add(_endButton, "buttonEnd", "medikit");
+	add(new MedikitTitle (37, tr("STR_PAIN_KILLER")), "textPK", "medikit");
+	add(new MedikitTitle (73, tr("STR_STIMULANT")), "textStim", "medikit");
+	add(new MedikitTitle (109, tr("STR_HEAL")), "textHeal", "medikit");
+	add(_healButton, "buttonHeal", "medikit");
+	add(_stimulantButton, "buttonStim", "medikit");
+	add(_pkButton, "buttonPK", "medikit");
+	add(_pkText, "numPK", "medikit");
+	add(_stimulantTxt, "numStim", "medikit");
+	add(_healTxt, "numHeal", "medikit");
+	add(_partTxt, "textPart", "medikit");
+	add(_woundTxt, "numWounds", "medikit");
 
 	Surface *backgroundSprite = 0;
 	if (!_item->getRules()->getMediKitCustomBackground().empty())

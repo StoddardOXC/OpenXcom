@@ -142,6 +142,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 			{
 				_isHovered = false;
 				mouseOut(action, state);
+				if (action->isConsumed()) return;
 				if (_listButton && action->getType() == SDL_MOUSEMOTION)
 				{
 					for (Uint8 i = 1; i <= NUM_BUTTONS; ++i)
@@ -156,6 +157,8 @@ void InteractiveSurface::handle(Action *action, State *state)
 			}
 		}
 	}
+
+	if (action->isConsumed()) return;
 
 	if (action->getType() == SDL_MOUSEBUTTONDOWN)
 	{
@@ -192,6 +195,8 @@ void InteractiveSurface::handle(Action *action, State *state)
 	{
 		multiGesture(action, state);
 	}
+
+	if (action->isConsumed()) return;
 
 	if (_isFocused)
 	{

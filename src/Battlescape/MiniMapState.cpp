@@ -55,10 +55,10 @@ MiniMapState::MiniMapState (Camera * camera, SavedBattleGame * battleGame)
 	add(_bg);
 	_game->getMod()->getSurface("SCANBORD.PCK")->blitNShade(_bg, 0, 0);
 	add(_miniMapView);
-	add(_btnLvlUp, "buttonUp", "minimap", _bg);
-	add(_btnLvlDwn, "buttonDown", "minimap", _bg);
-	add(_btnOk, "buttonOK", "minimap", _bg);
-	add(_txtLevel, "textLevel", "minimap", _bg);
+	add(_btnLvlUp, "buttonUp", "minimap");
+	add(_btnLvlDwn, "buttonDown", "minimap");
+	add(_btnOk, "buttonOK", "minimap");
+	add(_txtLevel, "textLevel", "minimap");
 
 	// FIXME this condition must be made more explicit.
 	if (_game->getScreen()->getDY() > 50)

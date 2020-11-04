@@ -173,86 +173,86 @@ UnitInfoState::UnitInfoState(BattleUnit *unit, BattlescapeState *parent, bool fr
 
 	add(_bg);
 	add(_exit);
-	add(_txtName, "textName", "stats", 0);
+	add(_txtName, "textName", "stats");
 
 	add(_txtTimeUnits);
 	add(_numTimeUnits);
-	add(_barTimeUnits, "barTUs", "stats", 0);
+	add(_barTimeUnits, "barTUs", "stats");
 
 	add(_txtEnergy);
 	add(_numEnergy);
-	add(_barEnergy, "barEnergy", "stats", 0);
+	add(_barEnergy, "barEnergy", "stats");
 
 	add(_txtHealth);
 	add(_numHealth);
-	add(_barHealth, "barHealth", "stats", 0);
+	add(_barHealth, "barHealth", "stats");
 
 	add(_txtFatalWounds);
 	add(_numFatalWounds);
-	add(_barFatalWounds, "barWounds", "stats", 0);
+	add(_barFatalWounds, "barWounds", "stats");
 
 	add(_txtBravery);
 	add(_numBravery);
-	add(_barBravery, "barBravery", "stats", 0);
+	add(_barBravery, "barBravery", "stats");
 
 	add(_txtMorale);
 	add(_numMorale);
-	add(_barMorale, "barMorale", "stats", 0);
+	add(_barMorale, "barMorale", "stats");
 
 	add(_txtReactions);
 	add(_numReactions);
-	add(_barReactions, "barReactions", "stats", 0);
+	add(_barReactions, "barReactions", "stats");
 
 	add(_txtFiring);
 	add(_numFiring);
-	add(_barFiring, "barFiring", "stats", 0);
+	add(_barFiring, "barFiring", "stats");
 
 	add(_txtThrowing);
 	add(_numThrowing);
-	add(_barThrowing, "barThrowing", "stats", 0);
+	add(_barThrowing, "barThrowing", "stats");
 
 	add(_txtMelee);
 	add(_numMelee);
-	add(_barMelee, "barMelee", "stats", 0);
+	add(_barMelee, "barMelee", "stats");
 
 	add(_txtStrength);
 	add(_numStrength);
-	add(_barStrength, "barStrength", "stats", 0);
+	add(_barStrength, "barStrength", "stats");
 
 	if (_game->getMod()->isManaFeatureEnabled())
 	{
 		add(_txtMana);
 		add(_numMana);
-		add(_barMana, "barMana", "stats", 0);
+		add(_barMana, "barMana", "stats");
 	}
 
 	add(_txtPsiStrength);
 	add(_numPsiStrength);
-	add(_barPsiStrength, "barPsiStrength", "stats", 0);
+	add(_barPsiStrength, "barPsiStrength", "stats");
 
 	add(_txtPsiSkill);
 	add(_numPsiSkill);
-	add(_barPsiSkill, "barPsiSkill", "stats", 0);
+	add(_barPsiSkill, "barPsiSkill", "stats");
 
 	add(_txtFrontArmor);
 	add(_numFrontArmor);
-	add(_barFrontArmor, "barFrontArmor", "stats", 0);
+	add(_barFrontArmor, "barFrontArmor", "stats");
 
 	add(_txtLeftArmor);
 	add(_numLeftArmor);
-	add(_barLeftArmor, "barLeftArmor", "stats", 0);
+	add(_barLeftArmor, "barLeftArmor", "stats");
 
 	add(_txtRightArmor);
 	add(_numRightArmor);
-	add(_barRightArmor, "barRightArmor", "stats", 0);
+	add(_barRightArmor, "barRightArmor", "stats");
 
 	add(_txtRearArmor);
 	add(_numRearArmor);
-	add(_barRearArmor, "barRearArmor", "stats", 0);
+	add(_barRearArmor, "barRearArmor", "stats");
 
 	add(_txtUnderArmor);
 	add(_numUnderArmor);
-	add(_barUnderArmor, "barUnderArmor", "stats", 0);
+	add(_barUnderArmor, "barUnderArmor", "stats");
 
 	if (!_mindProbe)
 	{

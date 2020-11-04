@@ -61,10 +61,10 @@ AlienInventoryState::AlienInventoryState(BattleUnit *unit)
 
 	add(_bg);
 	add(_soldier);
-	add(_txtName, "textName", "inventory", _bg);
-	add(_txtLeftHand, "textName", "inventory", _bg);
-	add(_txtRightHand, "textName", "inventory", _bg);
-	add(_btnArmor, "buttonOK", "inventory", _bg);
+	add(_txtName, "textName", "inventory"/*, _bg*/);
+	add(_txtLeftHand, "textName", "inventory"/*, _bg*/);
+	add(_txtRightHand, "textName", "inventory"/*, _bg*/);
+	add(_btnArmor, "buttonOK", "inventory"/*, _bg*/);
 	add(_inv);
 
 	// Set up objects

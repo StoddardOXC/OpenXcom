@@ -451,10 +451,10 @@ void Game::run()
 				default:
 					auto action = _screen->makeAction(&_event);
 					_screen->handle(action.get());
-					handle(action.get());
-					_cursor->handle(action.get());
-					_fpsCounter->handle(action.get());
-					_states.back()->handle(action.get());
+					if (!action.get()->isConsumed()) handle(action.get());
+					if (!action.get()->isConsumed()) _cursor->handle(action.get());
+					if (!action.get()->isConsumed()) _fpsCounter->handle(action.get());
+					if (!action.get()->isConsumed()) _states.back()->handle(action.get());
 					break;
 			}
 			if (!_init)

@@ -41,7 +41,7 @@ protected:
 	Surface *_altSurface;
 public:
 	/// Creates a new image button with the specified size and position.
-	BattlescapeButton(int width, int height, int x = 0, int y = 0);
+	BattlescapeButton(int width, int height, int x = 0, int y = 0, Surface *surf = nullptr);
 	/// Cleans up the image button.
 	virtual ~BattlescapeButton();
 	/// Sets the image button's color.
